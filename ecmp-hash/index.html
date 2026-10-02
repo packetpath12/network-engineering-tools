@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ECMP Hash Polarization Visualizer — Packet Path</title>
+<meta name="description" content="Simulate ECMP hashing across a Clos fabric — see how identical hash seeds polarize traffic and how per-switch seed variation restores uniform spreading.">
+<style>
+
+:root{
+  color-scheme:light dark;
+  --font-head:"Spectral",Georgia,"Times New Roman",serif;
+  --font-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f7faf8; --surface:#ffffff; --surface2:#eef4f1; --surface3:#e6eee9;
+  --ink:#142a25; --muted:#4f635b; --faint:#789089;
+  --line:#dde7e1; --line-soft:#eaf0ec;
+  --accent:#0a7d5f; --accent-strong:#076a51; --on-accent:#ffffff; --accent-soft:rgba(10,125,95,.10);
+  --teal:#0b6e99; --teal-soft:rgba(11,110,153,.10);
+  --amber:#9c5c00; --amber-soft:rgba(156,92,0,.10);
+  --warn-bg:#fff8e8; --warn-line:#e4b54d;
+  --code-bg:#0e1f1a; --code-ink:#e6f3ed; --code-line:#243530;
+  --link:#0b6e99;
+  --shadow:0 1px 2px rgba(16,40,32,.07),0 10px 28px -16px rgba(16,40,32,.25);
+  --radius:12px; --radius-sm:8px;
+}
+
+*{box-sizing:border-box}
+
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.62}
+
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+
+a:hover{text-decoration-thickness:2px}
+
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.18;letter-spacing:-.01em;text-wrap:balance}
+
+h1{font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 .55em}
+
+h3{font-size:1.12rem;margin:1.5em 0 .4em}
+
+p{margin:0 0 1.05em}
+
+html.darkm .theme-btn .moon{display:block}
+
+html.darkm .theme-btn .sun{display:none}
+
+html.lightm .theme-btn .moon{display:none}
+
+  html:not(.lightm):not(.darkm) .theme-btn .sun{display:none}
+
+.page-head{padding:2.4rem 0 1.2rem}
+
+.page-head .lede{font-size:1.12rem;color:var(--muted);max-width:62ch}
+
+.lede{font-size:1.13rem;color:var(--muted);max-width:56ch}
+
+.lede strong{color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.98rem;padding:.66rem 1.15rem;border-radius:10px;text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:var(--font-body)}
+
+.btn:hover{background:var(--accent-strong);color:var(--on-accent);text-decoration:none}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+.mini-tool header .t{font-family:var(--font-head);font-weight:700;font-size:1.15rem}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.field label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.3rem;letter-spacing:.02em}
+
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.55rem .7rem}
+
+.field textarea{min-height:120px;resize:vertical}
+
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .9rem;font-size:.94rem;background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem;margin:.4rem 0 0}
+
+.kv dt{color:var(--muted);font-weight:700;white-space:nowrap}
+
+.kv dd{margin:0;font-family:var(--font-mono);font-size:.93rem;overflow-wrap:anywhere}
+
+.err{color:#b3261e;font-size:.9rem;font-weight:700}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .err{color:#ff8a80}
+
+html.darkm .err{color:#ff8a80}
+
+.callout{border:1px solid var(--line);border-left:5px solid var(--teal);background:var(--teal-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.9rem 1.1rem;margin:1.3rem 0;font-size:.96rem}
+
+.callout.warn{border-left-color:var(--amber);background:var(--warn-bg);border-color:var(--warn-line)}
+
+.callout.key{border-left-color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+
+.callout strong.t{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;color:var(--teal)}
+
+.callout.warn strong.t{color:var(--amber)}
+
+.callout.key strong.t{color:var(--accent)}
+
+pre.code{position:relative;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:10px;padding:1rem 3.4rem 1rem 1.1rem;overflow:auto;font-family:var(--font-mono);font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+
+pre.code code{font:inherit}
+
+code.inline{font-family:var(--font-mono);font-size:.86em;background:var(--surface3);border:1px solid var(--line);border-radius:5px;padding:.08em .4em}
+
+table.tbl{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.94rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+
+table.tbl th,table.tbl td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+
+table.tbl thead th{background:var(--surface2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+table.tbl tr:last-child td{border-bottom:0}
+
+table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);white-space:nowrap}
+
+.tbl-wrap{overflow-x:auto;margin:0 -20px;padding:0 20px}
+
+.read-next .rn{padding:1.1rem 1.25rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+
+.read-next .rn:hover{border-color:var(--accent)}
+
+.read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
+
+.read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+.gear-card .why{background:var(--surface2);border-radius:var(--radius-sm);padding:.7rem .85rem;font-size:.88rem}
+
+.gear-card .why b{color:var(--ink)}
+
+.about-cols .card{padding:1.3rem}
+
+.tool-shell{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1.5rem;align-items:start}
+
+.panel{padding:1.4rem}
+
+.panel h3{margin-top:0;font-size:1.15rem}
+
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface3);border:1px solid var(--line);margin:.5rem 0}
+
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:pointer}
+
+.quiz-feedback.ok{display:block;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent)}
+
+html.darkm .quiz-feedback.ok,html:not(.lightm):not(.darkm) .quiz-feedback.ok{color:var(--accent)}
+
+html.darkm .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}
+
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:1.2rem 0}
+
+.stat{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem}
+
+.stat .v{font-family:var(--font-mono);font-weight:600;font-size:1.22rem;display:block;overflow-wrap:anywhere}
+
+.stat .l{font-size:.8rem;color:var(--muted)}
+
+/* ---------- SLA / capacity / tick-to-trade tools ---------- */
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+
+.seg button{font:inherit;font-weight:700;font-size:.88rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.42rem .95rem;cursor:pointer;white-space:nowrap}
+
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ---------- ECMP hash visualizer ---------- */
+.ec-bars{display:grid;gap:7px;margin:.9rem 0 0}
+
+.ec-bar{display:grid;grid-template-columns:96px minmax(0,1fr) 112px;gap:10px;align-items:center;font-size:.85rem}
+
+.ec-bar .lab{color:var(--muted);font-weight:700;white-space:nowrap}
+
+.ec-bar .tr{position:relative;height:18px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:5px}
+
+.ec-bar .fl{position:absolute;top:0;left:0;bottom:0;background:var(--teal);border-radius:4px 0 0 4px;min-width:2px}
+
+.ec-bar .exp{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--amber)}
+
+.ec-bar .n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+
+.ec-heat{display:grid;gap:3px;margin:.9rem 0 0;align-items:stretch}
+
+.ec-cell{position:relative;aspect-ratio:1.5;border-radius:4px;background:var(--surface3);overflow:hidden}
+
+.ec-fill{position:absolute;inset:0;background:var(--teal)}
+
+.ec-cell .n{position:relative;display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-mono);font-size:.66rem}
+
+.ec-ax{font-family:var(--font-mono);font-size:.68rem;color:var(--faint);display:flex;align-items:center;justify-content:center}
+
+.ec-good{color:#1c7a43}
+
+.ec-bad{color:#b3261e}
+
+.ec-mid{color:#9a6206}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .ec-good{color:#4cc38a}
+:root:not(.lightm) .ec-bad{color:#ff8a80}
+:root:not(.lightm) .ec-mid{color:#f0b13e}
+
+html.darkm .ec-good{color:#4cc38a}
+
+html.darkm .ec-bad{color:#ff8a80}
+
+html.darkm .ec-mid{color:#f0b13e}
+
+@media (max-width:560px){.ec-bar{grid-template-columns:70px minmax(0,1fr) 92px}
+.ec-bar .n{font-size:.7rem}
+.ec-cell .n{font-size:.55rem}
+
+/* ---------- ACL rule analyzer ---------- */
+.acl-findings{display:grid;gap:10px;margin:.9rem 0 0}
+
+.acl-row{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.75rem .9rem}
+
+.acl-row .acl-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.acl-row .rn{font-weight:700;font-size:.9rem;white-space:nowrap}
+
+.acl-row code{display:block;font-family:var(--font-mono);font-size:.82rem;overflow-wrap:anywhere;margin:.35rem 0 0;color:var(--muted)}
+
+.acl-row .why{font-size:.9rem;margin:.35rem 0 0}
+
+.acl-badge{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:.18rem .65rem;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+
+.acl-badge.sh{background:#fbe9e7;border-color:#e0a49e;color:#b3261e}
+
+.acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+
+.acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
+
+.acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+
+html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+
+html.lightm{color-scheme:light}
+
+  .tool-shell{grid-template-columns:1fr}
+
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .stat-strip{grid-template-columns:1fr 1fr}
+
+  body{font-size:12pt;background:#fff;color:#000}
+
+  .art-layout,.lead-grid,.card,.tool-shell{grid-template-columns:1fr}
+
+  .card{box-shadow:none;break-inside:avoid}
+
+  *{transition:none!important;animation:none!important}
+
+.pp-top{display:flex;align-items:center;gap:.6rem;padding:.8rem 1.2rem;border-bottom:1px solid var(--line,#dfe7e3);background:var(--surface,#fff);position:sticky;top:0;z-index:50}
+.pp-brand{font-weight:700;font-size:1.05rem;color:var(--ink,#142a25);text-decoration:none}
+.pp-top .pp-sep{color:var(--muted,#4f635b)}
+.pp-top .pp-tag{color:var(--muted,#4f635b);font-size:.92rem}
+.pp-main{max-width:74rem;margin:0 auto;padding:1.4rem 1.1rem 3rem}
+.pp-foot{border-top:1px solid var(--line,#dfe7e3);padding:1.2rem;color:var(--muted,#4f635b);font-size:.88rem;text-align:center}
+.pp-foot a{color:var(--link)}
+
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"ECMP hash polarization visualizer","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0"}}</script>
+</head>
+<body>
+<header class="pp-top"><a class="pp-brand" href="https://allaboutitinfrastructure.com">Packet Path</a><span class="pp-sep">/</span><span class="pp-tag">Free network engineering tools</span></header>
+<main id="tool" class="pp-main"></main>
+<footer class="pp-foot">Free tool from <a href="https://allaboutitinfrastructure.com">Packet Path</a> · runs entirely in your browser — nothing is uploaded.<br>Open source under the MIT License · <a href="https://github.com/packetpath12/network-engineering-tools">github.com/packetpath12/network-engineering-tools</a></footer>
+<script>
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function $(sel, el){ return (el||document).querySelector(sel); }
+
+function comma(n){ return Number(n).toLocaleString("en-US"); }
+function toolRows(){ return "<div class=\"card panel\"><h3 style=\"margin-top:0\">More free tools from Packet Path</h3><p style=\"margin:0;color:var(--muted)\">Try the <a href=\"https://allaboutitinfrastructure.com/#/tools/ptp-budget\">PTP timing budget calculator</a> · <a href=\"https://allaboutitinfrastructure.com/#/tools/acl-analyzer\">Firewall ACL rule analyzer</a> — all free, all run entirely in your browser.</p></div>"; }
+function mulberry32(seed){
+  var a=seed>>>0;
+  return function(){
+    a=(a+0x6D2B79F5)|0;
+    var t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+/* FNV-1a 32-bit with a seeded init, finished with the MurmurHash3 fmix32
+   avalanche — raw FNV-1a low bits do not avalanche seed differences, so
+   without fmix32 the "varied seeds" mode below could not decorrelate. */
+function ecmpHash(bytes,seed){
+  var h=(2166136261^seed)>>>0;
+  for(var i=0;i<bytes.length;i++){ h^=bytes[i]; h=Math.imul(h,16777619); }
+  h^=h>>>16; h=Math.imul(h,0x85ebca6b); h^=h>>>13; h=Math.imul(h,0xc2b2ae35); h^=h>>>16;
+  return h>>>0;
+}
+/* Simulate N random flows through a two-stage Clos fabric.
+   Stage 1 (leaf→spine): link1 = hash % S. Stage 2 (spine→leaf): identical-seed
+   mode reuses the same hash (% L, correlated); varied-seed mode hashes again
+   with an independent seed. Returns the S×L joint matrix and stats. */
+function ecmpSim(S,L,N,varied,flowSeed){
+  var SEED_A=0x1F123BB5, SEED_B=0x5BD1E995;
+  var rng=mulberry32(flowSeed);
+  var matrix=[],stage2=[],i,j;
+  for(i=0;i<S;i++){ matrix.push([]); for(j=0;j<L;j++) matrix[i].push(0); }
+  for(j=0;j<L;j++) stage2.push(0);
+  var b=new Uint8Array(13);
+  for(var f=0;f<N;f++){
+    var src=(rng()*4294967296)>>>0, dst=(rng()*4294967296)>>>0;
+    var sp=Math.floor(rng()*65536), dp=Math.floor(rng()*65536);
+    var proto=rng()<0.5?6:17;
+    b[0]=(src>>>24)&255; b[1]=(src>>>16)&255; b[2]=(src>>>8)&255; b[3]=src&255;
+    b[4]=(dst>>>24)&255; b[5]=(dst>>>16)&255; b[6]=(dst>>>8)&255; b[7]=dst&255;
+    b[8]=(sp>>>8)&255; b[9]=sp&255; b[10]=(dp>>>8)&255; b[11]=dp&255; b[12]=proto;
+    var hA=ecmpHash(b,SEED_A);
+    var i1=hA%S;
+    var i2=varied?(ecmpHash(b,SEED_B)%L):(hA%L);
+    stage2[i2]++; matrix[i1][i2]++;
+  }
+  var mean=N/(S*L), max=0, total=0, hi=0, hj=0, diag=0;
+  for(i=0;i<S;i++) for(j=0;j<L;j++){ var c=matrix[i][j]; total+=c; if(c>max){ max=c; hi=i; hj=j; } }
+  for(i=0;i<Math.min(S,L);i++) diag+=matrix[i][i];
+  return {matrix:matrix,stage2:stage2,ratio:max/mean,maxCell:max,meanCell:mean,total:total,hotI:hi,hotJ:hj,diagShare:100*diag/N};
+}
+function pageECMP(){
+  var h='<div class="page-head"><h1>ECMP hash polarization visualizer</h1><p class="lede">ECMP spreads flows across equal-cost paths by hashing each packet\'s 5-tuple — but when every switch in a Clos fabric runs the same hash with the same seed, the choices stop being independent and traffic polarizes onto a few hot paths. Run the simulation and watch it happen, then flip the seed mode and watch it heal.</p></div>'
+  +'<div class="tool-shell">'
+  +'<div class="card panel"><h3>Your fabric</h3>'
+  +'<div class="grid-2"><div class="field"><label for="ec-s">Spines (S)</label><input id="ec-s" type="number" min="2" max="32" step="1" value="8"></div>'
+  +'<div class="field"><label for="ec-l">Leaves (L)</label><input id="ec-l" type="number" min="2" max="32" step="1" value="8"></div></div>'
+  +'<div class="field" style="margin-top:.9rem"><label for="ec-n">Flows (N)</label><input id="ec-n" type="number" min="1000" max="100000" step="100" value="10000"></div>'
+  +'<div class="field" style="margin-top:.9rem"><label>Hash seed mode</label><div class="seg" id="ec-seg" role="group" aria-label="Hash seed mode"><button type="button" id="ec-ident" aria-pressed="true">Identical seed on every switch</button><button type="button" id="ec-varied" aria-pressed="false">Per-switch varied seeds</button></div></div>'
+  +'<div style="margin-top:1rem"><button type="button" class="btn" id="ec-run">Run simulation</button></div>'
+  +'<div id="ec-err" class="err" role="alert" style="margin-top:.6rem"></div></div>'
+  +'<div class="card panel"><h3>How the load landed</h3>'
+  +'<div class="stat-strip"><div class="stat"><span class="v" id="ec-ratio">—</span><span class="l">Polarization ratio (max ÷ mean cell)</span></div>'
+  +'<div class="stat"><span class="v" id="ec-max">—</span><span class="l">Hottest path-pair cell</span></div>'
+  +'<div class="stat"><span class="v" id="ec-mean">—</span><span class="l">Mean cell load (N ÷ S×L)</span></div>'
+  +'<div class="stat"><span class="v" id="ec-flows">—</span><span class="l">Flows simulated</span></div></div>'
+  +'<div id="ec-verdict" aria-live="polite"></div>'
+  +'<dl class="kv" id="ec-out" aria-live="polite"></dl>'
+  +'<h3 style="margin-top:1.4rem">Stage-2 load per leaf link</h3>'
+  +'<p style="color:var(--muted);font-size:.9rem;margin:.2rem 0 0">Flows by the spine→leaf link they left on. The amber tick marks the perfectly even share (N ÷ L).</p>'
+  +'<div class="ec-bars" id="ec-bars"></div>'
+  +'<h3 style="margin-top:1.4rem">Joint distribution: stage-1 × stage-2</h3>'
+  +'<p style="color:var(--muted);font-size:.9rem;margin:.2rem 0 0">Rows are the stage-1 link (leaf → spine), columns the stage-2 link (spine → leaf); each cell counts flows that took that exact pair of links. A healthy fabric fills the whole grid evenly. Polarization lights up a diagonal: stage-1 link <i>i</i> feeding only stage-2 link <i>i</i>, so the other S×L − S path pairs carry nothing. Hover any cell for its exact count.</p>'
+  +'<div class="ec-heat" id="ec-heat"></div>'
+  +'</div>'
+  +'</div>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">What polarization is, and how fabrics avoid it</h3>'
+  +'<ul><li><b>ECMP picks a path by hashing the 5-tuple.</b> Source and destination IP, source and destination port, and protocol go into a hash; the result modulo the link count chooses the next hop. Same flow, same hash, same path — that stability is the point, because it keeps a flow\'s packets in order.</li>'
+  +'<li><b>Identical seeds make the stages agree — and that is the bug.</b> In a two-stage Clos, a flow is hashed once at the leaf (choosing a spine) and again at the spine (choosing a leaf). If both switches hash the same 5-tuple with the same seed, the second hash returns the same number as the first. Stage-1 link <i>i</i> then pairs almost exclusively with stage-2 link <i>i</i>: traffic collapses onto the diagonal of the matrix above, a handful of path pairs carry everything, and the rest of the fabric idles while those links congest. Switch the seed mode above and compare the two heatmaps — same flows, same fabric, completely different outcome.</li>'
+  +'<li><b>The standard fixes all attack the correlation.</b> Per-switch (or per-stage) hash seed variation is the baseline: a different seed per device makes each stage\'s choice independent, which is the varied-seed mode simulated here. Resilient (consistent) hashing keeps flow-to-link assignments stable when a link fails, so a failure remaps only the dead link\'s flows instead of reshuffling the whole fabric. Flowlets re-balance at natural gaps in a flow, spraying bursts across paths without reordering packets. Symmetric hashing makes both directions of a conversation follow the same path, which stateful middleboxes and latency-sensitive fabrics care about.</li>'
+  +'<li><b>An honest note on the hash itself.</b> A seed only helps if changing it actually decorrelates the output. This tool hashes with FNV-1a, whose low bits — the bits the modulo reads — barely respond to a change in the initial seed, so raw FNV-1a would leave the two stages correlated even with different seeds. The hash here is therefore finished with the MurmurHash3 fmix32 avalanche, which mixes every input bit into every output bit; that is what lets the varied-seed mode spread. Real switch ASICs use CRC- or Toeplitz-family hashes with proper avalanche for the same reason — when you evaluate a platform, "configurable seed" is only half the question; the hash has to mix.</li></ul>'
+  +'<p style="color:var(--muted);font-size:.92rem">Size the fabric itself in the <a href="https://allaboutitinfrastructure.com/#/tools/dcap">data-center capacity planner</a>, read the <a href="https://allaboutitinfrastructure.com/#/article/hyperscaler-career-path">Hyperscaler career guide</a> for where Clos design lives on the job, then work the full <a href="https://allaboutitinfrastructure.com/#/track/hyperscaler">Hyperscaler track</a>.</p></div>'
+  +'<div style="margin-top:1.6rem">'+toolRows()+'</div>';
+  document.getElementById("tool").innerHTML=h; document.title="ECMP Hash Polarization Visualizer | Packet Path";
+  initECMP();
+}
+function initECMP(){
+  var varied=false, runNo=0;
+  function v(id){ return parseFloat($("#"+id).value); }
+  function setMode(x){
+    varied=x;
+    $("#ec-ident").setAttribute("aria-pressed",String(!x));
+    $("#ec-varied").setAttribute("aria-pressed",String(x));
+  }
+  function run(){
+    $("#ec-err").textContent=""; $("#ec-verdict").innerHTML="";
+    var S=v("ec-s"), L=v("ec-l"), N=v("ec-n");
+    if(isNaN(S)||S%1!==0||S<2||S>32){ $("#ec-err").textContent="Spines must be a whole number from 2 to 32."; return; }
+    if(isNaN(L)||L%1!==0||L<2||L>32){ $("#ec-err").textContent="Leaves must be a whole number from 2 to 32."; return; }
+    if(isNaN(N)||N%1!==0||N<1000||N>100000){ $("#ec-err").textContent="Flows must be a whole number from 1,000 to 100,000."; return; }
+    var r=ecmpSim(S,L,N,varied,0x2545F491+runNo*7919); runNo++;
+    var ratioEl=$("#ec-ratio");
+    ratioEl.textContent=r.ratio.toFixed(2)+"×";
+    ratioEl.className="v "+(r.ratio<1.5?"ec-good":(r.ratio>2?"ec-bad":"ec-mid"));
+    $("#ec-max").textContent=comma(r.maxCell);
+    $("#ec-mean").textContent=r.meanCell.toLocaleString("en-US",{maximumFractionDigits:1});
+    $("#ec-flows").textContent=comma(N);
+    var verdict;
+    if(r.ratio<1.5) verdict='<div class="callout key" style="margin:0"><strong class="t">Healthy — near-uniform spreading</strong>The hottest path pair carries '+r.ratio.toFixed(2)+'× the mean cell load. Every stage-1 → stage-2 combination is in use, so the fabric\'s full bisection is available to this traffic.</div>';
+    else if(r.ratio>2) verdict='<div class="callout" style="margin:0;border-left-color:#b3261e;border-color:#b3261e"><strong class="t" style="color:#b3261e">Polarized — traffic is collapsing onto a few paths</strong>The hottest path pair carries '+r.ratio.toFixed(2)+'× the mean cell load, and '+r.diagShare.toFixed(1)+'% of all flows sit on the diagonal. Those links congest while most of the fabric idles — the classic identical-seed failure. Flip to per-switch varied seeds and run it again.</div>';
+    else verdict='<div class="callout warn" style="margin:0"><strong class="t">Uneven — mild polarization</strong>The hottest path pair carries '+r.ratio.toFixed(2)+'× the mean cell load. Not a collapse, but the hot links will queue first under load; check seed configuration before blaming capacity.</div>';
+    $("#ec-verdict").innerHTML=verdict;
+    var rows=[];
+    rows.push(["Seed mode",varied?"Per-switch varied seeds":"Identical seed on every switch"]);
+    rows.push(["Fabric",S+" spines × "+L+" leaves ("+(S*L)+" path pairs)"]);
+    rows.push(["Hottest path pair","Stage-1 link "+(r.hotI+1)+" → stage-2 link "+(r.hotJ+1)+" — "+comma(r.maxCell)+" flows"]);
+    rows.push(["Diagonal traffic share",r.diagShare.toFixed(1)+"% of flows"]);
+    rows.push(["Polarization ratio",r.ratio.toFixed(2)+"× (max cell ÷ mean cell)"]);
+    $("#ec-out").innerHTML=rows.map(function(x){return "<dt>"+x[0]+"</dt><dd>"+x[1]+"</dd>";}).join("");
+    var maxS2=0,j;
+    for(j=0;j<L;j++) if(r.stage2[j]>maxS2) maxS2=r.stage2[j];
+    var even=N/L;
+    $("#ec-bars").innerHTML=r.stage2.map(function(c,j){
+      var w=maxS2?(100*c/maxS2):0, ew=maxS2?(100*even/maxS2):0;
+      return '<div class="ec-bar"><span class="lab">Leaf link '+(j+1)+'</span><span class="tr"><span class="fl" style="width:'+w.toFixed(1)+'%"></span><span class="exp" style="left:'+ew.toFixed(1)+'%"></span></span><span class="n">'+comma(c)+' ('+(100*c/N).toFixed(1)+'%)</span></div>';
+    }).join("");
+    var showNums=L<=16;
+    var heat='<span class="ec-ax"></span>';
+    for(j=0;j<L;j++) heat+='<span class="ec-ax">'+(j+1)+'</span>';
+    for(var i=0;i<S;i++){
+      heat+='<span class="ec-ax">'+(i+1)+'</span>';
+      for(j=0;j<L;j++){
+        var c=r.matrix[i][j], inten=r.maxCell?(c/r.maxCell):0;
+        heat+='<span class="ec-cell" title="Stage-1 link '+(i+1)+' → stage-2 link '+(j+1)+': '+comma(c)+' flows ('+(100*c/N).toFixed(1)+'% of all flows)"><span class="ec-fill" style="opacity:'+inten.toFixed(3)+'"></span>'+(showNums?'<span class="n">'+c+'</span>':'')+'</span>';
+      }
+    }
+    var heatEl=$("#ec-heat");
+    heatEl.style.gridTemplateColumns="auto repeat("+L+",minmax(0,1fr))";
+    heatEl.innerHTML=heat;
+  }
+  $("#ec-ident").addEventListener("click",function(){ setMode(false); run(); });
+  $("#ec-varied").addEventListener("click",function(){ setMode(true); run(); });
+  $("#ec-run").addEventListener("click",run);
+  ["ec-s","ec-l","ec-n"].forEach(function(id){ $("#"+id).addEventListener("input",run); });
+  run();
+}
+
+
+pageECMP();
+</script>
+</body>
+</html>
