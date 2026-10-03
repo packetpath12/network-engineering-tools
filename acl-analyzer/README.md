@@ -5,7 +5,7 @@ does — top-down, first match wins — and flags the rules that can never fire,
 the duplicates that add nothing, and the one line that quietly opens everything.
 
 **Live version:**
-[allaboutitinfrastructure.com/#/tools/acl-analyzer](https://allaboutitinfrastructure.com/#/tools/acl-analyzer)
+[allaboutitinfrastructure.com/tools/acl-analyzer/](https://allaboutitinfrastructure.com/tools/acl-analyzer/)
 
 **Run it:** open `index.html` in any browser. Single file, no dependencies,
 works offline. The analysis runs locally — your ACL never leaves the page.
