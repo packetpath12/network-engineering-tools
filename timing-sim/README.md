@@ -7,7 +7,7 @@ PI servo wander, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for
 every clock.
 
 **Live version:**
-[allaboutitinfrastructure.com/#/tools/timing-sim](https://allaboutitinfrastructure.com/#/tools/timing-sim)
+[allaboutitinfrastructure.com/tools/timing-sim/](https://allaboutitinfrastructure.com/tools/timing-sim/)
 
 **Run it:** open `index.html` in any browser. Single file, no dependencies,
 works offline. Everything is computed locally — nothing leaves the page.
