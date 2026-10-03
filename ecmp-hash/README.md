@@ -7,7 +7,7 @@ Run the simulation and watch it happen, then flip the seed mode and watch it
 heal.
 
 **Live version:**
-[allaboutitinfrastructure.com/#/tools/ecmp-hash](https://allaboutitinfrastructure.com/#/tools/ecmp-hash)
+[allaboutitinfrastructure.com/tools/ecmp-hash/](https://allaboutitinfrastructure.com/tools/ecmp-hash/)
 
 **Run it:** open `index.html` in any browser. Single file, no dependencies,
 works offline. Everything is computed locally — nothing leaves the page.
