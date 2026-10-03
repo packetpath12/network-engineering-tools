@@ -5,7 +5,7 @@ consistency verification — the "digital-twin scoped" v1: a browser tool that
 checks what your configs *actually* say before you push them.
 
 **Live version:**
-[allaboutitinfrastructure.com/#/tools/config-verify](https://allaboutitinfrastructure.com/#/tools/config-verify)
+[allaboutitinfrastructure.com/tools/config-verify/](https://allaboutitinfrastructure.com/tools/config-verify/)
 
 **Run it:** open `index.html` in any browser. Single file, no dependencies,
 works offline. Everything is computed locally — nothing leaves the page.
