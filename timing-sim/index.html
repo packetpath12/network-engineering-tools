@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PTP/SyncE Network-Wide Timing Simulator | Packet Path</title>
+<meta name="description" content="Simulate a PTP/SyncE timing chain over time: PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A-D checks. Simplified planning models.">
+<style>
+
+
+:root{
+  color-scheme:light dark;
+  --font-head:"Spectral",Georgia,"Times New Roman",serif;
+  --font-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f7faf8; --surface:#ffffff; --surface2:#eef4f1; --surface3:#e6eee9;
+  --ink:#142a25; --muted:#4f635b; --faint:#789089;
+  --line:#dde7e1; --line-soft:#eaf0ec;
+  --accent:#0a7d5f; --accent-strong:#076a51; --on-accent:#ffffff; --accent-soft:rgba(10,125,95,.10);
+  --teal:#0b6e99; --teal-soft:rgba(11,110,153,.10);
+  --amber:#9c5c00; --amber-soft:rgba(156,92,0,.10);
+  --warn-bg:#fff8e8; --warn-line:#e4b54d;
+  --code-bg:#0e1f1a; --code-ink:#e6f3ed; --code-line:#243530;
+  --link:#0b6e99;
+  --shadow:0 1px 2px rgba(16,40,32,.07),0 10px 28px -16px rgba(16,40,32,.25);
+  --radius:12px; --radius-sm:8px;
+}
+
+*{box-sizing:border-box}
+
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.62}
+
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+
+a:hover{text-decoration-thickness:2px}
+
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.18;letter-spacing:-.01em;text-wrap:balance}
+
+h1{font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 .55em}
+
+h3{font-size:1.12rem;margin:1.5em 0 .4em}
+
+p{margin:0 0 1.05em}
+
+html.darkm .theme-btn .moon{display:block}
+
+html.darkm .theme-btn .sun{display:none}
+
+html.lightm .theme-btn .moon{display:none}
+
+  html:not(.lightm):not(.darkm) .theme-btn .sun{display:none}
+
+.page-head{padding:2.4rem 0 1.2rem}
+
+.page-head .lede{font-size:1.12rem;color:var(--muted);max-width:62ch}
+
+.lede{font-size:1.13rem;color:var(--muted);max-width:56ch}
+
+.lede strong{color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.98rem;padding:.66rem 1.15rem;border-radius:10px;text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:var(--font-body)}
+
+.btn:hover{background:var(--accent-strong);color:var(--on-accent);text-decoration:none}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+.mini-tool header .t{font-family:var(--font-head);font-weight:700;font-size:1.15rem}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.field label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.3rem;letter-spacing:.02em}
+
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.55rem .7rem}
+
+.field textarea{min-height:120px;resize:vertical}
+
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .9rem;font-size:.94rem;background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem;margin:.4rem 0 0}
+
+.kv dt{color:var(--muted);font-weight:700;white-space:nowrap}
+
+.kv dd{margin:0;font-family:var(--font-mono);font-size:.93rem;overflow-wrap:anywhere}
+
+.err{color:#b3261e;font-size:.9rem;font-weight:700}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .err{color:#ff8a80}
+
+html.darkm .err{color:#ff8a80}
+
+.callout{border:1px solid var(--line);border-left:5px solid var(--teal);background:var(--teal-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.9rem 1.1rem;margin:1.3rem 0;font-size:.96rem}
+
+.callout.warn{border-left-color:var(--amber);background:var(--warn-bg);border-color:var(--warn-line)}
+
+.callout.key{border-left-color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+
+.callout strong.t{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;color:var(--teal)}
+
+.callout.warn strong.t{color:var(--amber)}
+
+.callout.key strong.t{color:var(--accent)}
+
+pre.code{position:relative;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:10px;padding:1rem 3.4rem 1rem 1.1rem;overflow:auto;font-family:var(--font-mono);font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+
+pre.code code{font:inherit}
+
+code.inline{font-family:var(--font-mono);font-size:.86em;background:var(--surface3);border:1px solid var(--line);border-radius:5px;padding:.08em .4em}
+
+table.tbl{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.94rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+
+table.tbl th,table.tbl td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+
+table.tbl thead th{background:var(--surface2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+table.tbl tr:last-child td{border-bottom:0}
+
+table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);white-space:nowrap}
+
+.tbl-wrap{overflow-x:auto;margin:0 -20px;padding:0 20px}
+
+.read-next .rn{padding:1.1rem 1.25rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+
+.read-next .rn:hover{border-color:var(--accent)}
+
+.read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
+
+.read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+.gear-card .why{background:var(--surface2);border-radius:var(--radius-sm);padding:.7rem .85rem;font-size:.88rem}
+
+.gear-card .why b{color:var(--ink)}
+
+.about-cols .card{padding:1.3rem}
+
+.tool-shell{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1.5rem;align-items:start}
+
+.panel{padding:1.4rem}
+
+.panel h3{margin-top:0;font-size:1.15rem}
+
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface3);border:1px solid var(--line);margin:.5rem 0}
+
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:pointer}
+
+.quiz-feedback.ok{display:block;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent)}
+
+html.darkm .quiz-feedback.ok,html:not(.lightm):not(.darkm) .quiz-feedback.ok{color:var(--accent)}
+
+html.darkm .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}
+
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:1.2rem 0}
+
+.stat{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem}
+
+.stat .v{font-family:var(--font-mono);font-weight:600;font-size:1.22rem;display:block;overflow-wrap:anywhere}
+
+.stat .l{font-size:.8rem;color:var(--muted)}
+
+/* ---------- SLA / capacity / tick-to-trade tools ---------- */
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+
+.seg button{font:inherit;font-weight:700;font-size:.88rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.42rem .95rem;cursor:pointer;white-space:nowrap}
+
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ---------- ECMP hash visualizer ---------- */
+.ec-bars{display:grid;gap:7px;margin:.9rem 0 0}
+
+.ec-bar{display:grid;grid-template-columns:96px minmax(0,1fr) 112px;gap:10px;align-items:center;font-size:.85rem}
+
+.ec-bar .lab{color:var(--muted);font-weight:700;white-space:nowrap}
+
+.ec-bar .tr{position:relative;height:18px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:5px}
+
+.ec-bar .fl{position:absolute;top:0;left:0;bottom:0;background:var(--teal);border-radius:4px 0 0 4px;min-width:2px}
+
+.ec-bar .exp{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--amber)}
+
+.ec-bar .n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+
+.ec-heat{display:grid;gap:3px;margin:.9rem 0 0;align-items:stretch}
+
+.ec-cell{position:relative;aspect-ratio:1.5;border-radius:4px;background:var(--surface3);overflow:hidden}
+
+.ec-fill{position:absolute;inset:0;background:var(--teal)}
+
+.ec-cell .n{position:relative;display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-mono);font-size:.66rem}
+
+.ec-ax{font-family:var(--font-mono);font-size:.68rem;color:var(--faint);display:flex;align-items:center;justify-content:center}
+
+.ec-good{color:#1c7a43}
+
+.ec-bad{color:#b3261e}
+
+.ec-mid{color:#9a6206}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .ec-good{color:#4cc38a}
+:root:not(.lightm) .ec-bad{color:#ff8a80}
+:root:not(.lightm) .ec-mid{color:#f0b13e}
+
+html.darkm .ec-good{color:#4cc38a}
+
+html.darkm .ec-bad{color:#ff8a80}
+
+html.darkm .ec-mid{color:#f0b13e}
+
+@media (max-width:560px){.ec-bar{grid-template-columns:70px minmax(0,1fr) 92px}
+.ec-bar .n{font-size:.7rem}
+.ec-cell .n{font-size:.55rem}
+
+/* ---------- ACL rule analyzer ---------- */
+.acl-findings{display:grid;gap:10px;margin:.9rem 0 0}
+
+.acl-row{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.75rem .9rem}
+
+.acl-row .acl-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.acl-row .rn{font-weight:700;font-size:.9rem;white-space:nowrap}
+
+.acl-row code{display:block;font-family:var(--font-mono);font-size:.82rem;overflow-wrap:anywhere;margin:.35rem 0 0;color:var(--muted)}
+
+.acl-row .why{font-size:.9rem;margin:.35rem 0 0}
+
+.acl-badge{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:.18rem .65rem;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+
+.acl-badge.sh{background:#fbe9e7;border-color:#e0a49e;color:#b3261e}
+
+.acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+
+.acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
+
+.acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+
+html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+
+html.lightm{color-scheme:light}
+
+  .tool-shell{grid-template-columns:1fr}
+
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .stat-strip{grid-template-columns:1fr 1fr}
+
+  body{font-size:12pt;background:#fff;color:#000}
+
+  .art-layout,.lead-grid,.card,.tool-shell{grid-template-columns:1fr}
+
+  .card{box-shadow:none;break-inside:avoid}
+
+  *{transition:none!important;animation:none!important}
+
+.pp-top{display:flex;align-items:center;gap:.6rem;padding:.8rem 1.2rem;border-bottom:1px solid var(--line,#dfe7e3);background:var(--surface,#fff);position:sticky;top:0;z-index:50}
+.pp-brand{font-weight:700;font-size:1.05rem;color:var(--ink,#142a25);text-decoration:none}
+.pp-top .pp-sep{color:var(--muted,#4f635b)}
+.pp-top .pp-tag{color:var(--muted,#4f635b);font-size:.92rem}
+.pp-main{max-width:74rem;margin:0 auto;padding:1.4rem 1.1rem 3rem}
+.pp-foot{border-top:1px solid var(--line,#dfe7e3);padding:1.2rem;color:var(--muted,#4f635b);font-size:.88rem;text-align:center}
+.pp-foot a{color:var(--link)}
+
+
+/* Packet Path — PTP/SyncE timing chain simulator: scoped styles.
+ * All classes are prefixed `tsim-`. Theme comes from the site's CSS vars
+ * (OS light/dark aware); fallbacks keep the fragment usable standalone. */
+.tsim-root { font-size: 15px; line-height: 1.55; }
+.tsim-crumb { font-size: .85rem; margin-bottom: .4rem; }
+.tsim-crumb a { color: var(--link, #0b6e99); text-decoration: none; font-weight: 700; }
+.tsim-crumb a:hover { text-decoration: underline; }
+.tsim-crumb span { color: var(--faint, #789089); margin: 0 .35rem; }
+.tsim-root h1 { font-family: var(--font-head, Georgia, serif); font-size: 1.9rem; line-height: 1.2; margin: .2rem 0 .5rem; color: var(--ink, #142a25); }
+.tsim-lede { color: var(--muted, #4f635b); max-width: 70ch; margin: 0 0 .6rem; }
+.tsim-simplabel {
+  display: inline-block; font-size: .8rem; font-weight: 700;
+  color: var(--amber, #9c5c00); background: var(--amber-soft, rgba(156,92,0,.10));
+  border: 1px solid var(--warn-line, #e4b54d); border-radius: 999px;
+  padding: .25rem .7rem; margin: 0 0 1rem;
+}
+.tsim-bar { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin-bottom: .6rem; }
+.tsim-btn {
+  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  color: var(--ink, #142a25); background: var(--surface, #fff);
+  border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px);
+  padding: .42rem .7rem;
+}
+.tsim-btn:hover { border-color: var(--accent, #0a7d5f); }
+.tsim-btn.on { background: var(--accent, #0a7d5f); border-color: var(--accent, #0a7d5f); color: var(--on-accent, #fff); }
+.tsim-btn.tsim-run { background: var(--accent, #0a7d5f); border-color: var(--accent, #0a7d5f); color: var(--on-accent, #fff); font-size: .95rem; padding: .5rem 1.1rem; }
+.tsim-btn.tsim-danger { color: #b23a48; border-color: #d8a3ab; margin-top: .6rem; }
+.tsim-in {
+  font: inherit; font-size: .85rem; color: var(--ink, #142a25);
+  background: var(--surface, #fff); border: 1px solid var(--line, #dde7e1);
+  border-radius: var(--radius-sm, 8px); padding: .4rem .55rem;
+}
+.tsim-num { width: 5.2rem; }
+.tsim-simbar label { font-size: .85rem; color: var(--muted, #4f635b); display: inline-flex; align-items: center; gap: .35rem; }
+.tsim-check input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--accent, #0a7d5f); }
+.tsim-err { color: #b23a48; font-size: .85rem; font-weight: 600; }
+.tsim-ws { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: .9rem; margin-bottom: .9rem; }
+@media (max-width: 900px) { .tsim-ws { grid-template-columns: 1fr; } }
+.tsim-card {
+  background: var(--surface, #fff); border: 1px solid var(--line, #dde7e1);
+  border-radius: var(--radius, 12px); padding: .9rem 1rem; margin-bottom: .9rem;
+  box-shadow: var(--shadow, 0 1px 2px rgba(16,40,32,.07));
+}
+.tsim-card h3 { margin: 0 0 .6rem; font-size: 1.02rem; color: var(--ink, #142a25); }
+.tsim-sub { font-weight: 400; font-size: .78rem; color: var(--muted, #4f635b); }
+.tsim-muted { color: var(--muted, #4f635b); font-size: .82rem; }
+.tsim-ed { width: 100%; height: auto; display: block; border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px); cursor: crosshair; touch-action: none; }
+.tsim-chart { width: 100%; height: auto; display: block; border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px); }
+.tsim-hint, .tsim-note { font-size: .82rem; color: var(--muted, #4f635b); margin: .55rem 0 0; }
+.tsim-note b { color: var(--ink, #142a25); }
+.tsim-legend { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin-top: .5rem; font-size: .82rem; }
+.tsim-leg i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .3rem; vertical-align: baseline; }
+.tsim-leg em { font-style: normal; color: var(--muted, #4f635b); }
+.tsim-cfghead { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; flex-wrap: wrap; }
+.tsim-chip {
+  font-size: .72rem; font-weight: 700; padding: .15rem .55rem; border-radius: 999px;
+  background: var(--accent-soft, rgba(10,125,95,.10)); color: var(--accent-strong, #076a51);
+  border: 1px solid var(--line, #dde7e1);
+}
+.tsim-f { display: block; margin-bottom: .55rem; font-size: .85rem; color: var(--muted, #4f635b); }
+.tsim-f .tsim-in { display: block; width: 100%; margin-top: .2rem; box-sizing: border-box; }
+.tsim-inrow { display: flex; align-items: center; gap: .4rem; margin-top: .2rem; }
+.tsim-inrow .tsim-in { flex: 1; margin-top: 0; }
+.tsim-unit { font-size: .78rem; color: var(--faint, #789089); white-space: nowrap; }
+.tsim-twrap { overflow-x: auto; }
+.tsim-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.tsim-table th, .tsim-table td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line-soft, #eaf0ec); }
+.tsim-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted, #4f635b); }
+.tsim-table td.num { font-family: var(--font-mono, ui-monospace, monospace); white-space: nowrap; }
+.tsim-verdict { font-size: .72rem; font-weight: 800; padding: .18rem .55rem; border-radius: 999px; letter-spacing: .03em; }
+.tsim-verdict.pass { background: var(--accent-soft, rgba(10,125,95,.10)); color: var(--accent-strong, #076a51); border: 1px solid var(--accent, #0a7d5f); }
+.tsim-verdict.fail { background: rgba(178,58,72,.08); color: #b23a48; border: 1px solid #d8a3ab; }
+.tsim-warn { color: var(--amber, #9c5c00); font-size: .78rem; font-weight: 600; }
+.tsim-blist { list-style: none; margin: .4rem 0 0; padding: 0; }
+.tsim-blist li { margin-bottom: .55rem; }
+.tsim-brow { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; font-size: .87rem; }
+.tsim-brow .num { font-family: var(--font-mono, ui-monospace, monospace); white-space: nowrap; }
+.tsim-bbar { height: .45rem; background: var(--surface2, #eef4f1); border-radius: 999px; margin-top: .25rem; overflow: hidden; }
+.tsim-bbar i { display: block; height: 100%; background: var(--accent, #0a7d5f); border-radius: 999px; }
+.tsim-what { border-left: 4px solid var(--amber, #9c5c00); }
+.tsim-what ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+.tsim-what li { margin-bottom: .45rem; font-size: .9rem; }
+.tsim-how { margin-top: 1.4rem; }
+.tsim-how h2 { font-family: var(--font-head, Georgia, serif); font-size: 1.35rem; margin: 0 0 .6rem; color: var(--ink, #142a25); }
+.tsim-how h3 { font-size: 1rem; margin: 1.1rem 0 .35rem; color: var(--ink, #142a25); }
+.tsim-how p, .tsim-how li { font-size: .9rem; color: var(--muted, #4f635b); }
+.tsim-how p b, .tsim-how li b { color: var(--ink, #142a25); }
+.tsim-how ul { padding-left: 1.2rem; }
+.tsim-eq {
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: .82rem;
+  background: var(--code-bg, #0e1f1a); color: var(--code-ink, #e6f3ed);
+  border-radius: var(--radius-sm, 8px); padding: .7rem .9rem; overflow-x: auto; margin: .5rem 0;
+}
+.tsim-eq .cm { color: var(--faint, #789089); }
+.tsim-results { margin-top: .4rem; }
+
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"PTP/SyncE network-wide timing simulator","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"}</script>
+</head>
+<body>
+<header class="pp-top"><a class="pp-brand" href="https://allaboutitinfrastructure.com">Packet Path</a><span class="pp-sep">/</span><span class="pp-tag">Free network engineering tools</span></header>
+<main id="tool" class="pp-main">
+ Packet Path — PTP/SyncE timing chain simulator (tool fragment).
+     Mounted by the SPA. Requires timing-sim.css + timing-sim.js (inline).
+     The JS auto-mounts into [data-tsim-app], or call TimingSim.mount(el). -->
+<div class="tsim-root" id="tsim">
+  <div class="tsim-crumb"><a href="https://allaboutitinfrastructure.com/#/tools">← All tools</a><span>·</span><a href="https://allaboutitinfrastructure.com/#/tools/ptp-budget">PTP timing budget</a></div>
+  <h1>PTP/SyncE timing chain simulator</h1>
+  <p class="tsim-lede">Draw a chain of grandmaster, boundary, transparent and slave clocks, set per-hop
+  asymmetry and noise, then simulate hours of PTP time error — servo wander, holdover drift, and
+  ITU-T G.8273.2 class checks included. Everything runs locally in your browser; nothing is uploaded.</p>
+  <p><span class="tsim-simplabel">Simplified planning models — not a substitute for lab validation</span></p>
+
+  <div data-tsim-app></div>
+
+  <section class="tsim-how" aria-label="How it works and assumptions">
+    <h2>How it works / assumptions</h2>
+    <p>This is a <b>discrete-time planning model</b> of a PTP timing chain (1&nbsp;s timestep, one
+    two-way exchange per step). It captures the dominant effects — servo tracking, asymmetry bias,
+    packet delay variation, oscillator wander, holdover — with honest simplifications, listed below.
+    <b>Simplified planning models, not a substitute for lab validation</b> against real hardware and
+    ITU-T test setups.</p>
+
+    <h3>The PI servo (per slave / boundary clock)</h3>
+    <p>Each slave and boundary clock steers its local clock with a proportional–integral loop driven
+    by the two-way PTP offset measurement against its upstream master:</p>
+    <div class="tsim-eq">e[k] &nbsp;&nbsp;= measured offset vs master (ns) <span class="cm">— includes asym/2 bias + PDV</span>
+I[k+1] = I[k] + Ki · e[k] · Δt            <span class="cm">— integrator state (ns)</span>
+u[k] &nbsp;&nbsp;= Kp · e[k] + I[k+1]             <span class="cm">— total correction (ns)</span>
+f[k] &nbsp;&nbsp;= f₀ − u[k] / (Δt · 10⁹)           <span class="cm">— fractional frequency applied</span>
+x[k+1] = x[k] + f[k] · Δt · 10⁹ + w[k]    <span class="cm">— clock phase (ns); w = wander noise</span></div>
+    <p>Defaults Kp&nbsp;=&nbsp;0.3, Ki&nbsp;=&nbsp;0.02 are numerically stable at Δt&nbsp;=&nbsp;1&nbsp;s.
+    The integrator is preloaded to cancel the <b>configured static ppm</b> — i.e. the model starts
+    frequency-locked and only has to acquire phase, asymmetry bias and noise. A real cold-starting
+    servo would show a longer pull-in transient; the chart here shows the (short) acquisition of the
+    asymmetry bias instead.</p>
+
+    <h3>Clock-noise approximation (disclosed)</h3>
+    <p>Oscillator wander <b>w[k]</b> is a <b>filtered-noise approximation</b> of power-law clock noise:
+    white Gaussian noise through a first-order low-pass filter (time constant τ ≈ 30&nbsp;s) <b>plus</b>
+    a random-walk (Wiener) component. This reproduces the right qualitative behavior — bounded fast
+    jitter riding on unbounded slow wander — but it is <b>not</b> a calibrated power-law generator
+    (real models distinguish white/flicker PM/FM and random-walk FM per ITU-T G.810, e.g. LibPLN-style
+    generators). Treat the “quiet / typical / noisy” profiles as relative planning knobs, not as
+    calibrated oscillator models.</p>
+
+    <h3>Two-way exchange and asymmetry</h3>
+    <p>Each exchange measures <b>offset ≈ (t₂−t₁) − (t₄−t₃) over 2</b>. If the master→slave path is longer
+    than the return path by <b>asym</b> ns, the estimate carries a fixed bias of <b>asym/2</b>, which the
+    servo obediently steers into the clock: the residual time error converges to <b>−asym/2 per span</b>.
+    Asymmetry <b>does not average out</b> — it is a fixed floor, which is why the bottleneck analysis
+    calls it out separately. Packet delay variation (PDV) is modeled as white Gaussian measurement
+    noise per exchange (σ from the span’s profile); transparent clocks add their residence-time jitter
+    to every exchange crossing them.</p>
+
+    <h3>Holdover</h3>
+    <p>At the configured GM/GPS loss time, all exchanges stop and every clock free-runs on its local
+    oscillator: <b>x[k+1] = x[k] + f₀·Δt·10⁹ + w[k]</b>, so a 1&nbsp;ppm oscillator drifts
+    3.6&nbsp;ms per hour. The chart shades the holdover region; the “what breaks” panel reports whether
+    holdover or the locked chain dominates each clock’s worst case.</p>
+
+    <h3>ITU-T G.8273.2 class checks</h3>
+    <p>Pass/fail is checked against the recommendation’s <b>noise-generation</b> limits (1000&nbsp;s,
+    applied here over the simulated interval):</p>
+    <ul>
+      <li><b>Class A:</b> max|TE| ≤ <b>100&nbsp;ns</b> (unfiltered)</li>
+      <li><b>Class B:</b> max|TE| ≤ <b>70&nbsp;ns</b> (unfiltered)</li>
+      <li><b>Class C:</b> max|TE| ≤ <b>30&nbsp;ns</b> (unfiltered)</li>
+      <li><b>Class D:</b> max|TEL| ≤ <b>5&nbsp;ns</b> — note this is the <b>0.1&nbsp;Hz low-pass filtered</b>
+      time error, exactly as the standard defines it (this tool applies the 0.1&nbsp;Hz filter before checking).</li>
+    </ul>
+    <p>Sources: Calnex “ITU-T G.8273.2 (T-BC and T-TSC) One-Page Summary”
+    (calnexsolutions.atlassian.net/wiki/spaces/GDW/pages/10027019/),
+    Calnex blog “G.8273.2 Specification for Class C and D Clocks”
+    (calnexsol.com/blog/g-8273-2-specification-for-class-c-and-d-clocks/),
+    Red Hat OpenShift PTP documentation (Class&nbsp;C max|TE| ≤ 30&nbsp;ns).
+    The spec additionally defines constant-TE (cTE: A&nbsp;50&nbsp;ns / B&nbsp;20&nbsp;ns / C&nbsp;10&nbsp;ns)
+    and dynamic-TE masks — not checked here.</p>
+
+    <h3>What this model leaves out</h3>
+    <ul>
+      <li>No BMCA grandmaster election or topology changes mid-run; one fixed reference.</li>
+      <li>No SyncE/ESMC frequency layer — wander comes only from the PTP servo and oscillator models.</li>
+      <li>No temperature ramps, packet-loss bursts, or correlated PDV (all noise is white/Gaussian).</li>
+      <li>Runs are <b>deterministic</b>: the same seed plus the same configuration always reproduces
+      bit-identical results (mulberry32 PRNG; the seed is shown with every result).</li>
+    </ul>
+  </section>
+</div>
+
+<div style="margin-top:1.6rem"><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0;color:var(--muted)"><a href="https://allaboutitinfrastructure.com/#/tools/ptp-budget">PTP timing budget calculator</a> · <a href="https://allaboutitinfrastructure.com/#/tools/ecmp-hash">ECMP hash polarization visualizer</a> · <a href="https://allaboutitinfrastructure.com/#/tools/acl-analyzer">Firewall ACL rule analyzer</a> · <a href="https://allaboutitinfrastructure.com/#/tools/config-verify">Network config verifier</a> — all free, all run entirely in your browser.</p></div></div>
+</main>
+<footer class="pp-foot">Free tool from <a href="https://allaboutitinfrastructure.com">Packet Path</a> · runs entirely in your browser — nothing is uploaded.<br>Open source under the MIT License · <a href="https://github.com/packetpath12/network-engineering-tools">github.com/packetpath12/network-engineering-tools</a></footer>
+<script>
+var TimingSim = (function () {
+'use strict';
+
+/* ============================ PART 1: CORE ============================ */
+
+/* ---------- Seeded PRNG (mulberry32) ---------- */
+function mulberry32(seed) {
+  var a = (seed >>> 0) || 1;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ---------- Gaussian sampler (Box–Muller, deterministic given rng) ---------- */
+function makeGaussian(rng) {
+  var spare = null;
+  return function () {
+    if (spare !== null) { var s = spare; spare = null; return s; }
+    var u = 0, v = 0;
+    while (u === 0) u = rng();
+    while (v === 0) v = rng();
+    var m = Math.sqrt(-2 * Math.log(u));
+    spare = m * Math.sin(2 * Math.PI * v);
+    return m * Math.cos(2 * Math.PI * v);
+  };
+}
+
+/* ---------- ITU-T G.8273.2 T-BC / T-TSC noise-generation limits ----------
+ * Verified values (see VALIDATION.md / on-page citations):
+ *   Class A: max|TE|  <= 100 ns   (unfiltered, 1000 s)
+ *   Class B: max|TE|  <=  70 ns   (unfiltered, 1000 s)
+ *   Class C: max|TE|  <=  30 ns   (unfiltered, 1000 s)
+ *   Class D: max|TEL| <=   5 ns   (TE through 0.1 Hz low-pass, 1000 s)
+ * NOTE: Class D uses the *filtered* metric max|TEL|, not raw max|TE|.
+ * The spec also defines cTE (constant TE, 1000 s average): A=50ns, B=20ns,
+ * C=10ns — reported on-page for reference but not pass/fail checked here.
+ */
+var G8273_2 = {
+  A: { maxTeNs: 100, metric: 'max|TE|',  filtered: false, filterHz: 0,
+       desc: 'Short chains (up to ~10 clocks), ±1.5 µs overall budget' },
+  B: { maxTeNs: 70,  metric: 'max|TE|',  filtered: false, filterHz: 0,
+       desc: 'Long chains (up to ~20 clocks), ±1.5 µs overall budget' },
+  C: { maxTeNs: 30,  metric: 'max|TE|',  filtered: false, filterHz: 0,
+       desc: 'Long chains, 5G fronthaul' },
+  D: { maxTeNs: 5,   metric: 'max|TEL|', filtered: true,  filterHz: 0.1,
+       desc: 'Low-noise timing transport (e.g. FlexE/FlexO)' }
+};
+var CLASS_ORDER = ['A', 'B', 'C', 'D'];
+
+/* ---------- Simplified noise profiles ----------
+ * Oscillator wander: filtered-noise APPROXIMATION of power-law clock noise —
+ * white Gaussian noise through a first-order low-pass (time constant tau)
+ * plus a random-walk (Wiener) component. Disclosed as an approximation
+ * on-page; see "How it works".
+ *   rw: random-walk sigma, ns per sqrt(s)
+ *   lp: low-pass-filtered white noise sigma, ns
+ */
+var OSC_PROFILES = {
+  none:    { rw: 0,    lp: 0,   tau: 30, label: 'None (ideal)' },
+  quiet:   { rw: 0.02, lp: 0.05, tau: 30, label: 'Quiet (good OCXO-ish)' },
+  typical: { rw: 0.15, lp: 0.4,  tau: 30, label: 'Typical' },
+  noisy:   { rw: 1.2,  lp: 3.0,  tau: 30, label: 'Noisy' }
+};
+/* PDV: per-exchange packet-delay-variation sigma (ns) added to the
+ * two-way offset measurement on a span / through a transparent clock. */
+var PDV_PROFILES = {
+  none:    { sigmaNs: 0,   label: 'None' },
+  quiet:   { sigmaNs: 2,   label: 'Quiet (±2 ns)' },
+  typical: { sigmaNs: 20,  label: 'Typical (±20 ns)' },
+  noisy:   { sigmaNs: 120, label: 'Noisy (±120 ns)' }
+};
+
+function pdvSigmaOfSpan(sp) {
+  var p = PDV_PROFILES[sp.pdvProfile] || PDV_PROFILES.typical;
+  return p.sigmaNs;
+}
+function pdvSigmaOfNode(n) {
+  var p = PDV_PROFILES[n.pdvProfile] || PDV_PROFILES.typical;
+  return p.sigmaNs;
+}
+
+/* ---------- PI servo step ----------
+ * Discrete PI loop, executed once per timestep (servo interval = dt):
+ *   e[k]    = measured offset vs master (ns)  [includes asym/2 bias + PDV]
+ *   I[k+1]  = I[k] + Ki * e[k] * dt            (integrator state, ns)
+ *   u[k]    = Kp * e[k] + I[k+1]               (total correction, ns)
+ *   f[k]    = f0 - u[k] / (dt * 1e9)           (fractional frequency applied)
+ *   x[k+1]  = x[k] + f[k] * dt * 1e9 + w[k]    (phase, ns)
+ * Sane defaults Kp=0.3, Ki=0.02 are stable for dt=1 s (verified numerically).
+ * The integrator is preloaded with I[0] = f0 * dt * 1e9 so the loop starts
+ * frequency-locked to the configured static ppm (disclosed on-page); phase,
+ * asymmetry bias and noise are still acquired dynamically.
+ */
+function servoStep(st, xMaster, gauss) {
+  var e = (st.x - xMaster) + st.asymPath + st.pdv * gauss();
+  st.I += st.Ki * e * st.dt;
+  var u = st.Kp * e + st.I;
+  return { e: e, u: u };
+}
+
+/* ---------- Chain simulation ----------
+ * spec: { nodes:[{id,label,type,Kp,Ki,ppm,oscProfile,pdvProfile}],
+ *         spans:[{id,from,to,asymNs,pdvProfile}], gmId }
+ *   node.type: 'gm' | 'bc' | 'tc' | 'slave'
+ * opts: { seed, dt (s), hours, holdoverAt (s|null), }
+ *
+ * Model:
+ *  - GM is the ideal reference (x = 0) until holdoverAt, then free-runs.
+ *  - Each BC/slave runs the PI servo against its nearest upstream non-TC
+ *    clock once per timestep. Asymmetry of every span on that path adds
+ *    asym/2 bias; PDV of spans + crossed TCs adds measurement noise.
+ *  - TCs are pass-through (no servo, no phase state).
+ *  - After holdoverAt (GM/GPS loss) all exchanges stop: every clock
+ *    free-runs on its local oscillator (ppm) plus wander noise.
+ * Time error of a node = its phase vs the ideal timescale (ns).
+ */
+function simulateChain(spec, opts) {
+  opts = opts || {};
+  var dt = opts.dt > 0 ? opts.dt : 1;
+  var hours = opts.hours > 0 ? opts.hours : 8;
+  var steps = Math.max(1, Math.round((hours * 3600) / dt));
+  var seed = (opts.seed == null ? 1 : opts.seed) >>> 0;
+  var holdoverAt = (opts.holdoverAt == null ? null : +opts.holdoverAt);
+
+  var rng = mulberry32(seed);
+  var gauss = makeGaussian(rng);
+
+  var nodeById = {};
+  (spec.nodes || []).forEach(function (n) { nodeById[n.id] = n; });
+  var gm = nodeById[spec.gmId];
+  if (!gm || gm.type !== 'gm') {
+    return { ok: false, error: 'A single grandmaster (GM) node is required as the timing reference.' };
+  }
+
+  /* adjacency + BFS parents (shortest path toward GM) */
+  var adj = {};
+  (spec.nodes || []).forEach(function (n) { adj[n.id] = []; });
+  (spec.spans || []).forEach(function (sp) {
+    if (!adj[sp.from] || !adj[sp.to]) return;
+    adj[sp.from].push({ to: sp.to, span: sp });
+    adj[sp.to].push({ to: sp.from, span: sp });
+  });
+  var parent = {}, pspan = {}, depth = {};
+  depth[spec.gmId] = 0;
+  var queue = [spec.gmId];
+  while (queue.length) {
+    var cur = queue.shift();
+    adj[cur].forEach(function (e) {
+      if (depth[e.to] == null) {
+        depth[e.to] = depth[cur] + 1;
+        parent[e.to] = cur;
+        pspan[e.to] = e.span;
+        queue.push(e.to);
+      }
+    });
+  }
+
+  /* runtime states */
+  var states = (spec.nodes || []).map(function (n) {
+    var op = OSC_PROFILES[n.oscProfile] || OSC_PROFILES.typical;
+    var y0 = (+n.ppm || 0) * 1e-6;
+    return {
+      id: n.id, label: n.label || n.id, type: n.type,
+      Kp: +n.Kp || 0, Ki: +n.Ki || 0, dt: dt,
+      y0: y0,
+      sigRw: op.rw, sigLp: op.lp, tau: op.tau,
+      /* Integrator preloaded to cancel the CONFIGURED static ppm, i.e. the
+       * loop starts frequency-locked (disclosed on-page). Phase, asymmetry
+       * bias, PDV and wander are still acquired dynamically. */
+      x: 0, I: y0 * dt * 1e9, nRw: 0, nLp: 0, tel: 0,
+      maxTe: 0, maxTel: 0, maxTePre: 0, maxTePost: 0,
+      masterId: null, asymPath: 0, pdv: 0, hasMaster: false,
+      depth: (depth[n.id] == null ? Infinity : depth[n.id])
+    };
+  });
+  var stById = {};
+  states.forEach(function (s) { stById[s.id] = s; });
+
+  /* servo path per BC/slave: walk upstream through TCs to nearest non-TC clock */
+  states.forEach(function (st) {
+    if (st.type !== 'bc' && st.type !== 'slave') return;
+    var cur = st.id, asym = 0, p2 = 0, guard = 0, master = null;
+    while (guard++ < 100000) {
+      var par = parent[cur];
+      if (par == null) break;
+      var sp = pspan[cur];
+      asym += (sp.asymNs || 0) / 2;
+      p2 += Math.pow(pdvSigmaOfSpan(sp), 2);
+      var pn = nodeById[par];
+      if (pn.type === 'tc') { p2 += Math.pow(pdvSigmaOfNode(pn), 2); cur = par; continue; }
+      master = par;
+      break;
+    }
+    if (master != null) {
+      st.masterId = master; st.asymPath = asym;
+      st.pdv = Math.sqrt(p2); st.hasMaster = true;
+    }
+  });
+
+  /* update order: upstream first so slaves see this step's master phase */
+  var order = states.slice().sort(function (a, b) { return a.depth - b.depth; });
+
+  var aT = 1 - Math.exp(-2 * Math.PI * 0.1 * dt); /* 0.1 Hz LPF for max|TEL| */
+  var recordEvery = Math.max(1, Math.ceil(steps / 1500));
+  var series = {};
+  states.forEach(function (st) {
+    if (st.type !== 'tc') series[st.id] = { t: [], te: [] };
+  });
+
+  for (var s = 0; s < steps; s++) {
+    var t = (s + 1) * dt;
+    var hold = (holdoverAt != null && t >= holdoverAt);
+    for (var i = 0; i < order.length; i++) {
+      var st = order[i];
+      /* oscillator wander increment (filtered-noise approximation) */
+      var w = 0;
+      if (st.type !== 'gm' || hold) {
+        var aLp = 1 - Math.exp(-dt / st.tau);
+        var dRw = st.sigRw * Math.sqrt(dt) * gauss();
+        st.nRw += dRw;
+        var dLp = aLp * (st.sigLp * gauss() - st.nLp);
+        st.nLp += dLp;
+        w = dRw + dLp;
+      }
+      if (st.type === 'gm') {
+        if (hold) st.x += st.y0 * dt * 1e9 + w;   /* GM free-runs on local osc */
+        else { st.x = 0; st.tel = 0; }            /* ideal reference */
+      } else if (st.type === 'tc') {
+        /* transparent: no phase state */
+      } else {
+        var m = st.masterId != null ? stById[st.masterId] : null;
+        if (m && !hold) {
+          var r = servoStep(st, m.x, gauss);
+          st.x += st.y0 * dt * 1e9 - r.u + w;
+        } else {
+          st.x += st.y0 * dt * 1e9 + w;           /* no master / holdover */
+        }
+      }
+      if (st.type !== 'tc') {
+        st.tel += aT * (st.x - st.tel);
+        var ax = Math.abs(st.x), at = Math.abs(st.tel);
+        if (ax > st.maxTe) st.maxTe = ax;
+        if (at > st.maxTel) st.maxTel = at;
+        if (hold) { if (ax > st.maxTePost) st.maxTePost = ax; }
+        else { if (ax > st.maxTePre) st.maxTePre = ax; }
+      }
+    }
+    if (s % recordEvery === 0) {
+      for (var k = 0; k < order.length; k++) {
+        var o = order[k];
+        if (o.type === 'tc') continue;
+        series[o.id].t.push(t / 3600);
+        series[o.id].te.push(o.x);
+      }
+    }
+  }
+
+  var results = states
+    .filter(function (st) { return st.type !== 'tc'; })
+    .map(function (st) {
+      return {
+        id: st.id, label: st.label, type: st.type, hasMaster: st.hasMaster,
+        masterId: st.masterId, asymPathNs: st.asymPath, pdvSigmaNs: st.pdv,
+        maxTeNs: st.maxTe, maxTelNs: st.maxTel,
+        maxTePreNs: st.maxTePre, maxTePostNs: st.maxTePost,
+        seriesT: series[st.id].t, seriesTe: series[st.id].te
+      };
+    });
+
+  return {
+    ok: true, seed: seed, dt: dt, hours: hours, steps: steps,
+    holdoverAt: holdoverAt, recordEvery: recordEvery,
+    nodes: results
+  };
+}
+
+/* ---------- G.8273.2 class check ----------
+ * Returns { class, metric, limitNs, valueNs, pass, overNs }.
+ * overNs > 0 means FAIL by that many ns (negative = margin).
+ */
+function checkClass(maxTeNs, maxTelNs, cls) {
+  var c = G8273_2[cls];
+  if (!c) return null;
+  var v = c.filtered ? maxTelNs : maxTeNs;
+  return {
+    class: cls, metric: c.metric, limitNs: c.maxTeNs, valueNs: v,
+    pass: v <= c.maxTeNs, overNs: v - c.maxTeNs
+  };
+}
+
+/* ---------- Bottleneck ranking ----------
+ * Ablation: re-run with each span idealized (asymmetry 0, PDV none) and
+ * measure how much the worst end-node max|TE| drops. Ranked descending.
+ * Same seed => deterministic.
+ */
+function cloneSpec(spec) {
+  return JSON.parse(JSON.stringify(spec));
+}
+function rankBottlenecks(spec, opts) {
+  var base = simulateChain(spec, opts);
+  if (!base.ok) return base;
+  var end = null;
+  base.nodes.forEach(function (n) {
+    if ((n.type === 'bc' || n.type === 'slave') && (!end || n.maxTeNs > end.maxTeNs)) end = n;
+  });
+  if (!end) return { ok: false, error: 'No boundary/slave clock reachable in the chain.' };
+  var rows = (spec.spans || []).map(function (sp) {
+    var s2 = cloneSpec(spec);
+    s2.spans.forEach(function (x) {
+      if (x.id === sp.id) { x.asymNs = 0; x.pdvProfile = 'none'; }
+    });
+    /* also neutralize a TC sitting on this span? TCs are nodes, not spans —
+       TC noise is attributed via the span walk only when the span is the
+       TC's uplink; keep ablation span-scoped and note TCs separately. */
+    var r = simulateChain(s2, opts);
+    var m2 = 0;
+    r.nodes.forEach(function (n) { if (n.id === end.id) m2 = n.maxTeNs; });
+    var nA = null, nB = null;
+    (spec.nodes || []).forEach(function (n) {
+      if (n.id === sp.from) nA = n; if (n.id === sp.to) nB = n;
+    });
+    return {
+      spanId: sp.id,
+      label: (nA ? (nA.label || nA.id) : sp.from) + ' → ' + (nB ? (nB.label || nB.id) : sp.to),
+      asymNs: sp.asymNs || 0,
+      pdvProfile: sp.pdvProfile || 'typical',
+      endMaxBaseNs: end.maxTeNs,
+      endMaxIdealNs: m2,
+      contribNs: Math.max(0, end.maxTeNs - m2)
+    };
+  });
+  rows.sort(function (a, b) { return b.contribNs - a.contribNs; });
+  return { ok: true, endNodeId: end.id, endNodeLabel: end.label, endMaxNs: end.maxTeNs, rows: rows };
+}
+
+/* ---------- formatting helpers (pure) ---------- */
+function fmtTe(ns) {
+  var a = Math.abs(ns);
+  if (a < 1000) return ns.toFixed(1) + ' ns';
+  if (a < 1e6) return (ns / 1e3).toFixed(2) + ' µs';
+  if (a < 1e9) return (ns / 1e6).toFixed(3) + ' ms';
+  return (ns / 1e9).toFixed(3) + ' s';
+}
+function fmtSignedTe(ns) {
+  return (ns < 0 ? '−' : '') + fmtTe(ns).replace('-', '');
+}
+
+return {
+  mulberry32: mulberry32,
+  makeGaussian: makeGaussian,
+  G8273_2: G8273_2,
+  CLASS_ORDER: CLASS_ORDER,
+  OSC_PROFILES: OSC_PROFILES,
+  PDV_PROFILES: PDV_PROFILES,
+  servoStep: servoStep,
+  simulateChain: simulateChain,
+  checkClass: checkClass,
+  rankBottlenecks: rankBottlenecks,
+  cloneSpec: cloneSpec,
+  fmtTe: fmtTe,
+  fmtSignedTe: fmtSignedTe
+};
+})();
+
+/* Node / CommonJS interop for validation (validate.mjs) */
+if (typeof module !== 'undefined' && module.exports) { module.exports = TimingSim; }
+if (typeof window !== 'undefined') { window.TimingSim = TimingSim; }
+
+/* ============================ PART 2: BROWSER UI ============================
+ * Chain editor + results rendering. Only defined when `document` exists.
+ * Mounted by the host page: TimingSim.mount(document.querySelector('[data-tsim-app]'))
+ * (auto-mounts on DOMContentLoaded when the fragment is present).
+ */
+(function () {
+if (typeof document === 'undefined') return;
+
+var T = TimingSim;
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function el(tag, cls, html) {
+  var d = document.createElement(tag);
+  if (cls) d.className = cls;
+  if (html != null) d.innerHTML = html;
+  return d;
+}
+function isDark() {
+  var h = document.documentElement;
+  if (h.classList.contains('darkm')) return true;
+  if (h.classList.contains('lightm')) return false;
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+var PAL_L = ['#0a7d5f', '#0b6e99', '#9c5c00', '#b23a48', '#6a4fb0', '#0f766e', '#a33d8f'];
+var PAL_D = ['#3cd79a', '#5fc4e6', '#f0b13e', '#ff8a80', '#b79bf0', '#4dd0c4', '#f08bc0'];
+
+var TYPE_META = {
+  gm:    { name: 'Grandmaster', short: 'GM' },
+  bc:    { name: 'Boundary clock', short: 'BC' },
+  tc:    { name: 'Transparent clock', short: 'TC' },
+  slave: { name: 'Slave clock', short: 'S' }
+};
+
+var PRESETS = {
+  fronthaul: {
+    label: '5G fronthaul · GM→BC→BC→slave (quiet)',
+    nodes: [
+      { type: 'gm', x: 90, y: 210, ppm: 0.05, oscProfile: 'quiet' },
+      { type: 'bc', x: 260, y: 210, Kp: 0.3, Ki: 0.02, ppm: 0.1, oscProfile: 'quiet' },
+      { type: 'bc', x: 430, y: 210, Kp: 0.3, Ki: 0.02, ppm: 0.1, oscProfile: 'quiet' },
+      { type: 'slave', x: 600, y: 210, Kp: 0.3, Ki: 0.02, ppm: 0.1, oscProfile: 'quiet' }
+    ],
+    spans: [
+      [0, 1, 10, 'quiet'], [1, 2, 10, 'quiet'], [2, 3, 10, 'quiet']
+    ],
+    sim: { hours: 8, cls: 'C' }
+  },
+  longhaul: {
+    label: 'Noisy long-haul · GM→TC→BC→TC→slave',
+    nodes: [
+      { type: 'gm', x: 70, y: 210, ppm: 0.05, oscProfile: 'typical' },
+      { type: 'tc', x: 210, y: 130, pdvProfile: 'noisy' },
+      { type: 'bc', x: 360, y: 210, Kp: 0.3, Ki: 0.02, ppm: 0.1, oscProfile: 'typical' },
+      { type: 'tc', x: 510, y: 290, pdvProfile: 'noisy' },
+      { type: 'slave', x: 650, y: 210, Kp: 0.3, Ki: 0.02, ppm: 0.1, oscProfile: 'typical' }
+    ],
+    spans: [
+      [0, 1, 100, 'noisy'], [1, 2, 50, 'noisy'], [2, 3, 100, 'noisy'], [3, 4, 100, 'noisy']
+    ],
+    sim: { hours: 8, cls: 'C' }
+  },
+  hft: {
+    label: 'HFT colo · GM→slave direct (Class D attempt)',
+    nodes: [
+      { type: 'gm', x: 150, y: 210, ppm: 0.05, oscProfile: 'quiet' },
+      { type: 'slave', x: 560, y: 210, Kp: 0.3, Ki: 0.02, ppm: 0.01, oscProfile: 'quiet' }
+    ],
+    spans: [[0, 1, 2, 'quiet']],
+    sim: { hours: 8, cls: 'D' }
+  }
+};
+
+function mount(root) {
+  var S = {
+    nodes: [], spans: [], seq: { gm: 0, bc: 0, tc: 0, slave: 0 }, nid: 1, sid: 1,
+    mode: 'select', sel: null, connectFrom: null,
+    sim: { hours: 8, seed: (Date.now() % 90000) + 1000, holdover: false, holdoverHrs: 2, cls: 'C' },
+    result: null, bottl: null
+  };
+
+  /* ---------- toolbar ---------- */
+  var bar = el('div', 'tsim-bar');
+  var modeBtns = [
+    ['select', 'Select / move'], ['connect', 'Connect nodes'], ['delete', 'Delete'],
+    ['add:gm', '+ GM'], ['add:bc', '+ BC'], ['add:tc', '+ TC'], ['add:slave', '+ Slave']
+  ];
+  var btnRefs = {};
+  modeBtns.forEach(function (mb) {
+    var b = el('button', 'tsim-btn' + (mb[0] === 'select' ? ' on' : ''), esc(mb[1]));
+    b.type = 'button';
+    b.dataset.mode = mb[0];
+    b.addEventListener('click', function () { setMode(mb[0]); });
+    btnRefs[mb[0]] = b;
+    bar.appendChild(b);
+  });
+  function setMode(m) {
+    S.mode = m; S.connectFrom = null;
+    Object.keys(btnRefs).forEach(function (k) {
+      btnRefs[k].classList.toggle('on', k === m);
+    });
+    drawEditor();
+  }
+
+  var presetSel = el('select', 'tsim-in', '');
+  presetSel.innerHTML = '<option value="">Load example chain…</option>' +
+    Object.keys(PRESETS).map(function (k) {
+      return '<option value="' + k + '">' + esc(PRESETS[k].label) + '</option>';
+    }).join('');
+  presetSel.addEventListener('change', function () {
+    if (presetSel.value) loadPreset(presetSel.value);
+    presetSel.value = '';
+  });
+  bar.appendChild(presetSel);
+
+  function loadPreset(key) {
+    var p = PRESETS[key];
+    S.nodes = []; S.spans = []; S.seq = { gm: 0, bc: 0, tc: 0, slave: 0 };
+    var ids = p.nodes.map(function (pn) {
+      S.seq[pn.type]++;
+      var n = {
+        id: 'n' + (S.nid++), type: pn.type,
+        label: (pn.type === 'gm' ? 'GM' : TYPE_META[pn.type].short + S.seq[pn.type]),
+        x: pn.x, y: pn.y,
+        Kp: pn.Kp != null ? pn.Kp : 0.3, Ki: pn.Ki != null ? pn.Ki : 0.02,
+        ppm: pn.ppm != null ? pn.ppm : 0.1,
+        oscProfile: pn.oscProfile || 'typical',
+        pdvProfile: pn.pdvProfile || 'typical'
+      };
+      S.nodes.push(n);
+      return n.id;
+    });
+    p.spans.forEach(function (ps) {
+      S.spans.push({
+        id: 's' + (S.sid++), from: ids[ps[0]], to: ids[ps[1]],
+        asymNs: ps[2], pdvProfile: ps[3]
+      });
+    });
+    if (p.sim) {
+      if (p.sim.hours) { S.sim.hours = p.sim.hours; hoursIn.value = p.sim.hours; }
+      if (p.sim.cls) { S.sim.cls = p.sim.cls; clsSel.value = p.sim.cls; }
+    }
+    S.sel = null; S.result = null; S.bottl = null;
+    resultsBox.style.display = 'none';
+    renderConfig(); drawEditor();
+  }
+
+  /* ---------- sim controls ---------- */
+  var simbar = el('div', 'tsim-bar tsim-simbar');
+  simbar.innerHTML =
+    '<label>Sim hours <input id="tsim-hours" class="tsim-in tsim-num" type="number" min="0.25" max="48" step="0.25" value="8"></label>' +
+    '<label>Seed <input id="tsim-seed" class="tsim-in tsim-num" type="number" min="0" max="999999999" step="1" value="' + S.sim.seed + '"></label>' +
+    '<button id="tsim-reseed" class="tsim-btn" type="button" title="Pick a new random seed">↻ seed</button>' +
+    '<label class="tsim-check"><input id="tsim-ho" type="checkbox"> GM/GPS loss at <input id="tsim-hoh" class="tsim-in tsim-num" type="number" min="0" max="48" step="0.25" value="2" disabled> h</label>' +
+    '<label>Class <select id="tsim-cls" class="tsim-in"><option>A</option><option>B</option><option selected>C</option><option>D</option></select></label>' +
+    '<button id="tsim-run" class="tsim-btn tsim-run" type="button">Run simulation</button>' +
+    '<span id="tsim-err" class="tsim-err" role="alert"></span>';
+  var hoursIn = simbar.querySelector('#tsim-hours');
+  var seedIn = simbar.querySelector('#tsim-seed');
+  var hoChk = simbar.querySelector('#tsim-ho');
+  var hoHrs = simbar.querySelector('#tsim-hoh');
+  var clsSel = simbar.querySelector('#tsim-cls');
+  var errBox = simbar.querySelector('#tsim-err');
+  simbar.querySelector('#tsim-reseed').addEventListener('click', function () {
+    S.sim.seed = Math.floor(Math.random() * 90000) + 1000;
+    seedIn.value = S.sim.seed;
+  });
+  hoChk.addEventListener('change', function () { hoHrs.disabled = !hoChk.checked; });
+  simbar.querySelector('#tsim-run').addEventListener('click', runSim);
+
+  /* ---------- workspace: canvas + config ---------- */
+  var ws = el('div', 'tsim-ws');
+  var ccard = el('div', 'tsim-card');
+  ccard.innerHTML = '<h3>Timing chain</h3>';
+  var cv = document.createElement('canvas');
+  cv.className = 'tsim-ed';
+  cv.width = 760; cv.height = 440;
+  ccard.appendChild(cv);
+  ccard.appendChild(el('p', 'tsim-hint',
+    'Add nodes with the + buttons, click “Connect nodes”, then click two nodes to join them with a fiber span. ' +
+    'Drag nodes to rearrange. Click a node or span to configure it.'));
+  var cfg = el('div', 'tsim-card tsim-cfg');
+  cfg.innerHTML = '<h3>Configuration</h3><div id="tsim-cfgb"></div>';
+  var cfgBody = cfg.querySelector('#tsim-cfgb');
+  ws.appendChild(ccard); ws.appendChild(cfg);
+
+  var resultsBox = el('div', 'tsim-results');
+  resultsBox.style.display = 'none';
+
+  root.appendChild(bar); root.appendChild(simbar); root.appendChild(ws); root.appendChild(resultsBox);
+
+  /* ================= editor ================= */
+  var ctx = cv.getContext('2d');
+  var drag = null;
+
+  function cssPos(ev) {
+    var r = cv.getBoundingClientRect();
+    return { x: (ev.clientX - r.left) * (cv.width / r.width), y: (ev.clientY - r.top) * (cv.height / r.height) };
+  }
+  function nodeAt(p) {
+    for (var i = S.nodes.length - 1; i >= 0; i--) {
+      var n = S.nodes[i];
+      if (Math.hypot(n.x - p.x, n.y - p.y) <= 26) return n;
+    }
+    return null;
+  }
+  function spanAt(p) {
+    for (var i = S.spans.length - 1; i >= 0; i--) {
+      var sp = S.spans[i];
+      var a = byId(sp.from), b = byId(sp.to);
+      if (!a || !b) continue;
+      if (ptSeg(p, a, b) <= 9) return sp;
+    }
+    return null;
+  }
+  function byId(id) {
+    for (var i = 0; i < S.nodes.length; i++) if (S.nodes[i].id === id) return S.nodes[i];
+    return null;
+  }
+  function ptSeg(p, a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var L2 = dx * dx + dy * dy;
+    var t = L2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  }
+
+  function nodeColor(type) {
+    var d = isDark();
+    return { gm: d ? '#e8c34a' : '#9c7a00', bc: d ? '#3cd79a' : '#0a7d5f',
+             tc: d ? '#5fc4e6' : '#0b6e99', slave: d ? '#f0b13e' : '#9c5c00' }[type];
+  }
+
+  function drawEditor() {
+    var d = isDark();
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = d ? '#101816' : '#f7faf8';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    /* spans */
+    S.spans.forEach(function (sp) {
+      var a = byId(sp.from), b = byId(sp.to);
+      if (!a || !b) return;
+      var sel = S.sel && S.sel.kind === 'span' && S.sel.id === sp.id;
+      ctx.strokeStyle = sel ? (d ? '#5fc4e6' : '#0b6e99') : (d ? '#5b6f66' : '#9db3a8');
+      ctx.lineWidth = sel ? 3 : 2;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      var lab = (sp.asymNs || 0) + 'ns · ' + (T.PDV_PROFILES[sp.pdvProfile] ? T.PDV_PROFILES[sp.pdvProfile].label.split(' ')[0] : '');
+      ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+      var wpx = ctx.measureText(lab).width;
+      ctx.fillStyle = d ? '#101816' : '#f7faf8';
+      ctx.fillRect(mx - wpx / 2 - 3, my - 9, wpx + 6, 15);
+      ctx.fillStyle = d ? '#a5b9b0' : '#4f635b';
+      ctx.textAlign = 'center';
+      ctx.fillText(lab, mx, my + 3);
+    });
+    /* nodes */
+    S.nodes.forEach(function (n) {
+      var c = nodeColor(n.type);
+      var sel = S.sel && S.sel.kind === 'node' && S.sel.id === n.id;
+      var isFrom = S.connectFrom === n.id;
+      ctx.lineWidth = sel || isFrom ? 3.5 : 2.5;
+      ctx.strokeStyle = sel ? (d ? '#ffffff' : '#142a25') : c;
+      ctx.fillStyle = d ? '#101816' : '#ffffff';
+      if (isFrom) { ctx.setLineDash([5, 4]); }
+      if (n.type === 'gm') {
+        ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(n.x, n.y, 11, 0, 7); ctx.stroke();
+        ctx.fillStyle = c; ctx.beginPath(); ctx.arc(n.x, n.y, 4, 0, 7); ctx.fill();
+      } else if (n.type === 'bc') {
+        roundRect(n.x - 19, n.y - 19, 38, 38, 9); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = c; ctx.beginPath(); ctx.arc(n.x, n.y, 5, 0, 7); ctx.fill();
+      } else if (n.type === 'tc') {
+        ctx.beginPath(); ctx.moveTo(n.x, n.y - 21); ctx.lineTo(n.x + 21, n.y);
+        ctx.lineTo(n.x, n.y + 21); ctx.lineTo(n.x - 21, n.y); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.arc(n.x, n.y, 19, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = c; ctx.beginPath(); ctx.arc(n.x, n.y, 5, 0, 7); ctx.fill();
+      }
+      ctx.setLineDash([]);
+      ctx.fillStyle = d ? '#e9f2ee' : '#142a25';
+      ctx.font = 'bold 12px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center';
+      ctx.fillText(n.label, n.x, n.y + 38);
+      ctx.font = '10px ' + getComputedStyle(document.body).fontFamily;
+      ctx.fillStyle = d ? '#7c938a' : '#789089';
+      ctx.fillText(TYPE_META[n.type].short, n.x, n.y + 51);
+    });
+    if (!S.nodes.length) {
+      ctx.fillStyle = d ? '#7c938a' : '#789089';
+      ctx.font = '14px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center';
+      ctx.fillText('Click “Load example chain…” or add nodes with the + buttons.', cv.width / 2, cv.height / 2);
+    }
+  }
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  cv.addEventListener('pointerdown', function (ev) {
+    var p = cssPos(ev);
+    var n = nodeAt(p);
+    if (S.mode === 'select' && n) {
+      drag = { id: n.id, moved: false, sx: p.x, sy: p.y };
+      cv.setPointerCapture(ev.pointerId);
+    }
+  });
+  cv.addEventListener('pointermove', function (ev) {
+    if (!drag) return;
+    var p = cssPos(ev);
+    if (Math.hypot(p.x - drag.sx, p.y - drag.sy) > 4) drag.moved = true;
+    if (drag.moved) {
+      var n = byId(drag.id);
+      n.x = Math.max(24, Math.min(cv.width - 24, p.x));
+      n.y = Math.max(24, Math.min(cv.height - 60, p.y));
+      drawEditor();
+    }
+  });
+  cv.addEventListener('pointerup', function (ev) {
+    var p = cssPos(ev);
+    if (drag) {
+      var wasDrag = drag.moved;
+      var dn = byId(drag.id);
+      drag = null;
+      if (wasDrag) { drawEditor(); return; }
+      S.sel = { kind: 'node', id: dn.id };
+      renderConfig(); drawEditor();
+      return;
+    }
+    handleClick(p);
+  });
+  function handleClick(p) {
+    var n = nodeAt(p), sp = n ? null : spanAt(p);
+    if (S.mode.indexOf('add:') === 0) {
+      var type = S.mode.slice(4);
+      if (type === 'gm' && S.nodes.some(function (x) { return x.type === 'gm'; })) {
+        errBox.textContent = 'Only one grandmaster is allowed — delete the existing GM first.';
+        return;
+      }
+      S.seq[type]++;
+      var nn = {
+        id: 'n' + (S.nid++), type: type,
+        label: type === 'gm' ? 'GM' : TYPE_META[type].short + S.seq[type],
+        x: Math.max(30, Math.min(cv.width - 30, p.x)),
+        y: Math.max(30, Math.min(cv.height - 70, p.y)),
+        Kp: 0.3, Ki: 0.02, ppm: type === 'gm' ? 0.05 : 0.1,
+        oscProfile: 'typical', pdvProfile: 'typical'
+      };
+      S.nodes.push(nn);
+      S.sel = { kind: 'node', id: nn.id };
+      errBox.textContent = '';
+      renderConfig(); drawEditor();
+      return;
+    }
+    if (S.mode === 'connect') {
+      errBox.textContent = '';
+      if (!n) return;
+      if (!S.connectFrom) { S.connectFrom = n.id; drawEditor(); return; }
+      if (S.connectFrom === n.id) { S.connectFrom = null; drawEditor(); return; }
+      var dup = S.spans.some(function (x) {
+        return (x.from === S.connectFrom && x.to === n.id) || (x.from === n.id && x.to === S.connectFrom);
+      });
+      if (!dup) {
+        var s = { id: 's' + (S.sid++), from: S.connectFrom, to: n.id, asymNs: 0, pdvProfile: 'typical' };
+        S.spans.push(s);
+        S.sel = { kind: 'span', id: s.id };
+        renderConfig();
+      }
+      S.connectFrom = null;
+      drawEditor();
+      return;
+    }
+    if (S.mode === 'delete') {
+      if (n) {
+        S.nodes = S.nodes.filter(function (x) { return x.id !== n.id; });
+        S.spans = S.spans.filter(function (x) { return x.from !== n.id && x.to !== n.id; });
+        if (S.connectFrom === n.id) S.connectFrom = null;
+      } else if (sp) {
+        S.spans = S.spans.filter(function (x) { return x.id !== sp.id; });
+      }
+      S.sel = null;
+      renderConfig(); drawEditor();
+      return;
+    }
+    /* select mode */
+    if (n) S.sel = { kind: 'node', id: n.id };
+    else if (sp) S.sel = { kind: 'span', id: sp.id };
+    else S.sel = null;
+    renderConfig(); drawEditor();
+  }
+
+  /* ================= config panel ================= */
+  function numField(id, labelTxt, val, min, max, step, unit) {
+    return '<label class="tsim-f">' + esc(labelTxt) +
+      '<span class="tsim-inrow"><input id="' + id + '" class="tsim-in tsim-num" type="number" value="' + esc(val) +
+      '" min="' + min + '" max="' + max + '" step="' + step + '">' +
+      (unit ? '<span class="tsim-unit">' + esc(unit) + '</span>' : '') + '</span></label>';
+  }
+  function profSelect(id, labelTxt, profiles, cur) {
+    return '<label class="tsim-f">' + esc(labelTxt) + '<select id="' + id + '" class="tsim-in">' +
+      Object.keys(profiles).map(function (k) {
+        return '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(profiles[k].label) + '</option>';
+      }).join('') + '</select></label>';
+  }
+  function renderConfig() {
+    var h = '';
+    if (S.sel && S.sel.kind === 'node') {
+      var n = byId(S.sel.id);
+      if (!n) { S.sel = null; }
+      else {
+        h += '<div class="tsim-cfghead"><strong>' + esc(n.label) + '</strong>' +
+          '<span class="tsim-chip">' + esc(TYPE_META[n.type].name) + '</span></div>';
+        h += '<label class="tsim-f">Label<input id="cf-label" class="tsim-in" type="text" value="' + esc(n.label) + '" maxlength="12"></label>';
+        h += '<label class="tsim-f">Clock type<select id="cf-type" class="tsim-in">' +
+          Object.keys(TYPE_META).map(function (t) {
+            return '<option value="' + t + '"' + (t === n.type ? ' selected' : '') + '>' + esc(TYPE_META[t].name) + '</option>';
+          }).join('') + '</select></label>';
+        if (n.type === 'bc' || n.type === 'slave') {
+          h += numField('cf-kp', 'Servo Kp (proportional)', n.Kp, 0, 2, 0.05, '');
+          h += numField('cf-ki', 'Servo Ki (integral)', n.Ki, 0, 1, 0.01, '');
+          h += numField('cf-ppm', 'Oscillator stability', n.ppm, -100, 100, 0.01, 'ppm');
+          h += profSelect('cf-osc', 'Wander/noise profile', T.OSC_PROFILES, n.oscProfile);
+        } else if (n.type === 'tc') {
+          h += profSelect('cf-tcnoise', 'Residence PDV added to crossing exchanges', T.PDV_PROFILES, n.pdvProfile);
+          h += '<p class="tsim-note">Transparent clocks forward PTP untouched; they add residence-time jitter to downstream measurements.</p>';
+        } else {
+          h += numField('cf-ppm', 'Holdover oscillator stability', n.ppm, -100, 100, 0.01, 'ppm');
+          h += profSelect('cf-osc', 'Wander/noise profile (holdover)', T.OSC_PROFILES, n.oscProfile);
+          h += '<p class="tsim-note">The grandmaster is the ideal reference (0 ns) until a GM/GPS loss, then it free-runs.</p>';
+        }
+        h += '<button id="cf-del" class="tsim-btn tsim-danger" type="button">Delete node</button>';
+      }
+    } else if (S.sel && S.sel.kind === 'span') {
+      var sp = null;
+      S.spans.forEach(function (x) { if (x.id === S.sel.id) sp = x; });
+      if (!sp) { S.sel = null; }
+      else {
+        var a = byId(sp.from), b = byId(sp.to);
+        h += '<div class="tsim-cfghead"><strong>Fiber span</strong>' +
+          '<span class="tsim-chip">' + esc(a ? a.label : '?') + ' → ' + esc(b ? b.label : '?') + '</span></div>';
+        h += numField('cf-asym', 'Path asymmetry (t_ms − t_sm)', sp.asymNs, -100000, 100000, 1, 'ns');
+        h += profSelect('cf-pdv', 'PDV / noise profile', T.PDV_PROFILES, sp.pdvProfile);
+        h += '<p class="tsim-note">Asymmetry biases the two-way offset estimate by <b>asym/2</b> — it does not average out.</p>';
+        h += '<button id="cf-del" class="tsim-btn tsim-danger" type="button">Delete span</button>';
+      }
+    } else {
+      h += '<p class="tsim-note">Click a node or span in the chain to configure it. ' +
+        'Each slave/boundary clock runs a PI servo against its upstream master once per simulated second.</p>' +
+        '<p class="tsim-note">Defaults: Kp 0.3, Ki 0.02, oscillator 0.1 ppm, “typical” noise profiles. ' +
+        'Deterministic: the same seed + configuration always gives identical results.</p>';
+    }
+    cfgBody.innerHTML = h;
+    /* wire */
+    function bind(id, fn) {
+      var i = cfgBody.querySelector('#' + id);
+      if (i) i.addEventListener('change', fn);
+    }
+    if (S.sel && S.sel.kind === 'node') {
+      var nn = byId(S.sel.id);
+      bind('cf-label', function (e) { nn.label = e.target.value.trim() || nn.label; drawEditor(); });
+      bind('cf-type', function (e) {
+        nn.type = e.target.value;
+        if (nn.type === 'gm' && S.nodes.some(function (x) { return x !== nn && x.type === 'gm'; })) {
+          errBox.textContent = 'Only one grandmaster is allowed.';
+          nn.type = 'bc'; e.target.value = 'bc';
+        }
+        renderConfig(); drawEditor();
+      });
+      bind('cf-kp', function (e) { nn.Kp = Math.max(0, Math.min(2, +e.target.value || 0)); });
+      bind('cf-ki', function (e) { nn.Ki = Math.max(0, Math.min(1, +e.target.value || 0)); });
+      bind('cf-ppm', function (e) { nn.ppm = +e.target.value || 0; });
+      bind('cf-osc', function (e) { nn.oscProfile = e.target.value; });
+      bind('cf-tcnoise', function (e) { nn.pdvProfile = e.target.value; });
+    } else if (S.sel && S.sel.kind === 'span') {
+      var ss = null;
+      S.spans.forEach(function (x) { if (x.id === S.sel.id) ss = x; });
+      if (ss) {
+        bind('cf-asym', function (e) { ss.asymNs = +e.target.value || 0; drawEditor(); });
+        bind('cf-pdv', function (e) { ss.pdvProfile = e.target.value; drawEditor(); });
+      }
+    }
+    var del = cfgBody.querySelector('#cf-del');
+    if (del) del.addEventListener('click', function () {
+      if (S.sel.kind === 'node') {
+        S.nodes = S.nodes.filter(function (x) { return x.id !== S.sel.id; });
+        S.spans = S.spans.filter(function (x) { return x.from !== S.sel.id && x.to !== S.sel.id; });
+      } else {
+        S.spans = S.spans.filter(function (x) { return x.id !== S.sel.id; });
+      }
+      S.sel = null; renderConfig(); drawEditor();
+    });
+  }
+
+  /* initial paint (ctx and helpers are initialized above) */
+  renderConfig();
+  drawEditor();
+
+
+  /* ================= run + results ================= */
+  function buildSpec() {
+    return {
+      nodes: S.nodes.map(function (n) {
+        return {
+          id: n.id, label: n.label, type: n.type, Kp: n.Kp, Ki: n.Ki,
+          ppm: n.ppm, oscProfile: n.oscProfile, pdvProfile: n.pdvProfile
+        };
+      }),
+      spans: S.spans.map(function (s) {
+        return { id: s.id, from: s.from, to: s.to, asymNs: s.asymNs, pdvProfile: s.pdvProfile };
+      }),
+      gmId: (S.nodes.filter(function (n) { return n.type === 'gm'; })[0] || {}).id
+    };
+  }
+
+  function runSim() {
+    errBox.textContent = '';
+    var gms = S.nodes.filter(function (n) { return n.type === 'gm'; });
+    if (gms.length !== 1) { errBox.textContent = 'The chain needs exactly one grandmaster (GM).'; return; }
+    if (!S.nodes.some(function (n) { return n.type === 'bc' || n.type === 'slave'; })) {
+      errBox.textContent = 'Add at least one boundary or slave clock to simulate.'; return;
+    }
+    S.sim.hours = Math.max(0.25, Math.min(48, +hoursIn.value || 8));
+    S.sim.seed = Math.max(0, (+seedIn.value || 0) >>> 0);
+    S.sim.holdover = hoChk.checked;
+    S.sim.holdoverHrs = Math.max(0, Math.min(48, +hoHrs.value || 0));
+    S.sim.cls = clsSel.value;
+    var opts = {
+      seed: S.sim.seed, hours: S.sim.hours,
+      holdoverAt: S.sim.holdover ? S.sim.holdoverHrs * 3600 : null
+    };
+    var spec = buildSpec();
+    errBox.textContent = 'Running…';
+    setTimeout(function () {
+      var t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      var res = T.simulateChain(spec, opts);
+      var bottl = T.rankBottlenecks(spec, opts);
+      var t1 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      errBox.textContent = '';
+      if (!res.ok) { errBox.textContent = res.error; return; }
+      S.result = res; S.bottl = bottl; S.ms = Math.round(t1 - t0);
+      renderResults();
+      resultsBox.style.display = '';
+      resultsBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 30);
+  }
+
+  /* ---------- symlog helpers ---------- */
+  var SYM_LIN = 10; /* ns: linear within ±10, log beyond */
+  function symF(v) {
+    var a = Math.abs(v);
+    if (a <= SYM_LIN) return v;
+    return (v < 0 ? -1 : 1) * (SYM_LIN + 2 * SYM_LIN * Math.log10(a / SYM_LIN));
+  }
+  var TICKS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 1e4, 2e4, 5e4,
+               1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7, 1e8];
+
+  function drawChart() {
+    var res = S.result;
+    var ch = document.getElementById('tsim-chart');
+    if (!ch) return;
+    var W = 760, H = 340, PADL = 64, PADR = 12, PADT = 14, PADB = 34;
+    ch.width = W; ch.height = H;
+    var c = ch.getContext('2d');
+    var d = isDark();
+    c.fillStyle = d ? '#101816' : '#ffffff';
+    c.fillRect(0, 0, W, H);
+    var nodes = res.nodes.filter(function (n) { return n.seriesTe.length > 1; });
+    if (!nodes.length) return;
+    var maxAbs = 1;
+    nodes.forEach(function (n) {
+      n.seriesTe.forEach(function (v) { var a = Math.abs(v); if (a > maxAbs) maxAbs = a; });
+    });
+    maxAbs *= 1.15;
+    var y0 = symF(-maxAbs), y1 = symF(maxAbs);
+    function X(t) { return PADL + (t / res.hours) * (W - PADL - PADR); }
+    function Y(v) { var f = symF(v); return PADT + (1 - (f - y0) / (y1 - y0)) * (H - PADT - PADB); }
+    /* holdover shading */
+    if (res.holdoverAt != null) {
+      c.fillStyle = d ? 'rgba(240,177,62,.10)' : 'rgba(156,92,0,.08)';
+      var hx = X(res.holdoverAt / 3600);
+      c.fillRect(hx, PADT, W - PADR - hx, H - PADT - PADB);
+      c.fillStyle = d ? '#f0b13e' : '#9c5c00';
+      c.font = '11px sans-serif'; c.textAlign = 'left';
+      c.fillText('holdover', hx + 4, PADT + 12);
+    }
+    /* gridlines */
+    c.font = '10px sans-serif';
+    c.textAlign = 'right';
+    TICKS.forEach(function (tk) {
+      if (tk > maxAbs) return;
+      [-tk, tk].forEach(function (v) {
+        if (v === 0) return;
+        var yy = Y(v);
+        c.strokeStyle = d ? '#223029' : '#eaf0ec';
+        c.lineWidth = 1;
+        c.beginPath(); c.moveTo(PADL, yy); c.lineTo(W - PADR, yy); c.stroke();
+        c.fillStyle = d ? '#7c938a' : '#789089';
+        c.fillText(T.fmtTe(v), PADL - 6, yy + 3);
+      });
+    });
+    var yz = Y(0);
+    c.strokeStyle = d ? '#3a4a43' : '#c8d6cf';
+    c.beginPath(); c.moveTo(PADL, yz); c.lineTo(W - PADR, yz); c.stroke();
+    /* class limit lines (selected class) */
+    var cl = T.G8273_2[S.sim.cls];
+    if (cl) {
+      c.setLineDash([6, 4]);
+      c.strokeStyle = d ? '#ff8a80' : '#b23a48';
+      c.lineWidth = 1.5;
+      [cl.maxTeNs, -cl.maxTeNs].forEach(function (v) {
+        if (Math.abs(v) > maxAbs) return;
+        var yy = Y(v);
+        c.beginPath(); c.moveTo(PADL, yy); c.lineTo(W - PADR, yy); c.stroke();
+      });
+      c.setLineDash([]);
+      c.fillStyle = d ? '#ff8a80' : '#b23a48';
+      c.textAlign = 'left';
+      var dl = Y(cl.maxTeNs) - 4;
+      c.fillText('Class ' + S.sim.cls + ' ' + cl.metric + ' ≤ ' + T.fmtTe(cl.maxTeNs) +
+        (cl.filtered ? ' (0.1 Hz filtered)' : ''), PADL + 6, Math.max(PADT + 10, dl));
+    }
+    /* x ticks */
+    c.fillStyle = d ? '#7c938a' : '#789089';
+    c.textAlign = 'center';
+    var xt = Math.max(1, Math.round(res.hours / 6));
+    for (var hh = 0; hh <= res.hours + 1e-9; hh += xt) {
+      c.fillText(hh + 'h', X(Math.min(hh, res.hours)), H - 12);
+    }
+    c.fillText('time →', W - PADR - 24, H - 12);
+    /* series */
+    var pal = d ? PAL_D : PAL_L;
+    nodes.forEach(function (n, i) {
+      c.strokeStyle = pal[i % pal.length];
+      c.lineWidth = 1.6;
+      c.beginPath();
+      for (var k = 0; k < n.seriesT.length; k++) {
+        var px = X(n.seriesT[k]), py = Y(n.seriesTe[k]);
+        if (k === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.stroke();
+    });
+  }
+
+  function verdictChip(v) {
+    return '<span class="tsim-verdict ' + (v.pass ? 'pass' : 'fail') + '">' +
+      (v.pass ? 'PASS' : 'FAIL') + '</span>';
+  }
+
+  function renderResults() {
+    var res = S.result, cls = S.sim.cls;
+    resultsBox.innerHTML = '';
+    var head = el('div', 'tsim-card',
+      '<h3>Results <span class="tsim-sub">seed ' + res.seed + ' · ' + res.hours + ' h simulated (' +
+      res.steps + ' steps × ' + res.nodes.length + ' clocks) · computed in ' + (S.ms || 0) +
+      ' ms · deterministic: same seed + config ⇒ identical output</span></h3>');
+    resultsBox.appendChild(head);
+
+    /* chart */
+    var chCard = el('div', 'tsim-card');
+    chCard.innerHTML = '<h3>Time error vs time <span class="tsim-sub">per clock, vs the GM timescale · symlog y-axis (linear ±10 ns)</span></h3>' +
+      '<canvas id="tsim-chart" class="tsim-chart"></canvas><div id="tsim-legend" class="tsim-legend"></div>';
+    resultsBox.appendChild(chCard);
+    var pal = isDark() ? PAL_D : PAL_L;
+    var leg = chCard.querySelector('#tsim-legend');
+    res.nodes.forEach(function (n, i) {
+      leg.appendChild(el('span', 'tsim-leg',
+        '<i style="background:' + pal[i % pal.length] + '"></i>' + esc(n.label) +
+        ' <em>' + esc(TYPE_META[n.type].name) + '</em>'));
+    });
+    drawChart();
+
+    /* max|TE| table */
+    var tCard = el('div', 'tsim-card');
+    var th = '<h3>Worst-case time error per clock</h3><div class="tsim-twrap"><table class="tsim-table">' +
+      '<thead><tr><th>Clock</th><th>Type</th><th>max|TE|</th><th>max|TEL| (0.1 Hz)</th>' +
+      '<th>Class ' + esc(cls) + ' ' + esc(T.G8273_2[cls].metric) + ' ≤ ' + T.fmtTe(T.G8273_2[cls].maxTeNs) + '</th></tr></thead><tbody>';
+    res.nodes.forEach(function (n) {
+      var v = T.checkClass(n.maxTeNs, n.maxTelNs, cls);
+      th += '<tr><td><b>' + esc(n.label) + '</b>' + (n.hasMaster ? '' : ' <span class="tsim-warn" title="No path to the grandmaster — free-running">⚠ no path</span>') + '</td>' +
+        '<td>' + esc(TYPE_META[n.type].name) + '</td>' +
+        '<td class="num">' + T.fmtTe(n.maxTeNs) + '</td>' +
+        '<td class="num">' + T.fmtTe(n.maxTelNs) + '</td>' +
+        '<td>' + verdictChip(v) + ' <span class="tsim-muted">' + T.fmtTe(v.valueNs) +
+        (v.pass ? '' : ' — over by ' + T.fmtTe(v.overNs)) + '</span></td></tr>';
+    });
+    tCard.innerHTML = th + '</tbody></table></div>';
+    resultsBox.appendChild(tCard);
+
+    /* class matrix */
+    var mCard = el('div', 'tsim-card');
+    var mh = '<h3>G.8273.2 class matrix <span class="tsim-sub">every clock × every class</span></h3>' +
+      '<div class="tsim-twrap"><table class="tsim-table"><thead><tr><th>Clock</th>' +
+      T.CLASS_ORDER.map(function (cc) {
+        var g = T.G8273_2[cc];
+        return '<th>Class ' + cc + '<br><span class="tsim-muted">' + esc(g.metric) + ' ≤ ' + T.fmtTe(g.maxTeNs) + '</span></th>';
+      }).join('') + '</tr></thead><tbody>';
+    res.nodes.forEach(function (n) {
+      mh += '<tr><td><b>' + esc(n.label) + '</b></td>' + T.CLASS_ORDER.map(function (cc) {
+        return '<td>' + verdictChip(T.checkClass(n.maxTeNs, n.maxTelNs, cc)) + '</td>';
+      }).join('') + '</tr>';
+    });
+    mCard.innerHTML = mh + '</tbody></table></div>' +
+      '<p class="tsim-note">Limits: ITU-T G.8273.2 noise generation — Class A max|TE| ≤ 100 ns, ' +
+      'Class B max|TE| ≤ 70 ns, Class C max|TE| ≤ 30 ns, Class D max|TEL| ≤ 5 ns (TE through a 0.1 Hz low-pass filter, 1000 s). ' +
+      'Class D is checked against the filtered metric, exactly as the standard defines it. ' +
+      'Sources: Calnex “ITU-T G.8273.2 (T-BC and T-TSC) One-Page Summary”; Calnex blog “G.8273.2 Specification for Class C and D Clocks”; ' +
+      'Red Hat OpenShift PTP documentation (Class C max|TE| ≤ 30 ns).</p>';
+    resultsBox.appendChild(mCard);
+
+    /* bottlenecks */
+    var b = S.bottl;
+    var bCard = el('div', 'tsim-card');
+    if (b && b.ok && b.rows.length) {
+      var mx = Math.max.apply(null, b.rows.map(function (r) { return r.contribNs; }).concat([1]));
+      var bh = '<h3>Bottleneck hops <span class="tsim-sub">ranked by contribution to ' + esc(b.endNodeLabel) +
+        '’s max|TE| (' + T.fmtTe(b.endMaxNs) + ')</span></h3><ol class="tsim-blist">';
+      b.rows.forEach(function (r) {
+        var pct = Math.round(100 * r.contribNs / mx);
+        bh += '<li><div class="tsim-brow"><span><b>' + esc(r.label) + '</b> ' +
+          '<span class="tsim-muted">asym ' + esc(r.asymNs) + ' ns · PDV ' + esc(r.pdvProfile) + '</span></span>' +
+          '<span class="num">' + T.fmtTe(r.contribNs) + '</span></div>' +
+          '<div class="tsim-bbar"><i style="width:' + pct + '%"></i></div></li>';
+      });
+      bCard.innerHTML = bh + '</ol><p class="tsim-note">Method: ablation — each span is idealized in turn ' +
+        '(asymmetry → 0, PDV → none) and the worst end-clock max|TE| is re-simulated with the same seed. ' +
+        'Transparent-clock residence jitter is attributed to the span it crosses with.</p>';
+    } else {
+      bCard.innerHTML = '<h3>Bottleneck hops</h3><p class="tsim-note">' +
+        esc((b && b.error) || 'Not available for this topology.') + '</p>';
+    }
+    resultsBox.appendChild(bCard);
+
+    /* what breaks */
+    var wCard = el('div', 'tsim-card tsim-what');
+    var wh = '<h3>What breaks</h3><ul>';
+    if (b && b.ok && b.rows.length && b.rows[0].contribNs > 0) {
+      var top = b.rows[0];
+      var share = b.endMaxNs > 0 ? Math.round(100 * top.contribNs / b.endMaxNs) : 0;
+      wh += '<li><b>' + esc(top.label) + '</b> dominates the error budget: idealizing it cuts ' +
+        esc(b.endNodeLabel) + '’s max|TE| by ' + T.fmtTe(top.contribNs) + ' (≈' + share + '%). ' +
+        (Math.abs(top.asymNs) / 2 >= 5 ?
+          'Its ' + esc(top.asymNs) + ' ns asymmetry alone injects a fixed ' + T.fmtTe(Math.abs(top.asymNs) / 2) +
+          ' ns bias that the servo cannot remove — asymmetry does not average out.' :
+          'Its “' + esc(top.pdvProfile) + '” PDV profile is the main noise source the servo has to fight.') + '</li>';
+    }
+    if (res.holdoverAt != null) {
+      var worst = null;
+      res.nodes.forEach(function (n) {
+        if ((n.type === 'bc' || n.type === 'slave') && (!worst || n.maxTePostNs > worst.maxTePostNs)) worst = n;
+      });
+      if (worst) {
+        wh += '<li>GM/GPS loss at ' + (res.holdoverAt / 3600) + ' h: <b>' + esc(worst.label) + '</b> drifts ' +
+          T.fmtTe(worst.maxTePostNs) + ' in holdover on its local oscillator' +
+          (worst.maxTePostNs > worst.maxTePreNs * 2 ?
+            ' — holdover, not the locked chain, dominates this clock’s worst case.' :
+            ' (locked-chain error was ' + T.fmtTe(worst.maxTePreNs) + ').') + '</li>';
+      }
+    }
+    var fails = [];
+    res.nodes.forEach(function (n) {
+      var v = T.checkClass(n.maxTeNs, n.maxTelNs, cls);
+      if (!v.pass && (n.type === 'bc' || n.type === 'slave')) fails.push({ n: n, v: v });
+    });
+    if (fails.length) {
+      fails.sort(function (a, b2) { return b2.v.overNs - a.v.overNs; });
+      var f0 = fails[0];
+      wh += '<li>Class ' + esc(cls) + ' verdict: <b>FAIL</b> — ' + esc(f0.n.label) + ' exceeds ' +
+        esc(f0.v.metric) + ' ≤ ' + T.fmtTe(f0.v.limitNs) + ' by ' + T.fmtTe(f0.v.overNs) + '.' +
+        (fails.length > 1 ? ' (' + fails.length + ' clocks fail.)' : '') + '</li>';
+    } else {
+      wh += '<li>Class ' + esc(cls) + ' verdict: <b>PASS</b> — every boundary/slave clock stays within ' +
+        esc(T.G8273_2[cls].metric) + ' ≤ ' + T.fmtTe(T.G8273_2[cls].maxTeNs) + ' over the simulated ' +
+        res.hours + ' h. Tighten a PDV profile or add asymmetry to find the breaking point.</li>';
+    }
+    wCard.innerHTML = wh + '</ul>';
+    resultsBox.appendChild(wCard);
+    drawChart();
+  }
+
+  } /* end mount() */
+
+  /* auto-mount the fragment (outside mount()) */
+  TimingSim.mount = mount;
+  function auto() {
+    var host = document.querySelector('[data-tsim-app]');
+    if (host && !host.dataset.mounted) {
+      host.dataset.mounted = '1';
+      try { mount(host); } catch (e) {
+        host.innerHTML = '<p class="tsim-err">Timing simulator failed to start: ' + esc(e.message) + '</p>';
+      }
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', auto);
+  else auto();
+})();
+</script>
+<script>
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+(function(){
+  var host=document.querySelector("[data-tsim-app]");
+  if(host && !host.dataset.mounted && window.TimingSim && window.TimingSim.mount){
+    try{ window.TimingSim.mount(host); host.dataset.mounted="1"; }
+    catch(e){ host.innerHTML='<p class="tsim-err">Timing simulator failed to start: '+esc(e.message)+'</p>'; }
+  }
+})();
+</script>
+</body>
+</html>
