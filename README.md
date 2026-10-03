@@ -25,6 +25,7 @@ offline included. Everything runs locally; nothing you type ever leaves the page
 | [wireshark-filter-builder](wireshark-filter-builder/) | **Wireshark display filter builder** — build valid display filters without memorizing syntax: 145-field picker, AND/OR/NOT grouping, gotcha linter, plain-English readout, shareable filter links. | [allaboutitinfrastructure.com/tools/wireshark-filter-builder/](https://allaboutitinfrastructure.com/tools/wireshark-filter-builder/) |
 | [wifi-planner](wifi-planner/) | **Wi-Fi channel interference planner** — enter audible APs (band, channel, width, RSSI); get spectral overlap graphs, ranked 2.4/5/6 GHz channel recommendations, and a printable multi-AP channel plan. | [allaboutitinfrastructure.com/tools/wifi-planner/](https://allaboutitinfrastructure.com/tools/wifi-planner/) |
 | [qos-simulator](qos-simulator/) | **QoS token-bucket policer & shaper simulator** — set CIR/Bc/Be like a Cisco MQC policy, inject traffic, watch conform/exceed/violate coloring and shaping delay, with the exact IOS CLI. | [allaboutitinfrastructure.com/tools/qos-simulator/](https://allaboutitinfrastructure.com/tools/qos-simulator/) |
+| [bgp-toolkit](bgp-toolkit/) | **BGP Toolkit** — one-click hijack verdict for any prefix (MOAS, more-specifics, RPKI, IRR, propagation), plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and IOS-XE/JunOS filter generator — live RIPEstat data. | [allaboutitinfrastructure.com/tools/bgp-toolkit/](https://allaboutitinfrastructure.com/tools/bgp-toolkit/) |
 
 ## Use
 
