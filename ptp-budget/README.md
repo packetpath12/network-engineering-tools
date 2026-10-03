@@ -6,7 +6,7 @@ asymmetry — get worst-case and RMS end-to-end time error checked against real
 budgets: 5G fronthaul, MiFID II, and power-utility timing.
 
 **Live version:**
-[allaboutitinfrastructure.com/#/tools/ptp-budget](https://allaboutitinfrastructure.com/#/tools/ptp-budget)
+[allaboutitinfrastructure.com/tools/ptp-budget/](https://allaboutitinfrastructure.com/tools/ptp-budget/)
 
 **Run it:** open `index.html` in any browser. Single file, no dependencies,
 works offline. Everything is computed locally — nothing leaves the page.
