@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Config Verifier | Packet Path</title>
+<meta name="description" content="Paste Cisco IOS configs and verify topology, reachability and consistency — duplicate IPs, OSPF and BGP mismatches, unreachable subnets and dead ACL rules. v1 Cisco IOS only, IPv4-only.">
+<style>
+
+
+:root{
+  color-scheme:light dark;
+  --font-head:"Spectral",Georgia,"Times New Roman",serif;
+  --font-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f7faf8; --surface:#ffffff; --surface2:#eef4f1; --surface3:#e6eee9;
+  --ink:#142a25; --muted:#4f635b; --faint:#789089;
+  --line:#dde7e1; --line-soft:#eaf0ec;
+  --accent:#0a7d5f; --accent-strong:#076a51; --on-accent:#ffffff; --accent-soft:rgba(10,125,95,.10);
+  --teal:#0b6e99; --teal-soft:rgba(11,110,153,.10);
+  --amber:#9c5c00; --amber-soft:rgba(156,92,0,.10);
+  --warn-bg:#fff8e8; --warn-line:#e4b54d;
+  --code-bg:#0e1f1a; --code-ink:#e6f3ed; --code-line:#243530;
+  --link:#0b6e99;
+  --shadow:0 1px 2px rgba(16,40,32,.07),0 10px 28px -16px rgba(16,40,32,.25);
+  --radius:12px; --radius-sm:8px;
+}
+
+*{box-sizing:border-box}
+
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.62}
+
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+
+a:hover{text-decoration-thickness:2px}
+
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.18;letter-spacing:-.01em;text-wrap:balance}
+
+h1{font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 .55em}
+
+h3{font-size:1.12rem;margin:1.5em 0 .4em}
+
+p{margin:0 0 1.05em}
+
+html.darkm .theme-btn .moon{display:block}
+
+html.darkm .theme-btn .sun{display:none}
+
+html.lightm .theme-btn .moon{display:none}
+
+  html:not(.lightm):not(.darkm) .theme-btn .sun{display:none}
+
+.page-head{padding:2.4rem 0 1.2rem}
+
+.page-head .lede{font-size:1.12rem;color:var(--muted);max-width:62ch}
+
+.lede{font-size:1.13rem;color:var(--muted);max-width:56ch}
+
+.lede strong{color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.98rem;padding:.66rem 1.15rem;border-radius:10px;text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:var(--font-body)}
+
+.btn:hover{background:var(--accent-strong);color:var(--on-accent);text-decoration:none}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+.mini-tool header .t{font-family:var(--font-head);font-weight:700;font-size:1.15rem}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.field label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.3rem;letter-spacing:.02em}
+
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.55rem .7rem}
+
+.field textarea{min-height:120px;resize:vertical}
+
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .9rem;font-size:.94rem;background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem;margin:.4rem 0 0}
+
+.kv dt{color:var(--muted);font-weight:700;white-space:nowrap}
+
+.kv dd{margin:0;font-family:var(--font-mono);font-size:.93rem;overflow-wrap:anywhere}
+
+.err{color:#b3261e;font-size:.9rem;font-weight:700}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .err{color:#ff8a80}
+
+html.darkm .err{color:#ff8a80}
+
+.callout{border:1px solid var(--line);border-left:5px solid var(--teal);background:var(--teal-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.9rem 1.1rem;margin:1.3rem 0;font-size:.96rem}
+
+.callout.warn{border-left-color:var(--amber);background:var(--warn-bg);border-color:var(--warn-line)}
+
+.callout.key{border-left-color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+
+.callout strong.t{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;color:var(--teal)}
+
+.callout.warn strong.t{color:var(--amber)}
+
+.callout.key strong.t{color:var(--accent)}
+
+pre.code{position:relative;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:10px;padding:1rem 3.4rem 1rem 1.1rem;overflow:auto;font-family:var(--font-mono);font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+
+pre.code code{font:inherit}
+
+code.inline{font-family:var(--font-mono);font-size:.86em;background:var(--surface3);border:1px solid var(--line);border-radius:5px;padding:.08em .4em}
+
+table.tbl{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.94rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+
+table.tbl th,table.tbl td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+
+table.tbl thead th{background:var(--surface2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+table.tbl tr:last-child td{border-bottom:0}
+
+table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);white-space:nowrap}
+
+.tbl-wrap{overflow-x:auto;margin:0 -20px;padding:0 20px}
+
+.read-next .rn{padding:1.1rem 1.25rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+
+.read-next .rn:hover{border-color:var(--accent)}
+
+.read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
+
+.read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+.gear-card .why{background:var(--surface2);border-radius:var(--radius-sm);padding:.7rem .85rem;font-size:.88rem}
+
+.gear-card .why b{color:var(--ink)}
+
+.about-cols .card{padding:1.3rem}
+
+.tool-shell{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1.5rem;align-items:start}
+
+.panel{padding:1.4rem}
+
+.panel h3{margin-top:0;font-size:1.15rem}
+
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface3);border:1px solid var(--line);margin:.5rem 0}
+
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:pointer}
+
+.quiz-feedback.ok{display:block;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent)}
+
+html.darkm .quiz-feedback.ok,html:not(.lightm):not(.darkm) .quiz-feedback.ok{color:var(--accent)}
+
+html.darkm .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}
+
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:1.2rem 0}
+
+.stat{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem}
+
+.stat .v{font-family:var(--font-mono);font-weight:600;font-size:1.22rem;display:block;overflow-wrap:anywhere}
+
+.stat .l{font-size:.8rem;color:var(--muted)}
+
+/* ---------- SLA / capacity / tick-to-trade tools ---------- */
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+
+.seg button{font:inherit;font-weight:700;font-size:.88rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.42rem .95rem;cursor:pointer;white-space:nowrap}
+
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ---------- ECMP hash visualizer ---------- */
+.ec-bars{display:grid;gap:7px;margin:.9rem 0 0}
+
+.ec-bar{display:grid;grid-template-columns:96px minmax(0,1fr) 112px;gap:10px;align-items:center;font-size:.85rem}
+
+.ec-bar .lab{color:var(--muted);font-weight:700;white-space:nowrap}
+
+.ec-bar .tr{position:relative;height:18px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:5px}
+
+.ec-bar .fl{position:absolute;top:0;left:0;bottom:0;background:var(--teal);border-radius:4px 0 0 4px;min-width:2px}
+
+.ec-bar .exp{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--amber)}
+
+.ec-bar .n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+
+.ec-heat{display:grid;gap:3px;margin:.9rem 0 0;align-items:stretch}
+
+.ec-cell{position:relative;aspect-ratio:1.5;border-radius:4px;background:var(--surface3);overflow:hidden}
+
+.ec-fill{position:absolute;inset:0;background:var(--teal)}
+
+.ec-cell .n{position:relative;display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-mono);font-size:.66rem}
+
+.ec-ax{font-family:var(--font-mono);font-size:.68rem;color:var(--faint);display:flex;align-items:center;justify-content:center}
+
+.ec-good{color:#1c7a43}
+
+.ec-bad{color:#b3261e}
+
+.ec-mid{color:#9a6206}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .ec-good{color:#4cc38a}
+:root:not(.lightm) .ec-bad{color:#ff8a80}
+:root:not(.lightm) .ec-mid{color:#f0b13e}
+
+html.darkm .ec-good{color:#4cc38a}
+
+html.darkm .ec-bad{color:#ff8a80}
+
+html.darkm .ec-mid{color:#f0b13e}
+
+@media (max-width:560px){.ec-bar{grid-template-columns:70px minmax(0,1fr) 92px}
+.ec-bar .n{font-size:.7rem}
+.ec-cell .n{font-size:.55rem}
+
+/* ---------- ACL rule analyzer ---------- */
+.acl-findings{display:grid;gap:10px;margin:.9rem 0 0}
+
+.acl-row{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.75rem .9rem}
+
+.acl-row .acl-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.acl-row .rn{font-weight:700;font-size:.9rem;white-space:nowrap}
+
+.acl-row code{display:block;font-family:var(--font-mono);font-size:.82rem;overflow-wrap:anywhere;margin:.35rem 0 0;color:var(--muted)}
+
+.acl-row .why{font-size:.9rem;margin:.35rem 0 0}
+
+.acl-badge{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:.18rem .65rem;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+
+.acl-badge.sh{background:#fbe9e7;border-color:#e0a49e;color:#b3261e}
+
+.acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+
+.acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
+
+.acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+
+html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+
+html.lightm{color-scheme:light}
+
+  .tool-shell{grid-template-columns:1fr}
+
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .stat-strip{grid-template-columns:1fr 1fr}
+
+  body{font-size:12pt;background:#fff;color:#000}
+
+  .art-layout,.lead-grid,.card,.tool-shell{grid-template-columns:1fr}
+
+  .card{box-shadow:none;break-inside:avoid}
+
+  *{transition:none!important;animation:none!important}
+
+.pp-top{display:flex;align-items:center;gap:.6rem;padding:.8rem 1.2rem;border-bottom:1px solid var(--line,#dfe7e3);background:var(--surface,#fff);position:sticky;top:0;z-index:50}
+.pp-brand{font-weight:700;font-size:1.05rem;color:var(--ink,#142a25);text-decoration:none}
+.pp-top .pp-sep{color:var(--muted,#4f635b)}
+.pp-top .pp-tag{color:var(--muted,#4f635b);font-size:.92rem}
+.pp-main{max-width:74rem;margin:0 auto;padding:1.4rem 1.1rem 3rem}
+.pp-foot{border-top:1px solid var(--line,#dfe7e3);padding:1.2rem;color:var(--muted,#4f635b);font-size:.88rem;text-align:center}
+.pp-foot a{color:var(--link)}
+
+
+/* ============================================================================
+   Packet Path — Network config verifier styles.
+   All classes are prefixed `cv-` and scoped under .cv-wrap.
+   Colors come from the site's CSS variables, with fallbacks so the fragment
+   also renders standalone.
+   ============================================================================ */
+.cv-wrap{
+  --cv-bg:var(--bg,#f7faf8);
+  --cv-surface:var(--surface,#ffffff);
+  --cv-surface2:var(--surface2,#eef4f1);
+  --cv-ink:var(--ink,#142a25);
+  --cv-muted:var(--muted,#4f635b);
+  --cv-faint:var(--faint,#789089);
+  --cv-line:var(--line,#dde7e1);
+  --cv-line-soft:var(--line-soft,#eaf0ec);
+  --cv-accent:var(--accent,#0a7d5f);
+  --cv-accent-strong:var(--accent-strong,#076a51);
+  --cv-on-accent:var(--on-accent,#ffffff);
+  --cv-accent-soft:var(--accent-soft,rgba(10,125,95,.10));
+  --cv-teal:var(--teal,#0b6e99);
+  --cv-amber:var(--amber,#9c5c00);
+  --cv-err:#b3261e;
+  --cv-radius:var(--radius,12px);
+  --cv-radius-sm:var(--radius-sm,8px);
+  --cv-mono:var(--font-mono,"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);
+  color:var(--cv-ink);
+}
+@media (prefers-color-scheme:dark){
+  .cv-wrap{ --cv-err:#ff8a80; }
+}
+
+/* crumb + header */
+.cv-crumb{ font-size:.9rem; color:var(--cv-muted); margin-bottom:1rem; }
+.cv-crumb a{ color:var(--cv-teal); text-decoration:none; font-weight:700; }
+.cv-crumb a:hover{ text-decoration:underline; }
+.cv-crumb-sep{ margin:0 .5rem; color:var(--cv-faint); }
+.cv-head{ margin-bottom:1.4rem; }
+.cv-head h1{ font-size:1.9rem; margin:.5rem 0 .6rem; line-height:1.25; }
+.cv-scope-badge{
+  display:inline-block; font-size:.78rem; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--cv-accent);
+  background:var(--cv-accent-soft); border:1px solid var(--cv-accent);
+  border-radius:999px; padding:.28rem .8rem;
+}
+.cv-lede{ font-size:1.08rem; color:var(--cv-muted); max-width:64ch; }
+.cv-honest{
+  background:var(--cv-surface2); border:1px solid var(--cv-line);
+  border-left:4px solid var(--cv-accent); border-radius:var(--cv-radius-sm);
+  padding:.8rem 1rem; font-size:.94rem; max-width:72ch;
+}
+.cv-honest strong{ color:var(--cv-ink); }
+
+/* device panes */
+.cv-devices{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; margin-bottom:1rem; }
+.cv-pane{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); overflow:hidden; }
+.cv-pane-head{
+  display:flex; align-items:center; gap:.6rem;
+  padding:.6rem .9rem; background:var(--cv-surface2); border-bottom:1px solid var(--cv-line);
+}
+.cv-pane-name{ font-size:1rem; }
+.cv-pane-meta{ flex:1; font-size:.8rem; color:var(--cv-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cv-mini-btn{
+  background:transparent; border:1px solid var(--cv-line); color:var(--cv-muted);
+  border-radius:6px; font-size:.78rem; padding:.25rem .6rem; cursor:pointer;
+}
+.cv-mini-btn:hover{ border-color:var(--cv-err); color:var(--cv-err); }
+.cv-ta{
+  width:100%; display:block; border:0; resize:vertical; min-height:220px;
+  font-family:var(--cv-mono); font-size:.82rem; line-height:1.5;
+  color:var(--cv-ink); background:var(--cv-surface); padding:.8rem .9rem;
+}
+.cv-ta:focus{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+
+/* actions */
+.cv-actions{ display:flex; flex-wrap:wrap; gap:.6rem; margin:.4rem 0 .4rem; }
+.cv-btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  background:transparent; color:var(--cv-ink); border:1px solid var(--cv-line);
+  font-weight:700; font-size:.95rem; padding:.6rem 1.1rem; border-radius:10px; cursor:pointer;
+}
+.cv-btn:hover{ border-color:var(--cv-accent); background:var(--cv-accent-soft); }
+.cv-btn-primary{ background:var(--cv-accent); border-color:transparent; color:var(--cv-on-accent); }
+.cv-btn-primary:hover{ background:var(--cv-accent-strong); color:var(--cv-on-accent); }
+.cv-privacy{ font-size:.82rem; color:var(--cv-faint); margin:.2rem 0 1rem; }
+
+/* results */
+.cv-results{ margin-top:1rem; }
+.cv-hint{ color:var(--cv-muted); background:var(--cv-surface); border:1px dashed var(--cv-line); border-radius:var(--cv-radius); padding:1rem 1.2rem; }
+.cv-summary{ margin-bottom:1.2rem; }
+.cv-stat-strip{ display:flex; flex-wrap:wrap; gap:.7rem; margin-bottom:.8rem; }
+.cv-stat{
+  background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius-sm);
+  padding:.55rem .9rem; min-width:86px; text-align:center;
+}
+.cv-stat .v{ display:block; font-size:1.35rem; font-weight:800; }
+.cv-stat .l{ display:block; font-size:.76rem; color:var(--cv-muted); }
+.cv-stat.cv-total{ border-color:var(--cv-accent); }
+.cv-stat.cv-total .v{ color:var(--cv-accent); }
+.cv-check-key{ font-size:.85rem; color:var(--cv-muted); max-width:78ch; }
+.cv-check-key strong{ color:var(--cv-ink); }
+
+/* callouts */
+.cv-callout{
+  border:1px solid var(--cv-line); border-left:4px solid var(--cv-amber);
+  background:var(--cv-surface); border-radius:var(--cv-radius-sm);
+  padding:.9rem 1.1rem; margin-bottom:1.2rem;
+}
+.cv-callout.cv-ok{ border-left-color:var(--cv-accent); }
+
+/* findings */
+.cv-findings{ display:grid; gap:.7rem; margin-bottom:1.6rem; }
+.cv-finding{
+  background:var(--cv-surface); border:1px solid var(--cv-line);
+  border-radius:var(--cv-radius-sm); padding:.75rem 1rem;
+}
+.cv-finding-head{ display:flex; align-items:center; gap:.6rem; margin-bottom:.3rem; }
+.cv-badge-sev{ font-size:.72rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:999px; padding:.18rem .7rem; }
+.cv-badge-sev.cv-err{ color:var(--cv-err); border:1px solid var(--cv-err); }
+.cv-badge-sev.cv-warn{ color:var(--cv-amber); border:1px solid var(--cv-amber); }
+.cv-check-tag{ font-size:.76rem; color:var(--cv-muted); }
+.cv-finding-title{ font-weight:700; margin-bottom:.25rem; }
+.cv-finding-detail{ font-size:.92rem; color:var(--cv-muted); }
+
+/* topology */
+.cv-sec{ font-size:1.15rem; margin:1.6rem 0 .7rem; }
+.cv-sec-sm{ font-size:1rem; margin:1.1rem 0 .5rem; }
+.cv-dim{ color:var(--cv-muted); font-weight:400; font-size:.85em; }
+.cv-svg{ width:100%; max-width:640px; height:auto; display:block; margin:.4rem 0 .8rem;
+  background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); }
+.cv-node{ fill:var(--cv-surface); stroke:var(--cv-accent); stroke-width:2.5; }
+.cv-node-label{ fill:var(--cv-ink); font-size:12px; font-weight:800; }
+.cv-link-line{ stroke:var(--cv-accent); stroke-width:2; opacity:.75; }
+.cv-link-label{ fill:var(--cv-muted); font-size:11px; font-family:var(--cv-mono); }
+.cv-links{ list-style:none; padding:0; margin:0 0 1rem; display:grid; gap:.5rem; }
+.cv-links li{ background:var(--cv-surface); border:1px solid var(--cv-line-soft); border-radius:var(--cv-radius-sm); padding:.55rem .9rem; font-size:.92rem; }
+.cv-inline{ font-family:var(--cv-mono); font-size:.86em; background:var(--cv-surface2); border:1px solid var(--cv-line-soft); border-radius:5px; padding:.1em .45em; }
+
+/* per-device detail */
+.cv-dev{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius-sm); margin-bottom:.6rem; }
+.cv-dev summary{ cursor:pointer; padding:.7rem 1rem; list-style:none; }
+.cv-dev summary::-webkit-details-marker{ display:none; }
+.cv-dev summary::before{ content:"▸ "; color:var(--cv-accent); font-weight:700; }
+.cv-dev[open] summary::before{ content:"▾ "; }
+.cv-dev-body{ padding:0 1rem 1rem; border-top:1px solid var(--cv-line-soft); }
+.cv-table{ width:100%; border-collapse:collapse; font-size:.88rem; margin:.8rem 0; }
+.cv-table th{ text-align:left; font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; color:var(--cv-muted); padding:.4rem .5rem; border-bottom:1px solid var(--cv-line); }
+.cv-table td{ padding:.4rem .5rem; border-bottom:1px solid var(--cv-line-soft); }
+.cv-shut{ color:var(--cv-amber); font-weight:700; }
+.cv-kv{ display:grid; grid-template-columns:150px 1fr; gap:.3rem .8rem; font-size:.9rem; margin:.6rem 0; }
+.cv-kv dt{ color:var(--cv-muted); font-weight:700; }
+.cv-kv dd{ margin:0; }
+.cv-rib-row{ display:flex; gap:.8rem; font-size:.88rem; padding:.25rem 0; align-items:baseline; flex-wrap:wrap; }
+.cv-rib-label{ min-width:96px; font-weight:700; color:var(--cv-muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+.cv-warns{ margin:.8rem 0 0; padding-left:1.2rem; font-size:.88rem; color:var(--cv-amber); }
+
+/* how-it-works */
+.cv-how{ margin-top:2.4rem; border-top:1px solid var(--cv-line); padding-top:1.4rem; }
+.cv-how h2{ font-size:1.4rem; margin-bottom:.8rem; }
+.cv-how h3{ font-size:1.05rem; margin:1.2rem 0 .4rem; }
+.cv-how p, .cv-how li{ font-size:.94rem; color:var(--cv-muted); max-width:76ch; }
+.cv-how strong{ color:var(--cv-ink); }
+.cv-how ul{ padding-left:1.3rem; }
+.cv-how li{ margin-bottom:.4rem; }
+
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#/" aria-label="Packet Path home">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true"><circle cx="13" cy="13" r="11.5" stroke="var(--accent)" stroke-width="2.4"/><circle cx="13" cy="13" r="3.4" fill="var(--accent)"/><circle cx="4.6" cy="8.4" r="2.2" fill="var(--teal)"/><circle cx="21.4" cy="8.4" r="2.2" fill="var(--amber)"/><circle cx="13" cy="22" r="2.2" fill="var(--teal)"/></svg>
+      Packet<span class="dot">Path</span>
+    </a>
+    <nav class="mainnav" aria-label="Primary">
+      <a href="#/" data-nav="">Home</a>
+      <a href="#/tools" data-nav="tools">Tools</a>
+      <a href="#/articles" data-nav="articles">Guides</a>
+      <a href="#/tracks" data-nav="tracks">Tracks</a>
+      <a href="#/gear" data-nav="gear">Gear</a>
+      <a href="#/about" data-nav="about">About</a>
+    </nav>
+    <div class="top-search">
+      <form id="searchform" role="search" aria-label="Site search">
+        <input id="searchbox" type="search" placeholder="Search guides…" aria-label="Search guides" autocomplete="off" />
+      </form>
+      <button class="theme-btn" id="themebtn" type="button" aria-label="Toggle color theme">
+        <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8"/></svg>
+        <svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg>
+      </button>
+    </div>
+    <details class="menu">
+      <summary aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></summary>
+      <nav aria-label="Mobile">
+        <a href="#/">Home</a><a href="#/tools">Tools</a><a href="#/articles">Guides</a><a href="#/tracks">Tracks</a><a href="#/gear">Gear</a><a href="#/about">About</a>
+      </nav>
+    </details>
+  </div>
+</header>
+<main id="main" tabindex="-1"><div class="wrap" id="app"></div></main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>Packet Path</h4>
+        <p style="max-width:34ch">Free network engineering tools and deep, practical guides — from your first subnet to low-latency production networks.</p>
+      </div>
+      <div><h4>Tools</h4><ul>
+        <li><a href="#/tools/subnet">Subnet calculator</a></li>
+        <li><a href="#/tools/bdp">Bandwidth-delay calculator</a></li>
+        <li><a href="#/tools/quiz">Subnet quiz</a></li>
+        <li><a href="#/tools/sla">SLA &amp; downtime</a></li>
+        <li><a href="#/tools/dcap">DC capacity planner</a></li>
+        <li><a href="#/tools/optic">Optical link budget</a></li>
+        <li><a href="#/tools/ttt">Tick-to-trade latency</a></li>
+        <li><a href="#/tools/ptp-budget">PTP timing budget</a></li>
+        <li><a href="#/tools/timing-sim">PTP/SyncE timing simulator</a></li>
+        <li><a href="#/tools/ecmp-hash">ECMP hash visualizer</a></li>
+        <li><a href="#/tools/acl-analyzer">ACL rule analyzer</a></li>
+        <li><a href="#/tools/config-verify">Network config verifier</a></li>
+      </ul></div>
+      <div><h4>Learn</h4><ul>
+        <li><a href="#/articles">All guides</a></li>
+        <li><a href="#/tracks">Career tracks</a></li>
+        <li><a href="#/gear">Lab gear</a></li>
+        <li><a href="#/about">About</a></li>
+      </ul></div>
+      <div><h4>Popular</h4><ul>
+        <li><a href="#/article/bgp-explained">BGP explained</a></li>
+        <li><a href="#/article/subnetting-cheatsheet">Subnetting cheatsheet</a></li>
+        <li><a href="#/article/home-lab-2026">Build a home lab</a></li>
+        <li><a href="#/article/ccna-vs-network-plus">CCNA vs Network+</a></li>
+      </ul></div>
+    </div>
+    <div class="fine"><span>© 2026 Packet Path</span><span>Tools run entirely in your browser — no sign-up, no data leaves this page.</span></div>
+  </div>
+</footer>
+<script>
+"use strict";
+
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Network config verifier","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"}</script>
+</head>
+<body>
+<header class="pp-top"><a class="pp-brand" href="https://allaboutitinfrastructure.com">Packet Path</a><span class="pp-sep">/</span><span class="pp-tag">Free network engineering tools</span></header>
+<main id="tool" class="pp-main">
+<!-- ============================================================================
+     Packet Path — Network config verifier ("digital-twin scoped", v1)
+     Markup fragment. Integration:
+       1. Include config-verify.css in the page.
+       2. Insert this fragment where the tool view renders.
+       3. Include config-verify.js (classic script), then call:
+            ConfigVerify.mount(document.getElementById("cv-app"));
+     No external requests, no tracking, no analytics in this tool.
+     ============================================================================ -->
+<div class="cv-wrap">
+  <nav class="cv-crumb" aria-label="Breadcrumb">
+    <a href="https://allaboutitinfrastructure.com/#/">&larr; Packet Path home</a>
+    <span class="cv-crumb-sep">&middot;</span>
+    <a href="https://allaboutitinfrastructure.com/#/tools/acl-analyzer">ACL rule analyzer</a>
+    <span class="cv-crumb-sep">&middot;</span>
+    <a href="https://allaboutitinfrastructure.com/#/tools">All tools</a>
+  </nav>
+
+  <div class="cv-head">
+    <span class="cv-scope-badge">v1 &middot; Cisco IOS only</span>
+    <h1>Network config verifier</h1>
+    <p class="cv-lede">Paste Cisco IOS configs — one pane per device — and get an instant consistency check: the topology your subnets imply, what each device can reach, and the misconfigurations that break it. Duplicate IPs, OSPF disagreements, BGP AS mismatches, and dead ACL rules, each explained in plain English.</p>
+    <p class="cv-honest"><strong>Honest scope:</strong> A true multi-vendor Batfish-grade digital twin takes a research team. This tool is the version that can actually be built well in a browser today: paste Cisco IOS configs, get topology + reachability + consistency verification. v1 is Cisco IOS scoped — IOS-XR, NX-OS, Junos, and EOS syntax are not parsed, and IPv6 is out of scope.</p>
+  </div>
+
+  <!-- Interactive tool mounts here -->
+  <div id="cv-app"></div>
+
+  <section class="cv-how" aria-labelledby="cv-how-h">
+    <h2 id="cv-how-h">How it works, and what it assumes</h2>
+
+    <h3>What it parses (Cisco IOS, IPv4)</h3>
+    <ul>
+      <li><strong>Hostname</strong> from <code class="cv-inline">hostname</code>.</li>
+      <li><strong>Interfaces:</strong> <code class="cv-inline">ip address</code> and mask, <code class="cv-inline">shutdown</code> / <code class="cv-inline">no shutdown</code>, <code class="cv-inline">ip ospf hello-interval</code> / <code class="cv-inline">dead-interval</code>, interface-level <code class="cv-inline">ip ospf &lt;pid&gt; area</code>, and <code class="cv-inline">ip access-group</code> bindings (recorded; not yet used for filtering checks).</li>
+      <li><strong>OSPF:</strong> <code class="cv-inline">router ospf</code> process ID, <code class="cv-inline">network</code> statements with wildcard and area. Unset hello/dead timers are treated as the IOS defaults (10s / 40s).</li>
+      <li><strong>BGP:</strong> <code class="cv-inline">router bgp</code> ASN and <code class="cv-inline">neighbor X remote-as Y</code> statements.</li>
+      <li><strong>Static routes</strong> via <code class="cv-inline">ip route</code> (next-hop IP or egress interface).</li>
+      <li><strong>Extended ACLs</strong> — numbered (<code class="cv-inline">access-list 100–199</code>) and named (<code class="cv-inline">ip access-list extended</code>) — analyzed with the site's ACL rule analyzer logic, unchanged.</li>
+    </ul>
+
+    <h3>How the topology is derived</h3>
+    <p>Two interfaces that are <strong>up</strong> and configured in the <strong>same subnet</strong> on <strong>different devices</strong> are treated as one link. Shutdown interfaces never form links. This is a heuristic, not discovery: it cannot tell a /30 point-to-point link from two interfaces that merely happen to share a subnet, and it knows nothing about the physical topology underneath.</p>
+
+    <h3>How reachability is derived (documented simplifications)</h3>
+    <p>Each device's RIB is the union of four buckets:</p>
+    <ul>
+      <li><strong>Connected</strong> — the device's own up interfaces. Real.</li>
+      <li><strong>Static</strong> — the device's own <code class="cv-inline">ip route</code> destinations. Real, but v1 does not check whether the next-hop is itself reachable (no recursive lookup).</li>
+      <li><strong>OSPF</strong> — every OSPF-enabled interface subnet on every device in the same OSPF domain, where the domain is the transitive closure over links with OSPF enabled on <strong>both</strong> ends. This is the big simplification: real OSPF also requires matching areas and timers, DR election, and LSA flooding rules, none of which are modeled. Area and timer mismatches are flagged separately by check 2, but v1 still propagates routes across the mismatched link when deriving reachability.</li>
+      <li><strong>BGP</strong> — each configured neighbor's connected and static subnets. Also simplified: v1 does not model whether the BGP session would actually establish, best-path selection, route policy, or <code class="cv-inline">network</code> statements under <code class="cv-inline">router bgp</code>.</li>
+    </ul>
+    <p>A subnet is reported <strong>unreachable</strong> from a device when it appears in no bucket. The known subnet set is every up interface subnet across all pasted devices.</p>
+
+    <h3>The five checks</h3>
+    <ul>
+      <li><strong>1. Duplicate IP addresses</strong> across (or within) devices.</li>
+      <li><strong>2. OSPF area or hello/dead-timer mismatch</strong> on a shared link, checked only where OSPF is enabled on both ends.</li>
+      <li><strong>3. BGP neighbor remote-AS mismatch</strong> — each neighbor statement is checked against the actual ASN of the device owning the neighbor's IP.</li>
+      <li><strong>4. Subnet unreachable</strong> from a device per the derived RIB.</li>
+      <li><strong>5. ACL findings</strong> — shadowed, redundant, and overly-broad rules, attributed per device and ACL.</li>
+    </ul>
+
+    <h3>What v1 does not do</h3>
+    <ul>
+      <li>Non-IOS syntax (IOS-XR, NX-OS, Junos, EOS), IPv6, VRFs, and MPLS are not parsed.</li>
+      <li>No data-plane simulation: ACLs are analyzed for dead rules, but v1 does not filter the derived RIB or reachability through interface ACLs.</li>
+      <li>No protocol state machines: OSPF adjacency formation, BGP best-path, and convergence are not simulated — only configuration consistency is checked.</li>
+      <li>Secondary IP addresses, <code class="cv-inline">interface range</code>, and discontiguous masks are noted as warnings or skipped.</li>
+    </ul>
+
+    <h3>What a real digital twin would add</h3>
+    <p>A Batfish-grade twin builds a vendor-independent model from the full config (not just the five sections above), simulates the control plane to convergence — OSPF LSAs, BGP best-path with policy — and then simulates the data plane, so it can answer "can host A reach host B on TCP 443?" including every ACL, NAT, and PBR hop along the path. It also diffs behavior across config changes and software versions. This tool deliberately stops at <strong>configuration consistency</strong>: it catches the typos and disagreements that break networks, without pretending to simulate them.</p>
+  </section>
+</div>
+
+<div style="margin-top:1.6rem"><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0;color:var(--muted)"><a href="https://allaboutitinfrastructure.com/#/tools/ptp-budget">PTP timing budget calculator</a> · <a href="https://allaboutitinfrastructure.com/#/tools/timing-sim">PTP/SyncE timing chain simulator</a> · <a href="https://allaboutitinfrastructure.com/#/tools/ecmp-hash">ECMP hash polarization visualizer</a> · <a href="https://allaboutitinfrastructure.com/#/tools/acl-analyzer">Firewall ACL rule analyzer</a> — all free, all run entirely in your browser.</p></div></div>
+</main>
+<footer class="pp-foot">Free tool from <a href="https://allaboutitinfrastructure.com">Packet Path</a> · runs entirely in your browser — nothing is uploaded.<br>Open source under the MIT License · <a href="https://github.com/packetpath12/network-engineering-tools">github.com/packetpath12/network-engineering-tools</a></footer>
+<script>
+/* ============================================================================
+   Packet Path — Network config verifier ("digital-twin scoped", v1)
+   ----------------------------------------------------------------------------
+   Self-contained tool fragment: no external dependencies, no network calls,
+   no tracking, no analytics.
+
+   INTEGRATION (for whoever applies this to the site artifact):
+     1. Include config-verify.css in the page.
+     2. Insert the markup from config-verify.html where the tool view renders.
+     3. Include this script (classic <script>, no modules), then call:
+            ConfigVerify.mount(document.getElementById("cv-app"));
+
+   The pure core (parseDevice, buildModel, deriveRIBs, runChecks) is also
+   Node-importable for automated validation:
+            const CV = require("./config-verify.js");
+
+   The ACL parse/analyze functions below are lifted VERBATIM from the Packet
+   Path artifact's ACL rule analyzer (its canonical logic); the IP helper
+   they depend on is lifted verbatim too.
+   ============================================================================ */
+(function (root) {
+"use strict";
+
+var IP={
+ parse:function(s){
+   s=String(s||"").trim();
+   var m=s.split(".");
+   if(m.length!==4) return {ok:false,err:"Enter 4 octets, e.g. 192.168.1.10"};
+   var out=0;
+   for(var i=0;i<4;i++){
+     if(!/^\d{1,3}$/.test(m[i])) return {ok:false,err:"Octet "+(i+1)+" is not a number 0–255"};
+     var v=parseInt(m[i],10);
+     if(v<0||v>255) return {ok:false,err:"Octet "+(i+1)+" is out of range 0–255"};
+     out=(out<<8)|v;
+   }
+   return {ok:true,val:out>>>0};
+ },
+ fmt:function(v){ v=v>>>0; return ((v>>>24)&255)+"."+((v>>>16)&255)+"."+((v>>>8)&255)+"."+(v&255); },
+ mask:function(p){ if(p<=0) return 0; return (0xFFFFFFFF<<(32-p))>>>0; },
+ details:function(ipInt,p){
+   var m=this.mask(p), net=(ipInt&m)>>>0, bc=(net|(~m>>>0))>>>0;
+   var total=Math.pow(2,32-p), usable=p===31?2:(p===32?1:Math.max(0,total-2));
+   var first=p>=31?net:(net+1)>>>0, last=p>=31?bc:(bc-1)>>>0;
+   return {network:net,broadcast:bc,mask:m,wildcard:(~m>>>0),first:first,last:last,total:total,usable:usable};
+ },
+ bits:function(ipInt,p){
+   var s="",i; for(i=31;i>=0;i--){ s+=((ipInt>>>i)&1)?"1":"0"; }
+   var out="",n=p;
+   for(i=0;i<32;i++){ out+= (n>0?'<span class="net">'+s[i]+'</span>':'<span class="host">'+s[i]+'</span>'); n--; if(i<31&&(i+1)%8===0) out+="  "; }
+   return out;
+ },
+ norm:function(s){ var r=this.parse(s); return r.ok?this.fmt(r.val):null; }
+};
+/* ============ ACL analyzer core ============ */
+var ACL_PORT_NAMES={www:80,https:443,telnet:23,ssh:22,ftp:21,"ftp-data":20,smtp:25,domain:53,pop3:110,ntp:123,snmp:161,bgp:179,kerberos:88,ldap:389,gopher:70,finger:79,"netbios-ns":137,"netbios-dgm":138,"netbios-ss":139};
+function aclPortVal(tok){
+  if(tok===undefined||tok===null) return null;
+  if(/^\d+$/.test(tok)){ var v=parseInt(tok,10); return (v>=0&&v<=65535)?v:null; }
+  var p=ACL_PORT_NAMES[String(tok).toLowerCase()];
+  return (p===undefined)?null:p;
+}
+function aclParseAddr(toks,i){
+  var t=(toks[i]||"").toLowerCase();
+  if(t==="any"||t==="any4") return {range:[0,4294967295],next:i+1};
+  if(t==="host"){
+    var hr=IP.parse(toks[i+1]||"");
+    if(!hr.ok) return null;
+    return {range:[hr.val,hr.val],next:i+2};
+  }
+  var a=IP.parse(toks[i]||"");
+  if(!a.ok) return null;
+  var w=IP.parse(toks[i+1]||"");
+  if(w.ok) return {range:[(a.val&~w.val)>>>0,(a.val|w.val)>>>0],next:i+2};
+  return {range:[a.val,a.val],next:i+1};
+}
+function aclParsePortOp(toks,i){
+  var op=(toks[i]||"").toLowerCase();
+  if(op==="eq"){ var p=aclPortVal(toks[i+1]); if(p===null) return {ports:[0,65535],next:i+2,note:true}; return {ports:[p,p],next:i+2,note:false}; }
+  if(op==="range"){ var a=aclPortVal(toks[i+1]),b=aclPortVal(toks[i+2]); if(a===null||b===null) return {ports:[0,65535],next:i+3,note:true}; return {ports:[Math.min(a,b),Math.max(a,b)],next:i+3,note:false}; }
+  if(op==="gt"){ var g=aclPortVal(toks[i+1]); if(g===null) return {ports:[0,65535],next:i+2,note:true}; return {ports:[Math.min(65535,g+1),65535],next:i+2,note:false}; }
+  if(op==="lt"){ var l=aclPortVal(toks[i+1]); if(l===null) return {ports:[0,65535],next:i+2,note:true}; return {ports:[0,Math.max(0,l-1)],next:i+2,note:false}; }
+  if(op==="neq") return {ports:[0,65535],next:i+2,note:true};
+  return null;
+}
+function aclParseLine(raw){
+  var toks=raw.split(/\s+/).filter(function(x){return x!=="";});
+  if(!toks.length) return {skip:true};
+  var i=0, first=toks[0].toLowerCase();
+  if(first.charAt(0)==="!") return {skip:true};
+  if(/^\d+$/.test(toks[0])&&/^(permit|deny)$/.test((toks[1]||"").toLowerCase())) i=1; /* named-ACL sequence number */
+  if((toks[i]||"").toLowerCase()==="access-list"){
+    if((toks[i+2]||"").toLowerCase()==="remark") return {skip:true};
+    i+=2;
+  }
+  var action=(toks[i]||"").toLowerCase();
+  if(action!=="permit"&&action!=="deny") return {unparsed:true};
+  var proto=(toks[i+1]||"").toLowerCase();
+  if(!proto) return {unparsed:true};
+  var idx=i+2;
+  var src=aclParseAddr(toks,idx); if(!src) return {unparsed:true};
+  idx=src.next;
+  var ports=null, note=false;
+  if(proto==="tcp"||proto==="udp"){
+    var sp=aclParsePortOp(toks,idx);
+    if(sp){ ports=sp.ports; note=note||sp.note; idx=sp.next; }
+  }
+  var dst=aclParseAddr(toks,idx); if(!dst) return {unparsed:true};
+  idx=dst.next;
+  if(proto==="tcp"||proto==="udp"){
+    var dp=aclParsePortOp(toks,idx);
+    if(dp){ ports=dp.ports; note=note||dp.note; idx=dp.next; }
+  }
+  if(!ports) ports=[0,65535];
+  return {action:action,proto:proto,src:src.range,dst:dst.range,ports:ports,note:note,raw:raw};
+}
+function aclParse(text){
+  var rules=[], skipped=[];
+  String(text||"").split(/\r?\n/).forEach(function(line){
+    var raw=line.trim();
+    if(!raw) return;
+    var low=raw.toLowerCase();
+    if(low.indexOf("remark")===0) return;
+    if(/^ip\s+access-list\b/.test(low)) return;
+    var r=aclParseLine(raw);
+    if(r.skip) return;
+    if(r.unparsed){ skipped.push(raw); return; }
+    rules.push(r);
+  });
+  return {rules:rules,skipped:skipped};
+}
+function aclProtoCovers(jp,ip){
+  if(jp===ip) return true;
+  if(jp==="ip") return true;
+  return false;
+}
+function aclCovers(j,r){
+  return aclProtoCovers(j.proto,r.proto)
+    && j.src[0]<=r.src[0] && j.src[1]>=r.src[1]
+    && j.dst[0]<=r.dst[0] && j.dst[1]>=r.dst[1]
+    && j.ports[0]<=r.ports[0] && j.ports[1]>=r.ports[1];
+}
+function aclAnalyze(rules){
+  var out=[], counts={shadowed:0,redundant:0,broad:0,clean:0};
+  rules.forEach(function(r,i){
+    var decider=-1, j;
+    for(j=0;j<i;j++){
+      if(out[j].status==="shadowed") continue; /* a dead rule can never match traffic, so it cannot cover anything */
+      if(aclCovers(rules[j],r)){ decider=j; break; }
+    }
+    var res={status:"clean",by:[],decider:-1};
+    if(decider>=0){
+      var same=rules[decider].action===r.action;
+      res.decider=decider+1;
+      for(j=0;j<i;j++){
+        if(out[j].status==="shadowed") continue;
+        if(!aclCovers(rules[j],r)) continue;
+        if((rules[j].action===r.action)===same) res.by.push(j+1);
+      }
+      res.status=same?"redundant":"shadowed";
+    } else if(r.action==="permit"&&r.proto==="ip"&&r.src[0]===0&&r.src[1]===4294967295&&r.dst[0]===0&&r.dst[1]===4294967295){
+      res.status="broad";
+    }
+    counts[res.status]++;
+    out.push(res);
+  });
+  return {results:out,counts:counts};
+}
+
+
+/* ============================================================================
+   config-verify core — Cisco IOS parser, topology model, simplified RIB
+   derivation, and the five verification checks.
+   Pure functions: no DOM, no network. Safe to import in Node.
+   ============================================================================ */
+
+function cvTrim(s){ return String(s==null?"":s).replace(/^\s+|\s+$/g,""); }
+
+/* Prefix length from a netmask integer. Assumes a contiguous mask (v1). */
+function cvPrefixLen(mask){
+  mask=mask>>>0; var p=0,i;
+  for(i=31;i>=0;i--){ if((mask>>>i)&1){ p++; } else { break; } }
+  return p;
+}
+function cvSubnetStr(net,prefix){ return IP.fmt(net)+"/"+prefix; }
+function cvDevName(d,idx){ return d.hostname||("Device "+(idx+1)); }
+
+/* --------------------------------------------------------------------------
+   parseDevice(text) — parse one Cisco IOS device config.
+   Returns {hostname, interfaces, ospf, bgp, statics, acls, warnings}.
+   -------------------------------------------------------------------------- */
+function parseDevice(text){
+  var dev={
+    hostname:null,
+    interfaces:[], /* {name,ip,ipStr,mask,maskStr,prefix,net,netStr,shutdown,
+                       hello,dead,ospfArea,aclIn,aclOut} */
+    ospf:null,     /* {pid,routerId,networks:[{net,wild,area}]} */
+    bgp:null,      /* {asn,neighbors:[{ip,ipStr,remoteAs}],networks:[{net,mask}]} */
+    statics:[],    /* {dest,destStr,mask,prefix,via,viaStr,viaIf,raw} */
+    acls:[],       /* {name,lines:[raw config lines]} */
+    warnings:[]
+  };
+  var lines=String(text||"").split(/\r?\n/);
+  var ctx=null; /* {kind:'interface'|'ospf'|'bgp'|'acl'|'skip', ref} */
+
+  function closeCtx(){
+    if(!ctx) return;
+    if(ctx.kind==="interface") dev.interfaces.push(ctx.ref);
+    else if(ctx.kind==="acl") dev.acls.push(ctx.ref);
+    ctx=null;
+  }
+  function newInterface(name){
+    return {name:name,ip:null,ipStr:null,mask:null,maskStr:null,prefix:null,
+      net:null,netStr:null,shutdown:false,hello:null,dead:null,
+      ospfArea:null,aclIn:null,aclOut:null};
+  }
+
+  for(var li=0;li<lines.length;li++){
+    var line=cvTrim(String(lines[li]).replace(/\t/g," "));
+    if(!line) continue;
+    if(line.charAt(0)==="!"){ closeCtx(); continue; }
+
+    var m;
+    /* --- block starters (each closes any open block first) --- */
+    if((m=/^hostname\s+(\S+)/i.exec(line))){ closeCtx(); dev.hostname=m[1]; continue; }
+    if((m=/^interface\s+(\S+)/i.exec(line))){
+      closeCtx();
+      if(/^range\b/i.test(m[1])){ dev.warnings.push("interface range is not modeled in v1 — skipped: "+line); continue; }
+      ctx={kind:"interface",ref:newInterface(m[1])}; continue;
+    }
+    if((m=/^router\s+ospf\s+(\d+)/i.exec(line))){ closeCtx(); dev.ospf={pid:parseInt(m[1],10),routerId:null,networks:[]}; ctx={kind:"ospf"}; continue; }
+    if((m=/^router\s+bgp\s+(\d+)/i.exec(line))){ closeCtx(); dev.bgp={asn:parseInt(m[1],10),neighbors:[],networks:[]}; ctx={kind:"bgp"}; continue; }
+    if((m=/^ip\s+access-list\s+extended\s+(\S+)/i.exec(line))){ closeCtx(); ctx={kind:"acl",ref:{name:m[1],lines:[]}}; continue; }
+    if((m=/^ip\s+access-list\s+(standard|\d+)\s*(\S*)/i.exec(line))){ closeCtx(); dev.warnings.push("standard ACLs are not analyzed in v1 — skipped: "+line); ctx={kind:"skip"}; continue; }
+    if((m=/^access-list\s+(\d+)\s+(.*)$/i.exec(line))){
+      closeCtx();
+      var num=parseInt(m[1],10), rest=m[2];
+      if(/^remark\b/i.test(rest)) continue;
+      if(!((num>=100&&num<=199)||(num>=2000&&num<=2699))){ dev.warnings.push("non-extended access-list "+num+" is not analyzed in v1"); continue; }
+      var nm="ACL "+num, ex=null, ai;
+      for(ai=0;ai<dev.acls.length;ai++) if(dev.acls[ai].name===nm) ex=dev.acls[ai];
+      if(!ex){ ex={name:nm,lines:[]}; dev.acls.push(ex); }
+      ex.lines.push(line); continue;
+    }
+    if((m=/^ip\s+route\s+(\S+)\s+(\S+)\s+(\S+)(.*)$/i.exec(line))){
+      closeCtx();
+      var dr=IP.parse(m[1]), mr=IP.parse(m[2]);
+      if(!dr.ok||!mr.ok){ dev.warnings.push("could not parse static route: "+line); continue; }
+      var vr=IP.parse(m[3]);
+      dev.statics.push({dest:dr.val,destStr:IP.fmt(dr.val),mask:mr.val,prefix:cvPrefixLen(mr.val),
+        via:vr.ok?vr.val:null,viaStr:vr.ok?IP.fmt(vr.val):null,viaIf:vr.ok?null:m[3],raw:line});
+      continue;
+    }
+    if(/^(exit|end)\b/i.test(line)){ closeCtx(); continue; }
+
+    /* --- inside interface blocks --- */
+    if(ctx&&ctx.kind==="interface"){
+      var f=ctx.ref;
+      if((m=/^ip\s+address\s+(\S+)\s+(\S+)(\s+secondary)?\s*$/i.exec(line))){
+        if(m[3]){ dev.warnings.push("secondary address ignored in v1 on "+f.name+": "+line); }
+        else{
+          var ar=IP.parse(m[1]), nr=IP.parse(m[2]);
+          if(ar.ok&&nr.ok){
+            f.ip=ar.val; f.ipStr=IP.fmt(ar.val); f.mask=nr.val; f.maskStr=IP.fmt(nr.val);
+            f.prefix=cvPrefixLen(nr.val); f.net=(ar.val&nr.val)>>>0; f.netStr=cvSubnetStr(f.net,f.prefix);
+          } else dev.warnings.push("could not parse address on "+f.name+": "+line);
+        }
+        continue;
+      }
+      if(/^no\s+ip\s+address\b/i.test(line)){ f.ip=null;f.ipStr=null;f.mask=null;f.maskStr=null;f.prefix=null;f.net=null;f.netStr=null; continue; }
+      if(/^shutdown\s*$/i.test(line)){ f.shutdown=true; continue; }
+      if(/^no\s+shutdown\s*$/i.test(line)){ f.shutdown=false; continue; }
+      if((m=/^ip\s+ospf\s+hello-interval\s+(\d+)/i.exec(line))){ f.hello=parseInt(m[1],10); continue; }
+      if((m=/^ip\s+ospf\s+dead-interval\s+(\d+)/i.exec(line))){ f.dead=parseInt(m[1],10); continue; }
+      if((m=/^ip\s+ospf\s+\d+\s+area\s+(\S+)/i.exec(line))){ f.ospfArea=m[1]; continue; }
+      if((m=/^ip\s+access-group\s+(\S+)\s+(in|out)/i.exec(line))){ if(m[2].toLowerCase()==="in") f.aclIn=m[1]; else f.aclOut=m[1]; continue; }
+      continue; /* other interface subcommands are not modeled in v1 */
+    }
+    /* --- inside router ospf --- */
+    if(ctx&&ctx.kind==="ospf"){
+      if((m=/^network\s+(\S+)\s+(\S+)\s+area\s+(\S+)/i.exec(line))){
+        var on=IP.parse(m[1]), ow=IP.parse(m[2]);
+        if(on.ok&&ow.ok) dev.ospf.networks.push({net:on.val,wild:ow.val,area:m[3]});
+        else dev.warnings.push("could not parse ospf network statement: "+line);
+        continue;
+      }
+      if((m=/^router-id\s+(\S+)/i.exec(line))){ dev.ospf.routerId=m[1]; continue; }
+      continue;
+    }
+    /* --- inside router bgp --- */
+    if(ctx&&ctx.kind==="bgp"){
+      if((m=/^neighbor\s+(\S+)\s+remote-as\s+(\d+)/i.exec(line))){
+        var br=IP.parse(m[1]);
+        if(br.ok) dev.bgp.neighbors.push({ip:br.val,ipStr:IP.fmt(br.val),remoteAs:parseInt(m[2],10)});
+        else dev.warnings.push("could not parse bgp neighbor: "+line);
+        continue;
+      }
+      if(/^no\s+neighbor\b/i.test(line)) continue;
+      if((m=/^network\s+(\S+)(?:\s+mask\s+(\S+))?/i.exec(line))){
+        var bn=IP.parse(m[1]);
+        if(bn.ok){
+          var bm=m[2]?IP.parse(m[2]):null;
+          dev.bgp.networks.push({net:(bn.val&((bm&&bm.ok?bm.val:0xFFFFFFFF)))>>>0,
+            mask:(bm&&bm.ok?bm.val:0xFFFFFFFF)});
+        }
+        continue;
+      }
+      continue;
+    }
+    /* --- inside an ACL block: keep raw lines for the reused analyzer --- */
+    if(ctx&&ctx.kind==="acl"){ ctx.ref.lines.push(line); continue; }
+    if(ctx&&ctx.kind==="skip"){ continue; }
+    /* any other top-level line is not modeled in v1 — ignored quietly */
+  }
+  closeCtx();
+  return dev;
+}
+
+/* --------------------------------------------------------------------------
+   cvOspfState(dev, iface) — OSPF state of one interface.
+   Returns {area, hello, dead} or null when OSPF is not enabled on it.
+   Area: interface-level `ip ospf <pid> area` wins, else the matching
+   `network` statement under `router ospf`. Unset timers mean IOS defaults
+   (hello 10s, dead 40s).
+   -------------------------------------------------------------------------- */
+function cvOspfState(dev,iface){
+  var area=iface.ospfArea;
+  if(area==null&&dev.ospf&&iface.ip!=null){
+    for(var i=0;i<dev.ospf.networks.length;i++){
+      var n=dev.ospf.networks[i], nm=(~n.wild)>>>0;
+      if((((iface.ip&nm)>>>0)===((n.net&nm)>>>0))){ area=n.area; break; }
+    }
+  }
+  if(area==null) return null;
+  return {area:String(area),
+    hello:iface.hello==null?10:iface.hello,
+    dead:iface.dead==null?40:iface.dead};
+}
+
+/* --------------------------------------------------------------------------
+   buildModel(devices) — topology from shared subnets.
+   Two UP interfaces on different devices in the same subnet form a link.
+   (Documented v1 rule; shutdown interfaces never form links.)
+   -------------------------------------------------------------------------- */
+function buildModel(devices){
+  var ups=[];
+  devices.forEach(function(d,di){
+    d.interfaces.forEach(function(f){
+      if(f.ip!=null&&!f.shutdown) ups.push({di:di,dev:d,iface:f});
+    });
+  });
+  var byNet={};
+  ups.forEach(function(u){ (byNet[u.iface.netStr]=byNet[u.iface.netStr]||[]).push(u); });
+
+  var links=[];
+  Object.keys(byNet).forEach(function(k){
+    var g=byNet[k];
+    for(var i=0;i<g.length;i++) for(var j=i+1;j<g.length;j++){
+      if(g[i].di===g[j].di) continue;
+      var A=g[i], B=g[j];
+      links.push({
+        subnet:k,
+        a:{di:A.di,dev:cvDevName(A.dev,A.di),iface:A.iface.name,ip:A.iface.ipStr},
+        b:{di:B.di,dev:cvDevName(B.dev,B.di),iface:B.iface.name,ip:B.iface.ipStr},
+        aOspf:cvOspfState(A.dev,A.iface),
+        bOspf:cvOspfState(B.dev,B.iface)
+      });
+    }
+  });
+
+  /* Same-device overlapping connected subnets are a config smell — surfaced
+     as a device warning, not a numbered check finding. */
+  devices.forEach(function(d){
+    var seen={};
+    d.interfaces.forEach(function(f){
+      if(f.ip==null||f.shutdown) return;
+      if(seen[f.netStr]) d.warnings.push("overlapping connected subnets on this device: "+f.name+" and "+seen[f.netStr]+" both cover "+f.netStr);
+      else seen[f.netStr]=f.name;
+    });
+  });
+
+  return {links:links};
+}
+
+/* --------------------------------------------------------------------------
+   deriveRIBs(devices, links) — simplified per-device RIBs.
+   DOCUMENTED v1 SIMPLIFICATIONS (also stated on-page):
+   - connected: the device's own up interfaces.
+   - static: the device's own `ip route` destinations.
+   - OSPF: every OSPF-enabled interface subnet on every device in the same
+     OSPF domain. The domain is the transitive closure over links with OSPF
+     enabled on BOTH ends. Real OSPF would also require matching areas,
+     matching timers, DR election, and LSA flooding rules — v1 does not
+     model any of that (area/timer mismatches are flagged by check 2).
+   - BGP: each configured neighbor's connected + static subnets, regardless
+     of whether the session would actually establish (v1 does not model BGP
+     session state, best-path selection, or policy).
+   -------------------------------------------------------------------------- */
+function deriveRIBs(devices,links){
+  var ribs=devices.map(function(){ return {connected:{},statics:{},ospf:{},bgp:{},all:{}}; });
+  function add(rib,bucket,subnet){ rib[bucket][subnet]=true; rib.all[subnet]=true; }
+
+  devices.forEach(function(d,di){
+    d.interfaces.forEach(function(f){
+      if(f.ip!=null&&!f.shutdown) add(ribs[di],"connected",f.netStr);
+    });
+    d.statics.forEach(function(s){ add(ribs[di],"statics",cvSubnetStr(s.dest,s.prefix)); });
+  });
+
+  /* OSPF propagation over the OSPF-enabled domain */
+  var adj=devices.map(function(){ return []; });
+  links.forEach(function(L){
+    if(L.aOspf&&L.bOspf){ adj[L.a.di].push(L.b.di); adj[L.b.di].push(L.a.di); }
+  });
+  devices.forEach(function(d,di){
+    var seen={}, queue=[di]; seen[di]=true;
+    while(queue.length){
+      var cur=queue.shift();
+      devices[cur].interfaces.forEach(function(f){
+        if(f.ip!=null&&!f.shutdown&&cvOspfState(devices[cur],f)) add(ribs[di],"ospf",f.netStr);
+      });
+      adj[cur].forEach(function(nx){ if(!seen[nx]){ seen[nx]=true; queue.push(nx); } });
+    }
+  });
+
+  /* BGP: learn each neighbor device's connected + static subnets */
+  devices.forEach(function(d,di){
+    if(!d.bgp) return;
+    d.bgp.neighbors.forEach(function(nb){
+      var owner=-1;
+      devices.forEach(function(od,oi){
+        od.interfaces.forEach(function(f){ if(f.ip===nb.ip) owner=oi; });
+      });
+      if(owner<0) return;
+      devices[owner].interfaces.forEach(function(f){
+        if(f.ip!=null&&!f.shutdown) add(ribs[di],"bgp",f.netStr);
+      });
+      devices[owner].statics.forEach(function(s){
+        add(ribs[di],"bgp",cvSubnetStr(s.dest,s.prefix));
+      });
+    });
+  });
+
+  return ribs;
+}
+
+/* --------------------------------------------------------------------------
+   runChecks(devices) — the five verification checks.
+   Returns {devices, links, ribs, findings, acl}.
+   -------------------------------------------------------------------------- */
+function runChecks(devices){
+  var model=buildModel(devices);
+  var links=model.links;
+  var ribs=deriveRIBs(devices,links);
+  var findings=[];
+
+  /* ---- check 1: duplicate IP addresses ---- */
+  var byIp={};
+  devices.forEach(function(d,di){
+    var hn=cvDevName(d,di);
+    d.interfaces.forEach(function(f){
+      if(f.ip==null) return;
+      (byIp[f.ipStr]=byIp[f.ipStr]||[]).push({dev:hn,iface:f.name,shutdown:f.shutdown});
+    });
+  });
+  Object.keys(byIp).forEach(function(ip){
+    var owners=byIp[ip];
+    if(owners.length>1){
+      findings.push({check:1,kind:"dup-ip",severity:"error",
+        title:"Duplicate IP address "+ip,
+        detail:"Configured on "+owners.map(function(o){
+          return o.dev+" "+o.iface+(o.shutdown?" (shutdown)":"");
+        }).join(" and ")+". Only one device can own an address — whichever ARP entry wins decides where the traffic goes, so this flaps or blackholes.",
+        devices:owners.map(function(o){ return o.dev; })});
+    }
+  });
+
+  /* ---- check 2: OSPF area / hello / dead mismatch on shared links ---- */
+  links.forEach(function(L){
+    if(!L.aOspf||!L.bOspf) return;
+    var linkName="link "+L.subnet+" ("+L.a.dev+" "+L.a.iface+" <-> "+L.b.dev+" "+L.b.iface+")";
+    if(L.aOspf.area!==L.bOspf.area){
+      findings.push({check:2,kind:"ospf-area",severity:"error",
+        title:"OSPF area mismatch on "+linkName,
+        detail:L.a.dev+" "+L.a.iface+" is in area "+L.aOspf.area+" but "+L.b.dev+" "+L.b.iface+" is in area "+L.bOspf.area+". OSPF neighbors must be in the same area — this adjacency will never form, so no routes cross this link.",
+        devices:[L.a.dev,L.b.dev]});
+    }
+    if(L.aOspf.hello!==L.bOspf.hello){
+      findings.push({check:2,kind:"ospf-hello",severity:"error",
+        title:"OSPF hello-interval mismatch on "+linkName,
+        detail:"Hello interval is "+L.aOspf.hello+"s on "+L.a.dev+" "+L.a.iface+" but "+L.bOspf.hello+"s on "+L.b.dev+" "+L.b.iface+". Neighbors with different hello timers never become adjacent.",
+        devices:[L.a.dev,L.b.dev]});
+    }
+    if(L.aOspf.dead!==L.bOspf.dead){
+      findings.push({check:2,kind:"ospf-dead",severity:"error",
+        title:"OSPF dead-interval mismatch on "+linkName,
+        detail:"Dead interval is "+L.aOspf.dead+"s on "+L.a.dev+" "+L.a.iface+" but "+L.bOspf.dead+"s on "+L.b.dev+" "+L.b.iface+". Neighbors with different dead timers never become adjacent.",
+        devices:[L.a.dev,L.b.dev]});
+    }
+  });
+
+  /* ---- check 3: BGP neighbor remote-AS mismatch (each side's view) ---- */
+  devices.forEach(function(d,di){
+    if(!d.bgp) return;
+    var hn=cvDevName(d,di);
+    d.bgp.neighbors.forEach(function(nb){
+      var owner=-1, ownerBgp=null;
+      devices.forEach(function(od,oi){
+        od.interfaces.forEach(function(f){ if(f.ip===nb.ip) owner=oi; });
+      });
+      var ownerHn=owner>=0?cvDevName(devices[owner],owner):null;
+      if(owner<0){
+        findings.push({check:3,kind:"bgp-unknown",severity:"error",
+          title:"BGP neighbor "+nb.ipStr+" is not on any parsed device",
+          detail:hn+" lists "+nb.ipStr+" as a BGP neighbor (remote-as "+nb.remoteAs+"), but no parsed device owns that address. The session can never establish — either the neighbor's config is missing from the paste or the address is wrong.",
+          devices:[hn]});
+        return;
+      }
+      ownerBgp=devices[owner].bgp;
+      if(!ownerBgp){
+        findings.push({check:3,kind:"bgp-noasn",severity:"error",
+          title:"BGP neighbor "+ownerHn+" ("+nb.ipStr+") has no BGP configured",
+          detail:hn+" expects "+nb.ipStr+" to speak BGP as AS "+nb.remoteAs+", but "+ownerHn+" has no router bgp section at all. One side of the peering is missing.",
+          devices:[hn,ownerHn]});
+        return;
+      }
+      if(ownerBgp.asn!==nb.remoteAs){
+        findings.push({check:3,kind:"bgp-asn",severity:"error",
+          title:"BGP remote-AS mismatch: "+hn+" -> "+ownerHn,
+          detail:hn+" configures neighbor "+nb.ipStr+" with remote-as "+nb.remoteAs+", but that address belongs to "+ownerHn+", which actually runs AS "+ownerBgp.asn+". Both sides must agree on the peer's AS number or the session stays idle.",
+          devices:[hn,ownerHn]});
+      }
+    });
+  });
+
+  /* ---- check 4: subnets unreachable from a device ---- */
+  var known={};
+  devices.forEach(function(d){
+    d.interfaces.forEach(function(f){ if(f.ip!=null&&!f.shutdown) known[f.netStr]=true; });
+  });
+  devices.forEach(function(d,di){
+    var hn=cvDevName(d,di);
+    Object.keys(known).forEach(function(sn){
+      if(!ribs[di].all[sn]){
+        findings.push({check:4,kind:"unreachable",severity:"error",
+          title:hn+" cannot reach "+sn,
+          detail:"No route to "+sn+" in "+hn+"'s derived RIB — it is not directly connected, no static route covers it, OSPF does not advertise it into "+hn+"'s domain, and no BGP neighbor supplies it. A link, a network statement, or a route is missing somewhere.",
+          devices:[hn]});
+      }
+    });
+  });
+
+  /* ---- check 5: ACL findings via the reused site analyzer ---- */
+  var aclSummary=[];
+  devices.forEach(function(d,di){
+    var hn=cvDevName(d,di);
+    d.acls.forEach(function(a){
+      var parsed=aclParse(a.lines.join("\n"));
+      var res=aclAnalyze(parsed.rules);
+      aclSummary.push({device:hn,acl:a.name,parsed:parsed,analysis:res});
+      res.results.forEach(function(r,i){
+        if(r.status==="clean") return;
+        var line=parsed.rules[i]?parsed.rules[i].raw:"";
+        var sev=r.status==="broad"?"error":"warn";
+        var what=r.status==="shadowed"?"Shadowed — this rule can never fire":
+                 r.status==="redundant"?"Redundant — this rule adds nothing":
+                 "Overly broad — permit ip any any";
+        var why=r.status==="shadowed"?
+                 "Every packet this rule could match is already matched by rule "+r.by.join(", rule ")+" with the opposite action, so this line is dead config that lies about the policy.":
+               r.status==="redundant"?
+                 "Fully covered by rule "+r.by.join(", rule ")+" with the same action. Deleting it changes firewall behavior not at all — it only adds lookup cost and audit noise.":
+                 "Permits every protocol from anywhere to anywhere. If this sits above the cleanup deny, the firewall is barely filtering.";
+        findings.push({check:5,kind:"acl-"+r.status,severity:sev,
+          title:hn+" · "+a.name+" · rule "+(i+1)+": "+what,
+          detail:"Rule text: "+line+" — "+why,
+          devices:[hn]});
+      });
+    });
+  });
+
+  return {devices:devices,links:links,ribs:ribs,findings:findings,acl:aclSummary};
+}
+
+/* --------------------------------------------------------------------------
+   SAMPLE — a clean, fully consistent 3-router IOS lab. Loaded by the
+   "Load sample lab" button; also the "clean set" in automated validation.
+   -------------------------------------------------------------------------- */
+var SAMPLE=[
+{label:"R1",config:
+"hostname R1\n"+
+"!\n"+
+"interface GigabitEthernet0/0\n"+
+" ip address 10.0.12.1 255.255.255.252\n"+
+" no shutdown\n"+
+"!\n"+
+"interface GigabitEthernet0/1\n"+
+" ip address 10.0.13.1 255.255.255.252\n"+
+" no shutdown\n"+
+"!\n"+
+"interface Loopback0\n"+
+" ip address 192.168.1.1 255.255.255.255\n"+
+"!\n"+
+"router ospf 1\n"+
+" router-id 1.1.1.1\n"+
+" network 10.0.12.0 0.0.0.3 area 0\n"+
+" network 10.0.13.0 0.0.0.3 area 0\n"+
+" network 192.168.1.1 0.0.0.0 area 0\n"+
+"!\n"+
+"router bgp 65001\n"+
+" neighbor 10.0.12.2 remote-as 65001\n"+
+" neighbor 10.0.13.2 remote-as 65001\n"+
+"!\n"+
+"ip access-list extended CLEAN-IN\n"+
+" permit tcp any any eq 80\n"+
+"!\n"},
+{label:"R2",config:
+"hostname R2\n"+
+"!\n"+
+"interface GigabitEthernet0/0\n"+
+" ip address 10.0.12.2 255.255.255.252\n"+
+" no shutdown\n"+
+"!\n"+
+"interface GigabitEthernet0/1\n"+
+" ip address 10.0.23.1 255.255.255.252\n"+
+" no shutdown\n"+
+"!\n"+
+"interface Loopback0\n"+
+" ip address 192.168.2.1 255.255.255.255\n"+
+"!\n"+
+"router ospf 1\n"+
+" router-id 2.2.2.2\n"+
+" network 10.0.12.0 0.0.0.3 area 0\n"+
+" network 10.0.23.0 0.0.0.3 area 0\n"+
+" network 192.168.2.1 0.0.0.0 area 0\n"+
+"!\n"+
+"router bgp 65001\n"+
+" neighbor 10.0.12.1 remote-as 65001\n"+
+" neighbor 10.0.23.2 remote-as 65001\n"+
+"!\n"+
+"ip route 203.0.113.0 255.255.255.0 10.0.12.1\n"+
+"!\n"},
+{label:"R3",config:
+"hostname R3\n"+
+"!\n"+
+"interface GigabitEthernet0/0\n"+
+" ip address 10.0.23.2 255.255.255.252\n"+
+" no shutdown\n"+
+"!\n"+
+"interface GigabitEthernet0/1\n"+
+" ip address 10.0.13.2 255.255.255.252\n"+
+" no shutdown\n"+
+"!\n"+
+"interface Loopback0\n"+
+" ip address 192.168.3.1 255.255.255.255\n"+
+"!\n"+
+"router ospf 1\n"+
+" router-id 3.3.3.3\n"+
+" network 10.0.13.0 0.0.0.3 area 0\n"+
+" network 10.0.23.0 0.0.0.3 area 0\n"+
+" network 192.168.3.1 0.0.0.0 area 0\n"+
+"!\n"+
+"router bgp 65001\n"+
+" neighbor 10.0.13.1 remote-as 65001\n"+
+" neighbor 10.0.23.1 remote-as 65001\n"+
+"!\n"}
+];
+
+/* ============================================================================
+   Browser UI — mount(el) renders the interactive tool into el.
+   No external dependencies; all state is local to the mount.
+   ============================================================================ */
+
+function cvEsc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function cvTopoSVG(devs,links){
+  var n=devs.length;
+  if(!n) return "";
+  var W=640,H=300,cx=W/2,cy=H/2+8,R=Math.min(W,H)/2-58;
+  var pos=devs.map(function(d,i){
+    var a=-Math.PI/2+(n===1?0:i*2*Math.PI/n);
+    return {x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),name:cvDevName(d,i)};
+  });
+  /* group links by unordered device pair so parallel links offset cleanly */
+  var pairCount={};
+  links.forEach(function(L){
+    var k=Math.min(L.a.di,L.b.di)+"-"+Math.max(L.a.di,L.b.di);
+    L._pi=(pairCount[k]=((pairCount[k]||0)+1))-1;
+    L._pn=0; /* filled below */
+  });
+  var pairTotal={};
+  links.forEach(function(L){
+    var k=Math.min(L.a.di,L.b.di)+"-"+Math.max(L.a.di,L.b.di);
+    pairTotal[k]=(pairTotal[k]||0)+1;
+  });
+  links.forEach(function(L){
+    var k=Math.min(L.a.di,L.b.di)+"-"+Math.max(L.a.di,L.b.di);
+    L._pn=pairTotal[k];
+  });
+  var s='<svg class="cv-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Topology derived from shared subnets">';
+  links.forEach(function(L){
+    var A=pos[L.a.di],B=pos[L.b.di];
+    var dx=B.x-A.x,dy=B.y-A.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+    var off=(L._pi-(L._pn-1)/2)*14;
+    var px=-dy/len*off,py=dx/len*off;
+    var x1=A.x+px,y1=A.y+py,x2=B.x+px,y2=B.y+py;
+    var mx=(x1+x2)/2,my=(y1+y2)/2;
+    s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" class="cv-link-line"/>';
+    s+='<text x="'+mx.toFixed(1)+'" y="'+(my-6).toFixed(1)+'" class="cv-link-label" text-anchor="middle">'+cvEsc(L.subnet)+'</text>';
+  });
+  pos.forEach(function(p){
+    s+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="27" class="cv-node"/>'
+      +'<text x="'+p.x.toFixed(1)+'" y="'+(p.y+5).toFixed(1)+'" class="cv-node-label" text-anchor="middle">'+cvEsc(p.name)+'</text>';
+  });
+  return s+'</svg>';
+}
+
+var CV_CHECK_BLURB={
+  1:"Duplicate IPs — two interfaces configured with the same address. Only one device can own an address; this flaps or blackholes.",
+  2:"OSPF mismatch — neighbors must agree on area and hello/dead timers, or the adjacency never forms.",
+  3:"BGP mismatch — each side must agree on the other's AS number, or the session stays idle.",
+  4:"Unreachable subnet — no route via connected, static, OSPF, or BGP-derived RIB.",
+  5:"ACL findings — shadowed, redundant, and overly-broad rules, via the site's ACL rule analyzer."
+};
+
+function cvRenderSummary(res){
+  var counts={1:0,2:0,3:0,4:0,5:0};
+  res.findings.forEach(function(f){ counts[f.check]=(counts[f.check]||0)+1; });
+  var h='<div class="cv-summary"><div class="cv-stat-strip">';
+  [1,2,3,4,5].forEach(function(c){
+    h+='<div class="cv-stat"><span class="v">'+counts[c]+'</span><span class="l">Check '+c+'</span></div>';
+  });
+  h+='<div class="cv-stat cv-total"><span class="v">'+res.findings.length+'</span><span class="l">Total findings</span></div>';
+  h+='</div>';
+  h+='<p class="cv-check-key">'+[1,2,3,4,5].map(function(c){
+    return '<span><strong>Check '+c+':</strong> '+cvEsc(CV_CHECK_BLURB[c])+'</span>';
+  }).join('<br>')+'</p></div>';
+  return h;
+}
+
+function cvRenderFindings(res){
+  if(!res.findings.length){
+    return '<div class="cv-callout cv-ok"><strong>No issues found.</strong> No duplicate IPs, no OSPF or BGP mismatches, every subnet is reachable from every device, and no dead ACL rules — across all five checks.</div>';
+  }
+  var h='<div class="cv-findings">';
+  res.findings.forEach(function(f){
+    var badge=f.severity==="error"
+      ?'<span class="cv-badge-sev cv-err">Issue</span>'
+      :'<span class="cv-badge-sev cv-warn">Warning</span>';
+    h+='<div class="cv-finding">'
+      +'<div class="cv-finding-head">'+badge+'<span class="cv-check-tag">Check '+f.check+'</span></div>'
+      +'<div class="cv-finding-title">'+cvEsc(f.title)+'</div>'
+      +'<div class="cv-finding-detail">'+cvEsc(f.detail)+'</div>'
+      +'</div>';
+  });
+  return h+'</div>';
+}
+
+function cvRenderTopology(res){
+  if(!res.links.length) return '<h3 class="cv-sec">Topology</h3><p class="cv-hint">No shared subnets found between devices — every device is an island.</p>';
+  var rows=res.links.map(function(L){
+    var ospf=(L.aOspf&&L.bOspf)
+      ?("OSPF area "+cvEsc(L.aOspf.area)+" / "+cvEsc(L.bOspf.area)+(L.aOspf.area===L.bOspf.area?"":" — MISMATCH"))
+      :'<span class="cv-dim">OSPF not on both ends</span>';
+    return '<li><code class="cv-inline">'+cvEsc(L.subnet)+'</code> — '
+      +cvEsc(L.a.dev)+' '+cvEsc(L.a.iface)+' ('+cvEsc(L.a.ip)+')'
+      +' &lt;-&gt; '
+      +cvEsc(L.b.dev)+' '+cvEsc(L.b.iface)+' ('+cvEsc(L.b.ip)+')'
+      +'<br><span class="cv-dim">'+ospf+'</span></li>';
+  }).join("");
+  return '<h3 class="cv-sec">Topology <span class="cv-dim">(links derived from shared subnets)</span></h3>'
+    +cvTopoSVG(res.devices,res.links)
+    +'<ul class="cv-links">'+rows+'</ul>';
+}
+
+function cvRenderDevices(res){
+  var h='<h3 class="cv-sec">Per-device detail</h3>';
+  res.devices.forEach(function(d,di){
+    var hn=cvDevName(d,di);
+    var rib=res.ribs[di];
+    function ribList(bucket,label){
+      var ks=Object.keys(rib[bucket]).sort();
+      if(!ks.length) return "";
+      return '<div class="cv-rib-row"><span class="cv-rib-label">'+label+'</span><span>'
+        +ks.map(function(k){ return '<code class="cv-inline">'+cvEsc(k)+'</code>'; }).join(" ")+'</span></div>';
+    }
+    var ifRows=d.interfaces.map(function(f){
+      var o=cvOspfState(d,f);
+      return '<tr><td><code class="cv-inline">'+cvEsc(f.name)+'</code></td>'
+        +'<td>'+(f.ipStr?cvEsc(f.ipStr+"/"+f.prefix):'<span class="cv-dim">—</span>')+'</td>'
+        +'<td>'+(f.shutdown?'<span class="cv-shut">shutdown</span>':"up")+'</td>'
+        +'<td>'+(o?("area "+cvEsc(o.area)+", hello "+o.hello+"s, dead "+o.dead+"s"):'<span class="cv-dim">—</span>')+'</td></tr>';
+    }).join("");
+    var ospfNet=d.ospf?d.ospf.networks.map(function(n){
+      return '<code class="cv-inline">'+cvEsc(IP.fmt(n.net)+"/"+cvPrefixLen((~n.wild)>>>0))+'</code> area '+cvEsc(String(n.area));
+    }).join(" · "):"—";
+    var bgpN=d.bgp?d.bgp.neighbors.map(function(nb){
+      return '<code class="cv-inline">'+cvEsc(nb.ipStr)+'</code> remote-as '+nb.remoteAs;
+    }).join(" · "):"—";
+    var statics=d.statics.length?d.statics.map(function(s){
+      return '<code class="cv-inline">'+cvEsc(cvSubnetStr(s.dest,s.prefix))+'</code> via '+(s.viaStr?cvEsc(s.viaStr):cvEsc(s.viaIf||"?"));
+    }).join(" · "):"—";
+    var acls=d.acls.length?d.acls.map(function(a){ return cvEsc(a.name)+" ("+a.lines.length+" lines)"; }).join(" · "):"—";
+    var warns=d.warnings.length?'<ul class="cv-warns">'+d.warnings.map(function(w){ return '<li>'+cvEsc(w)+'</li>'; }).join("")+'</ul>':"";
+    h+='<details class="cv-dev"><summary><strong>'+cvEsc(hn)+'</strong>'
+      +' <span class="cv-dim">'+d.interfaces.length+' interfaces · '
+      +(d.ospf?("OSPF "+d.ospf.pid):"no OSPF")+' · '
+      +(d.bgp?("BGP AS "+d.bgp.asn):"no BGP")+' · '
+      +d.statics.length+' statics · '+d.acls.length+' ACLs</span></summary>'
+      +'<div class="cv-dev-body">'
+      +'<table class="cv-table"><thead><tr><th>Interface</th><th>IPv4</th><th>State</th><th>OSPF</th></tr></thead><tbody>'+ifRows+'</tbody></table>'
+      +'<dl class="cv-kv">'
+      +'<dt>OSPF networks</dt><dd>'+ospfNet+'</dd>'
+      +'<dt>BGP neighbors</dt><dd>'+bgpN+'</dd>'
+      +'<dt>Static routes</dt><dd>'+statics+'</dd>'
+      +'<dt>Extended ACLs</dt><dd>'+acls+'</dd>'
+      +'</dl>'
+      +'<h4 class="cv-sec-sm">Derived RIB <span class="cv-dim">(v1 simplifications — see How it works)</span></h4>'
+      +ribList("connected","Connected")+ribList("statics","Static")+ribList("ospf","OSPF")+ribList("bgp","BGP")
+      +warns
+      +'</div></details>';
+  });
+  return h;
+}
+
+function mount(el){
+  if(!el||el.getAttribute("data-cv-mounted")) return;
+  el.setAttribute("data-cv-mounted","1");
+
+  var S={panes:[{text:""},{text:""},{text:""}],timer:null};
+
+  function paneMeta(d){
+    if(!d) return "paste Cisco IOS config";
+    var bits=[d.interfaces.length+" interfaces"];
+    bits.push(d.ospf?("OSPF "+d.ospf.pid):"no OSPF");
+    bits.push(d.bgp?("BGP AS "+d.bgp.asn):"no BGP");
+    if(d.warnings.length) bits.push(d.warnings.length+" note"+(d.warnings.length>1?"s":""));
+    return bits.join(" · ");
+  }
+
+  function renderShell(){
+    var h='<div class="cv-devices">';
+    S.panes.forEach(function(p,i){
+      h+='<div class="cv-pane" data-i="'+i+'">'
+        +'<div class="cv-pane-head"><strong class="cv-pane-name">Device '+(i+1)+'</strong>'
+        +'<span class="cv-pane-meta">paste Cisco IOS config</span>'
+        +(S.panes.length>1?'<button type="button" class="cv-mini-btn cv-remove" data-i="'+i+'" aria-label="Remove device '+(i+1)+'">Remove</button>':"")
+        +'</div>'
+        +'<textarea class="cv-ta" data-i="'+i+'" rows="11" spellcheck="false" autocomplete="off" autocapitalize="off"'
+        +' placeholder="hostname R1&#10;!&#10;interface GigabitEthernet0/0&#10; ip address 10.0.12.1 255.255.255.252&#10;!&#10;router ospf 1&#10; network 10.0.12.0 0.0.0.3 area 0">'
+        +cvEsc(p.text)+'</textarea></div>';
+    });
+    h+='</div>'
+      +'<div class="cv-actions">'
+      +'<button type="button" class="cv-btn cv-btn-primary" id="cv-run">Run verification</button>'
+      +'<button type="button" class="cv-btn" id="cv-add">Add device</button>'
+      +'<button type="button" class="cv-btn" id="cv-sample">Load sample lab</button>'
+      +'<button type="button" class="cv-btn" id="cv-clear">Clear</button>'
+      +'</div>'
+      +'<p class="cv-privacy">Everything runs locally in your browser — configs never leave this page.</p>'
+      +'<div class="cv-results" id="cv-results" aria-live="polite"></div>';
+    el.innerHTML=h;
+
+    Array.prototype.forEach.call(el.querySelectorAll(".cv-ta"),function(ta){
+      ta.addEventListener("input",function(){
+        var i=parseInt(ta.getAttribute("data-i"),10);
+        S.panes[i].text=ta.value;
+        if(S.timer) clearTimeout(S.timer);
+        S.timer=setTimeout(run,700);
+      });
+    });
+    Array.prototype.forEach.call(el.querySelectorAll(".cv-remove"),function(b){
+      b.addEventListener("click",function(){
+        var i=parseInt(b.getAttribute("data-i"),10);
+        S.panes.splice(i,1);
+        renderShell();
+      });
+    });
+    el.querySelector("#cv-run").addEventListener("click",run);
+    el.querySelector("#cv-add").addEventListener("click",function(){
+      S.panes.push({text:""});
+      renderShell();
+    });
+    el.querySelector("#cv-sample").addEventListener("click",function(){
+      while(S.panes.length<SAMPLE.length) S.panes.push({text:""});
+      SAMPLE.forEach(function(s,i){ S.panes[i].text=s.config; });
+      renderShell();
+    });
+    el.querySelector("#cv-clear").addEventListener("click",function(){
+      S.panes.forEach(function(p){ p.text=""; });
+      renderShell();
+    });
+  }
+
+  function updatePaneHeaders(devs){
+    /* devs is aligned with non-empty panes; map back by order */
+    var di=0;
+    S.panes.forEach(function(p,i){
+      var nameEl=el.querySelector('.cv-pane[data-i="'+i+'"] .cv-pane-name');
+      var metaEl=el.querySelector('.cv-pane[data-i="'+i+'"] .cv-pane-meta');
+      if(!nameEl||!metaEl) return;
+      if(cvTrim(p.text)===""){ nameEl.textContent="Device "+(i+1); metaEl.textContent="paste Cisco IOS config"; return; }
+      var d=devs[di++];
+      nameEl.textContent=cvDevName(d,i);
+      metaEl.textContent=paneMeta(d);
+    });
+  }
+
+  function run(){
+    if(S.timer){ clearTimeout(S.timer); S.timer=null; }
+    var devs=[];
+    S.panes.forEach(function(p){
+      if(cvTrim(p.text)==="") return;
+      devs.push(parseDevice(p.text));
+    });
+    var box=el.querySelector("#cv-results");
+    updatePaneHeaders(devs);
+    if(!devs.length){
+      box.innerHTML='<p class="cv-hint">Paste a Cisco IOS config into each pane — or hit <strong>Load sample lab</strong> for a clean 3-router example — then press <strong>Run verification</strong>. Analysis runs as you type.</p>';
+      return;
+    }
+    var res;
+    try{
+      res=runChecks(devs);
+    }catch(err){
+      box.innerHTML='<div class="cv-callout"><strong>Something failed while analyzing.</strong> '+cvEsc(err&&err.message||String(err))+'</div>';
+      return;
+    }
+    box.innerHTML=cvRenderSummary(res)+cvRenderFindings(res)+cvRenderTopology(res)+cvRenderDevices(res);
+  }
+
+  renderShell();
+  run();
+}
+
+/* ---- public API ---- */
+var ConfigVerify={
+  parseDevice:parseDevice,
+  buildModel:buildModel,
+  deriveRIBs:deriveRIBs,
+  runChecks:runChecks,
+  aclParse:aclParse,
+  aclAnalyze:aclAnalyze,
+  IP:IP,
+  SAMPLE:SAMPLE,
+  mount:mount
+};
+
+if(typeof module!=="undefined"&&module.exports){ module.exports=ConfigVerify; }
+var _cvGlobal=(typeof window!=="undefined")?window:root;
+_cvGlobal.ConfigVerify=ConfigVerify;
+
+})(typeof globalThis!=="undefined"?globalThis:this);
+</script>
+<script>
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+(function(){
+  var host=document.getElementById("cv-app");
+  if(host && window.ConfigVerify && window.ConfigVerify.mount){
+    try{ window.ConfigVerify.mount(host); }
+    catch(e){ host.innerHTML='<p class="err">Config verifier failed to start: '+esc(e.message)+'</p>'; }
+  } else if(host){ host.innerHTML='<p class="err">Config verifier failed to start.</p>'; }
+})();
+</script>
+</body>
+</html>
