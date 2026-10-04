@@ -243,6 +243,12 @@ mark{background:var(--amber-soft);color:inherit;border-radius:3px;padding:0 .15e
 .tool-shell{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1.5rem;align-items:start}
 .panel{padding:1.4rem}
 .panel h3{margin-top:0;font-size:1.15rem}
+.pi-intro{margin:0 0 1.2rem}
+.pi-intro h3{margin-top:0}
+.pi-plain{font-size:.93rem;line-height:1.65;margin:.55rem 0;color:var(--ink)}
+.pi-try{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem .95rem;font-size:.92rem;line-height:1.62;margin:.75rem 0}
+.pi-gloss{font-size:.85rem;color:var(--muted);line-height:1.6;margin:.55rem 0 0}
+.pi-gloss b{color:var(--ink)}
 input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface3);border:1px solid var(--line);margin:.5rem 0}
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
 input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:pointer}
@@ -934,6 +940,7 @@ function pageMtuMss(){
   var h='<div class="page-head"><h1>MTU/MSS Tunnel Overhead Calculator</h1>'
   +'<p class="lede">Stack up GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers — or jump straight to a DMVPN preset — and see exactly what they cost: per-layer byte overhead, the TCP MSS to configure, and whether your packets will fragment — explained in plain English.</p></div>'
   +'<div class="card panel"><h3 style="margin-top:0">What are MTU and MSS?</h3>'
+  +'<p class="mm-plain"><strong>Who is this for?</strong> Anyone setting up a VPN or tunnel — and anyone whose downloads stall on DSL. When packets are mysteriously slow or break, an MTU/MSS mismatch is suspect number one.</p>'
   +'<p class="mm-plain"><strong>MTU</strong> (Maximum Transmission Unit) is the biggest single package the network path will carry, measured in bytes. Think of a mailbox slot: shove in an envelope that is too big and it either gets torn in two — that is <strong>fragmentation</strong> — or refused outright and dropped.</p>'
   +'<p class="mm-plain"><strong>MSS</strong> (Maximum Segment Size) is the biggest chunk of <em>your</em> data that TCP puts inside each package. Think of it as how much letter you write before the envelope\'s own weight starts counting against the slot.</p>'
   +'<p class="mm-plain">The relationship, in one line: <strong>MSS = MTU &minus; IP header (20) &minus; TCP header (20).</strong> Every tunnel layer — GRE, IPsec, VXLAN — wraps the package in <em>another</em> envelope, shrinking what fits inside. So the MSS must shrink too, or full-size packets get torn in two.</p>'
