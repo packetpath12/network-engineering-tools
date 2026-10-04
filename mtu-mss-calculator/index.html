@@ -813,6 +813,10 @@ var MtuMssLayerOrder = ["eth","ipv4","ipv6","udp","gre","esp-tunnel","esp-transp
 var MtuMssPresets = [
   {id:"ipsec-site", name:"IPsec site-to-site over the internet",
    stack:[{id:"esp-tunnel", opts:{cipher:"aes", icv:"sha256"}}]},
+  {id:"dmvpn-plain", name:"DMVPN without IPsec",
+   stack:[{id:"ipv4", opts:{}}, {id:"gre", opts:{}}]},
+  {id:"dmvpn-ipsec", name:"DMVPN with IPsec (transport mode)",
+   stack:[{id:"ipv4", opts:{}}, {id:"gre", opts:{}}, {id:"esp-transport", opts:{cipher:"aes", icv:"sha256"}}]},
   {id:"vxlan", name:"VXLAN overlay",
    stack:[{id:"vxlan", opts:{}}]},
   {id:"pppoe-ipsec", name:"PPPoE DSL + IPsec",
@@ -904,6 +908,21 @@ function pageMtuMss(){
   +'.mm-note{font-size:.85rem;color:var(--muted);line-height:1.6}'
   +'.mm-gotchas{display:grid;gap:.7rem;margin-top:.6rem}'
   +'.mm-gotchas .card{margin:0}'
+  +'.mm-plain{font-size:.93rem;line-height:1.65;color:var(--ink);margin:.55rem 0}'
+  +'.mm-plain strong{color:inherit}'
+  +'.mm-barwrap{margin:.9rem 0 .4rem}'
+  +'.mm-barlabel{font-size:.82rem;color:var(--muted);margin:.65rem 0 .3rem;font-weight:600}'
+  +'.mm-bar{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;min-height:2.7rem;font-size:.78rem;background:var(--surface)}'
+  +'.mm-seg{display:flex;align-items:center;justify-content:center;padding:.35rem .15rem;overflow:hidden;text-align:center;line-height:1.25;font-weight:700}'
+  +'.mm-seg span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 .3rem}'
+  +'.mm-seg-hdr{background:var(--accent-soft);color:var(--accent-strong);min-width:4.2rem}'
+  +'.mm-seg-hdr2{background:color-mix(in srgb,var(--teal) 16%,transparent);color:var(--teal);min-width:4.2rem}'
+  +'.mm-seg-tun{background:var(--warn-bg);min-width:5.2rem}'
+  +'.mm-seg-data{background:var(--surface2);color:var(--muted);font-weight:400;flex:1;min-width:0}'
+  +'.mm-exlist{margin:.5rem 0;padding-left:1.2rem;font-size:.93rem;line-height:1.65}'
+  +'.mm-exlist li{margin-bottom:.35rem}'
+  +'.mm-steps{margin:.5rem 0;padding-left:1.2rem;font-size:.93rem;line-height:1.65}'
+  +'.mm-steps li{margin-bottom:.3rem}'
   +'</style>';
   var presetBtns=MtuMssPresets.map(function(p){
     return '<button type="button" class="btn btn-ghost btn-sm" data-preset="'+p.id+'">'+esc(p.name)+'</button>';
@@ -913,7 +932,30 @@ function pageMtuMss(){
     return '<option value="'+id+'">'+esc(d.name)+'</option>';
   }).join("");
   var h='<div class="page-head"><h1>MTU/MSS Tunnel Overhead Calculator</h1>'
-  +'<p class="lede">Stack up GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and see exactly what they cost: per-layer byte overhead, the TCP MSS to configure, and whether your packets will fragment — explained in plain English.</p></div>'
+  +'<p class="lede">Stack up GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers — or jump straight to a DMVPN preset — and see exactly what they cost: per-layer byte overhead, the TCP MSS to configure, and whether your packets will fragment — explained in plain English.</p></div>'
+  +'<div class="card panel"><h3 style="margin-top:0">What are MTU and MSS?</h3>'
+  +'<p class="mm-plain"><strong>MTU</strong> (Maximum Transmission Unit) is the biggest single package the network path will carry, measured in bytes. Think of a mailbox slot: shove in an envelope that is too big and it either gets torn in two — that is <strong>fragmentation</strong> — or refused outright and dropped.</p>'
+  +'<p class="mm-plain"><strong>MSS</strong> (Maximum Segment Size) is the biggest chunk of <em>your</em> data that TCP puts inside each package. Think of it as how much letter you write before the envelope\'s own weight starts counting against the slot.</p>'
+  +'<p class="mm-plain">The relationship, in one line: <strong>MSS = MTU &minus; IP header (20) &minus; TCP header (20).</strong> Every tunnel layer — GRE, IPsec, VXLAN — wraps the package in <em>another</em> envelope, shrinking what fits inside. So the MSS must shrink too, or full-size packets get torn in two.</p>'
+  +'<div class="mm-barwrap">'
+  +'<div class="mm-barlabel">Plain path &mdash; MTU 1500</div>'
+  +'<div class="mm-bar" role="img" aria-label="1500 byte packet: 20 byte IP header, 20 byte TCP header, 1460 bytes of your data"><div class="mm-seg mm-seg-hdr"><span>IP 20</span></div><div class="mm-seg mm-seg-hdr2"><span>TCP 20</span></div><div class="mm-seg mm-seg-data"><span>Your data &mdash; 1460 (the MSS)</span></div></div>'
+  +'<div class="mm-barlabel">Same path with a VXLAN tunnel &mdash; inner MTU 1450</div>'
+  +'<div class="mm-bar" role="img" aria-label="1450 byte inner packet: 50 byte VXLAN wrap, 20 byte IP header, 20 byte TCP header, 1410 bytes of your data"><div class="mm-seg mm-seg-tun"><span>VXLAN wrap 50</span></div><div class="mm-seg mm-seg-hdr"><span>IP 20</span></div><div class="mm-seg mm-seg-hdr2"><span>TCP 20</span></div><div class="mm-seg mm-seg-data"><span>Your data &mdash; 1410</span></div></div>'
+  +'<p class="mm-note" style="margin-top:.35rem">Header widths exaggerated so the labels stay readable &mdash; watch the &ldquo;your data&rdquo; slice shrink when the tunnel wrap appears.</p>'
+  +'</div>'
+  +'<ul class="mm-exlist">'
+  +'<li><strong>Home internet:</strong> path MTU 1500 &rarr; set MSS <strong>1460</strong>. The default that just works.</li>'
+  +'<li><strong>PPPoE DSL:</strong> path MTU 1492 &rarr; set MSS <strong>1452</strong>. The classic case: leave it at 1460 and large downloads stall or crawl, because every full-size packet gets chopped in two. This is the number people google at 2am.</li>'
+  +'<li><strong>VXLAN overlay:</strong> inner MTU 1450 &rarr; set MSS <strong>1410</strong>. One real tunnel: the 50-byte VXLAN wrap eats into the payload, so the MSS comes down with it. This is exactly what the calculator below works out for any stack.</li>'
+  +'</ul>'
+  +'<h4 style="margin:1rem 0 .3rem">How this tool works</h4>'
+  +'<ol class="mm-steps">'
+  +'<li><strong>Stack your tunnel layers</strong> in the order they sit on the wire, outermost first &mdash; or jump straight to a preset like DMVPN or VXLAN.</li>'
+  +'<li><strong>The tool adds up every byte of wrapping</strong>, layer by layer, with the math shown.</li>'
+  +'<li><strong>You get the exact MSS to configure</strong> and a plain-English verdict on whether your packets will fragment &mdash; plus a paste-ready <code>ip tcp adjust-mss</code> command for the tunnel interface.</li>'
+  +'</ol>'
+  +'</div>'
   +'<div class="mm-presets" role="group" aria-label="Presets">'+presetBtns+'</div>'
   +'<div class="card panel"><h3 style="margin-top:0">The path</h3>'
   +'<div class="mm-grid">'
@@ -933,9 +975,12 @@ function pageMtuMss(){
   +'<div class="card panel"><strong>IPsec padding moves with packet size.</strong><br><span class="mm-note">Unlike every other header here, ESP padding isn\'t fixed — it rounds the encrypted part up to the cipher block size, so the overhead changes with each packet. This tool recomputes it live from your test packet size.</span></div>'
   +'<div class="card panel"><strong>WireGuard is a flat 60.</strong><br><span class="mm-note">20 outer IPv4 + 8 UDP + 32 WireGuard message = 60 bytes, always. One of the leanest tunnels you can run.</span></div>'
   +'<div class="card panel"><strong>IPv6 inside? Subtract 60, not 40.</strong><br><span class="mm-note">The MSS figure above assumes IPv4/TCP inside (20 + 20). If the inner traffic is IPv6, the headers are 40 + 20, so take another 20 off the MSS.</span></div>'
+  +'<div class="card panel"><strong>What DMVPN is, in plain English.</strong><br><span class="mm-note">DMVPN — Dynamic Multipoint VPN — is the classic enterprise way to stitch branch offices together. Three ingredients: mGRE (one tunnel interface that can talk to many spokes at once), NHRP (a phone book mapping tunnel addresses to real public IPs), and optional IPsec for encryption. It starts hub-and-spoke, but spokes build direct spoke-to-spoke tunnels on demand, so branch-to-branch traffic never hairpins through HQ. On the wire, the data plane is just mGRE plus IPsec — exactly what the two DMVPN presets above compute. mGRE headers are standard GRE per RFC 2784/2890: 4 bytes, +4 with a key, +4 with a sequence number. And note the IPsec mode: DMVPN pairs mGRE with IPsec TRANSPORT mode, not tunnel mode — GRE already provides the tunnel, so a second outer IP header would just waste bytes.</span></div>'
+  +'<div class="card panel"><strong>NHRP costs zero bytes per packet.</strong><br><span class="mm-note">NHRP (Next Hop Resolution Protocol) is control-plane only: when a spoke needs to reach another spoke, it asks the hub (the NHS, Next Hop Server) \'who owns this tunnel address?\' and caches the reply. After that one lookup, data packets fly with nothing but the mGRE (+ IPsec) headers. People expect the phone-book lookup to tax every packet — it does not.</span></div>'
+  +'<div class="card panel"><strong>Common Cisco practice: ip mtu 1400 + adjust-mss 1360.</strong><br><span class="mm-note">On real DMVPN tunnel interfaces you will commonly see the pair <code>ip mtu 1400</code> and <code>ip tcp adjust-mss 1360</code> — conservative values that leave headroom for ESP overhead across different ciphers. Use the calculator above for the exact MSS of your cipher; 1360 is the \'works everywhere\' shortcut. The adjust-mss command goes on the tunnel interface.</span></div>'
   +'</div></div>'
   +'<div style="margin-top:1.6rem">'+toolRows()+'</div>';
-  $("#app").innerHTML=h;
+  $("#app").innerHTML=css+h;
   markNav("tools");
   document.title="MTU/MSS Tunnel Overhead Calculator \u2014 Packet Path";
   var md=document.querySelector('meta[name="description"]');
