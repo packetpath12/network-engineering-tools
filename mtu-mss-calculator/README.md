@@ -6,9 +6,13 @@ effective inner MTU, the TCP MSS to configure (with a paste-ready
 `ip tcp adjust-mss` command), and a plain-English fragmentation verdict for
 your test packet size — including the fragment sizes when it will fragment.
 One-click presets cover the jobs people actually run: IPsec site-to-site,
-VXLAN overlays, PPPoE DSL + IPsec, MPLS L3VPN (2 labels), and WireGuard
-tunnels. IPsec ESP padding is recomputed live per packet size, because unlike
-every other header here it isn't fixed.
+DMVPN with and without IPsec (mGRE + IPsec transport mode), VXLAN overlays,
+PPPoE DSL + IPsec, MPLS L3VPN (2 labels), and WireGuard tunnels. IPsec ESP
+padding is recomputed live per packet size, because unlike every other header
+here it isn't fixed. A plain-English primer at the top explains MTU vs MSS
+with packet diagrams, and gotcha cards cover DMVPN's NHRP (control-plane only
+— zero per-packet overhead) and the common Cisco `ip mtu 1400` +
+`ip tcp adjust-mss 1360` practice.
 
 **Live version:**
 [allaboutitinfrastructure.com/tools/mtu-mss-calculator/](https://allaboutitinfrastructure.com/tools/mtu-mss-calculator/)
