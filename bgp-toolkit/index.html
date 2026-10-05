@@ -193,6 +193,53 @@ table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);
 .read-next .rn:hover{border-color:var(--accent)}
 .read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
 .read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+/* ---------- RPKI article lab ---------- */
+.rpki-figure{margin:1.5rem 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;overflow:hidden}
+.rpki-figure svg{display:block;min-width:0}
+.rpki-figure figcaption{margin-top:.65rem;color:var(--muted);font-size:.9rem;text-align:center}
+.rpki-lab{padding:1.2rem;margin:1.25rem 0}
+.rpki-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.rpki-presets button{font:inherit;font-size:.86rem;font-weight:700;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.45rem .72rem;cursor:pointer}
+.rpki-presets button:hover,.rpki-presets button:focus-visible{border-color:var(--accent);outline:none}
+.rpki-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rpki-fields label{display:grid;gap:.25rem;color:var(--muted);font-size:.82rem;font-weight:700}
+.rpki-fields input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .65rem}
+.rpki-fields input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.rpki-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:1rem 0}
+.rpki-checks div{display:grid;grid-template-columns:auto 1fr;gap:.15rem .55rem;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem}
+.rpki-checks span{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface3);font-weight:700}
+.rpki-checks b{font-size:.86rem}.rpki-checks em{font-style:normal;font-size:.82rem;color:var(--muted)}
+.rpki-checks .pass em{color:var(--accent);font-weight:700}.rpki-checks .fail em{color:#b3261e;font-weight:700}
+.rpki-result{display:flex;align-items:baseline;gap:.65rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:.9rem}
+.rpki-result>span{color:var(--muted);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rpki-result strong{font-family:var(--font-mono);font-size:1.35rem}
+.rpki-result.valid strong{color:var(--accent)}.rpki-result.invalid strong{color:#b3261e}.rpki-result.notfound strong{color:var(--amber)}
+.rpki-result p{width:100%;margin:0;color:var(--muted);font-size:.92rem}
+.rpki-honesty{margin-bottom:0}
+.rpki-timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:relative;margin:1.4rem 0 1.6rem;gap:0}
+.rpki-timeline:before{content:"";position:absolute;left:7%;right:7%;top:36px;border-top:3px solid var(--line)}
+.rpki-timeline div{position:relative;padding:0 .55rem;text-align:center}
+.rpki-timeline div:before{content:"";display:block;width:13px;height:13px;margin:30px auto .65rem;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent)}
+.rpki-timeline time{display:block;min-height:2.7rem;color:var(--accent);font-weight:700;font-size:.82rem;line-height:1.35}
+.rpki-timeline p{font-size:.84rem;line-height:1.4;margin:0;color:var(--muted)}
+.rpki-fixes{counter-reset:rpki-fix;list-style:none;padding:0;display:grid;gap:1rem}
+.rpki-fixes li{counter-increment:rpki-fix;position:relative;padding-left:3rem}
+.rpki-fixes li:before{content:counter(rpki-fix);position:absolute;left:0;top:.08rem;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:700}
+.rpki-related{padding:1.1rem 1.25rem;margin-top:1.5rem}.rpki-related h3{margin-top:0}.rpki-tool-link a{display:flex;flex-direction:column;gap:.1rem;padding:.75rem;background:var(--accent-soft);border-radius:8px;text-decoration:none}.rpki-tool-link span{color:var(--muted);font-size:.9rem}
+.announcement-card{margin:1.25rem 0;border:1px solid var(--code-line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);color:var(--code-ink);font-family:var(--font-mono);font-size:.88rem}
+.announcement-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:.8rem 1rem;background:#07110e;border-bottom:1px solid var(--code-line);font-size:.78rem;letter-spacing:.04em}
+.announcement-card details{border-bottom:1px solid var(--code-line)}.announcement-card details:last-child{border-bottom:0}
+.announcement-card summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:.82rem 1rem;cursor:pointer;list-style-position:inside}
+.announcement-card summary:hover{background:rgba(255,255,255,.04)}.announcement-card summary span{font-weight:700}.announcement-card summary code{font:inherit;color:#9cd9c0;text-align:right;overflow-wrap:anywhere}
+.announcement-card details p{margin:0;padding:0 1rem 1rem 2.15rem;color:#b7c9c1;font-family:var(--font-body);font-size:.94rem}.announcement-card mark{background:rgba(240,177,62,.22);color:#ffd27a;padding:.05em .3em;border-radius:3px}
+.rov-valid{color:#76e2ae}
+@media(max-width:620px){.announcement-card summary{grid-template-columns:1fr}.announcement-card summary code{text-align:left;padding-left:1.35rem}.announcement-head{align-items:flex-start;flex-direction:column}.rpki-related .read-next{grid-template-columns:1fr}}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .rpki-checks .fail em,:root:not(.lightm) .rpki-result.invalid strong{color:#ff8a80}}
+html.darkm .rpki-checks .fail em,html.darkm .rpki-result.invalid strong{color:#ff8a80}
+@media (prefers-reduced-motion:reduce){.rpki-anim{display:none}}
+@media(max-width:680px){.rpki-fields,.rpki-checks{grid-template-columns:1fr}.rpki-timeline{grid-template-columns:1fr;gap:.8rem}.rpki-timeline:before{left:20px;right:auto;top:12px;bottom:12px;border-top:0;border-left:3px solid var(--line)}.rpki-timeline div{text-align:left;padding-left:3.3rem}.rpki-timeline div:before{position:absolute;left:14px;top:7px;margin:0}.rpki-timeline time{min-height:0}.rpki-figure{padding:.5rem}.rpki-figure svg{font-size:90%}}
+
 /* ---------- tracks ---------- */
 .track-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;padding:1.4rem 1.5rem;margin:0 0 14px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
 .track-banner:hover{border-color:var(--accent)}
@@ -644,7 +691,7 @@ html.lightm{color-scheme:light}
 <header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a></nav></header>
 <main id="app" class="pp-main"></main>
 <section class="pp-about"><h2>About this tool</h2><p>One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
-<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a></p></footer>
+<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a></p></footer>
 <script>
 
 function markNav(){}
@@ -1040,6 +1087,39 @@ function btParsePrefix(s){
   }
   return null;
 }
+function btRoaCoverage(status, roas){
+  var items=[];
+  if(!roas||!roas.length) return items;
+  for(var i=0;i<roas.length;i++){
+    var r=roas[i]||{};
+    var m=/^[^/]+\/(\d{1,3})$/.exec(String(r.prefix||""));
+    if(!m) continue;
+    var roaLen=parseInt(m[1],10), ml=parseInt(r.max_length,10);
+    if(isNaN(roaLen)||isNaN(ml)) continue;
+    items.push({prefix:String(r.prefix), origin:r.origin, maxLen:ml, roaLen:roaLen,
+      loose: status==="valid" && ml>roaLen});
+  }
+  return items;
+}
+function btRoaItemsHtml(status, roas, announcedLen, escFn){
+  var escF=escFn||function(s){return String(s);};
+  var h="";
+  btRoaCoverage(status, roas).forEach(function(c){
+    if(c.loose){
+      h+='<div class="bt-item"><span class="bt-dot bt-warn"></span><div><b>Overly permissive maxLength.</b> '
+      +'Covering ROA '+escF(c.prefix)+' authorizes more-specific announcements down to /'+c.maxLen
+      +' \u2014 RPKI \u201cValid\u201d only checks the origin ASN and the prefix length (RFC 6811), so it cannot distinguish your legitimate /'+announcedLen
+      +' from an attacker\u2019s /'+announcedLen+' inside that window. This is the exact misconfiguration behind the Aug 2026 Virtualizor hijack \u2014 '
+      +'<a href="/articles/rpki-maxlength-loophole/">what went wrong, and how to fix it</a>. '
+      +'If you do not intend to announce smaller pieces of this space, tighten the ROA\u2019s maxLength to /'+c.roaLen+'.</div></div>';
+    }else{
+      h+='<div class="bt-item"><span class="bt-dot bt-info"></span><div>'
+      +'Covered by ROA '+escF(c.prefix)+', maxLength /'+c.maxLen+', AS'+escF(c.origin)
+      +' \u2014 tight: maxLength equals the announced prefix length.</div></div>';
+    }
+  });
+  return h;
+}
 function btShowTab(name){
   var body=$("#bt-body");
   if(name==="verdict") btTabVerdict(body);
@@ -1246,6 +1326,7 @@ function btTabRPKI(body){
       if(st==="invalid_length") h+='<div class="bt-item"><span class="bt-dot bt-bad"></span><div>A ROA covers this space but its <b>maxLength</b> is shorter than /'+p.len+' \u2014 tighten the ROA or aggregate the announcement.</div></div>';
       if(st==="unknown") h+='<div class="bt-item"><span class="bt-dot bt-info"></span><div>No ROA covers this prefix. RPKI can neither confirm nor dispute it \u2014 consider publishing one.</div></div>';
       var roas=d.validating_roas||[];
+      if(st==="valid") h+=btRoaItemsHtml(st, roas, p.len, esc);
       if(roas.length){
         h+='<table class="bt-table"><tr><th>ROA prefix</th><th>Origin</th><th>Max length</th><th>Validity</th></tr>'
         +roas.map(function(r){return '<tr><td>'+esc(r.prefix)+'</td><td>AS'+esc(r.origin)+'</td><td>/'+esc(r.max_length)+'</td><td>'+esc(r.validity)+'</td></tr>';}).join("")+'</table>';
