@@ -7,16 +7,28 @@ Nine BGP workflows in one page, with live data from the RIPEstat API:
   more-specifics by others, RPKI validity, IRR/routing consistency, and RIS
   propagation. Handles legitimate MOAS honestly (anycast, multihoming, DDoS
   scrubbing); optional "expected origin ASNs" input. Never claims "hijacked".
+
 - **Prefix lookup** — origin ASNs + holders, announced yes/no, RIR allocation,
   related more/less-specifics.
+
 - **AS lookup** — holder and announced prefixes for any ASN.
+
 - **Looking glass** — per-collector RIS views with sample AS paths.
+
 - **RPKI check** — validate a (prefix, origin ASN) pair against published ROAs.
+  Shows the covering ROA(s) and warns when a ROA's maxLength is overly
+  permissive — the misconfiguration behind the Aug 2026 RPKI-"valid" hijack
+  (a ROA covering a /16 with maxLength /24 authorizes any /24 inside it,
+  including an attacker's).
+
 - **Bogon check** — against Team Cymru fullbogons (2026-10-03), baked into the
   page; works offline.
+
 - **Community decoder** — curated, sourced DB (IANA/RFC + NTT, Arelion, Lumen,
   Cogent…); unknown communities are labeled "not in database", never guessed.
+
 - **Propagation tracker** — % of RIS collectors seeing a new announcement.
+
 - **Filter generator** — peer ASN to ready-to-paste IOS-XE + JunOS prefix-lists.
 
 **Live version:**
