@@ -878,7 +878,7 @@ function btApi(call, params){
 function btApiErr(e){
   var m=(e&&e.message)||String(e);
   if(/Failed to fetch|NetworkError|Load failed/i.test(m))
-    return "Could not reach stat.ripe.net — check your connection or try again in a minute.";
+    return "Could not reach stat.ripe.net — check your connection or try again in a minute. On a corporate network or VPN? Its firewall may be blocking this API — try from another network (e.g. your phone).";
   return "RIPEstat error: "+m;
 }
 function btApiPump(){
