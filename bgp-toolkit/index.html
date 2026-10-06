@@ -888,8 +888,11 @@ function btApiPump(){
     (function(job){
       fetch(job.url).then(function(r){
         if(!r.ok) throw new Error("RIPEstat HTTP "+r.status);
-        return r.json();
-      }).then(function(j){
+        return r.text();
+      }).then(function(t){
+        var j=null;
+        try{ j=(t&&t.trim())?JSON.parse(t):null; }catch(e){ j=null; }
+        if(!j) throw new Error("RIPEstat returned an empty or invalid response — try again in a moment.");
         if(j.status!=="ok"&&j.status!=="success") throw new Error("RIPEstat: "+(j.message||j.status||"error"));
         BT_CACHE[job.url]=j.data;
         job.resolve(j.data);
