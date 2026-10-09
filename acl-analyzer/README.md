@@ -1,8 +1,9 @@
 # Firewall / ACL Rule Analyzer
 
-Paste a Cisco IOS extended ACL and this page reads it the way the firewall
-does — top-down, first match wins — and flags the rules that can never fire,
-the duplicates that add nothing, and the one line that quietly opens everything.
+Paste a Cisco IOS extended ACL or a Juniper firewall filter and this page
+reads it the way the firewall does — top-down, first match wins — and flags
+the rules that can never fire, the duplicates that add nothing, and the one
+line that quietly opens everything.
 
 **Live version:**
 [allaboutitinfrastructure.com/tools/acl-analyzer/](https://allaboutitinfrastructure.com/tools/acl-analyzer/)
@@ -12,9 +13,15 @@ works offline. The analysis runs locally — your ACL never leaves the page.
 
 ## How to use
 
-Paste numbered extended ACL lines (`access-list 101 permit tcp any any eq 80`)
-or bare `permit`/`deny` lines from a named ACL, then hit **Analyze**. Findings
-update live as you type. Each rule gets one verdict:
+Pick **Cisco IOS** or **Juniper** at the top of the page, then paste:
+
+- Cisco: numbered extended ACL lines
+  (`access-list 101 permit tcp any any eq 80`) or bare `permit`/`deny` lines
+  from a named ACL.
+- Juniper: `set firewall family inet filter ...` lines or a
+  `show configuration`-style brace-format firewall filter.
+
+Hit **Analyze**. Findings update live as you type. Each rule gets one verdict:
 
 - **Shadowed** — an earlier rule with the *opposite* action already matches
   every packet this rule could see. The line can never fire; the intent it
@@ -38,8 +45,13 @@ anything. Protocol `ip` correctly covers tcp, udp, and icmp. Only full
 containment is reported; partial overlaps are deliberately not flagged.
 
 **Parser scope:** numbered extended IOS ACLs and bare permit/deny lines, IPv4
-only. Not modeled: object-groups, `time-range` schedules, ICMP type/code
-detail, `established`, NAT/route-map interactions, ASA/FTD syntax.
+only; Juniper `family inet` filters (set-format and brace-format). Juniper
+terms model source/destination address (CIDR), source/destination port (single,
+list, range), protocol, icmp-type, and tcp-established; `then accept` /
+`then discard` / `then reject` map to permit/deny, `then next term` is noted
+and excluded from verdicts, prefix-lists are noted as not expanded. Not
+modeled: object-groups, `time-range` schedules, NAT/route-map interactions,
+ASA/FTD syntax, `family inet6`.
 
 ## Validated
 
