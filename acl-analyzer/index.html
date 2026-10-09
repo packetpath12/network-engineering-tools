@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Firewall ACL Rule Analyzer — Free Network Engineering Tool | Packet Path</title>
-<meta name="description" content="Paste a Cisco IOS extended ACL and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous permit ip any any holes.">
+<meta name="description" content="Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.">
 <link rel="canonical" href="https://allaboutitinfrastructure.com/tools/acl-analyzer/">
 <meta property="og:title" content="Firewall ACL Rule Analyzer — Free Network Engineering Tool | Packet Path">
-<meta property="og:description" content="Paste a Cisco IOS extended ACL and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous permit ip any any holes.">
+<meta property="og:description" content="Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.">
 <meta property="og:url" content="https://allaboutitinfrastructure.com/tools/acl-analyzer/">
 <meta property="og:type" content="website">
 <style>
@@ -193,7 +193,56 @@ table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);
 .read-next .rn:hover{border-color:var(--accent)}
 .read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
 .read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+/* ---------- RPKI article lab ---------- */
+.rpki-figure{margin:1.5rem 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;overflow:hidden}
+.rpki-figure svg{display:block;min-width:0}
+.rpki-figure figcaption{margin-top:.65rem;color:var(--muted);font-size:.9rem;text-align:center}
+.rpki-lab{padding:1.2rem;margin:1.25rem 0}
+.rpki-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.rpki-presets button{font:inherit;font-size:.86rem;font-weight:700;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.45rem .72rem;cursor:pointer}
+.rpki-presets button:hover,.rpki-presets button:focus-visible{border-color:var(--accent);outline:none}
+.rpki-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rpki-fields label{display:grid;gap:.25rem;color:var(--muted);font-size:.82rem;font-weight:700}
+.rpki-fields input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .65rem}
+.rpki-fields input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.rpki-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:1rem 0}
+.rpki-checks div{display:grid;grid-template-columns:auto 1fr;gap:.15rem .55rem;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem}
+.rpki-checks span{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface3);font-weight:700}
+.rpki-checks b{font-size:.86rem}.rpki-checks em{font-style:normal;font-size:.82rem;color:var(--muted)}
+.rpki-checks .pass em{color:var(--accent);font-weight:700}.rpki-checks .fail em{color:#b3261e;font-weight:700}
+.rpki-result{display:flex;align-items:baseline;gap:.65rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:.9rem}
+.rpki-result>span{color:var(--muted);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rpki-result strong{font-family:var(--font-mono);font-size:1.35rem}
+.rpki-result.valid strong{color:var(--accent)}.rpki-result.invalid strong{color:#b3261e}.rpki-result.notfound strong{color:var(--amber)}
+.rpki-result p{width:100%;margin:0;color:var(--muted);font-size:.92rem}
+.rpki-honesty{margin-bottom:0}
+.rpki-timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:relative;margin:1.4rem 0 1.6rem;gap:0}
+.rpki-timeline:before{content:"";position:absolute;left:7%;right:7%;top:36px;border-top:3px solid var(--line)}
+.rpki-timeline div{position:relative;padding:0 .55rem;text-align:center}
+.rpki-timeline div:before{content:"";display:block;width:13px;height:13px;margin:30px auto .65rem;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent)}
+.rpki-timeline time{display:block;min-height:2.7rem;color:var(--accent);font-weight:700;font-size:.82rem;line-height:1.35}
+.rpki-timeline p{font-size:.84rem;line-height:1.4;margin:0;color:var(--muted)}
+.rpki-fixes{counter-reset:rpki-fix;list-style:none;padding:0;display:grid;gap:1rem}
+.rpki-fixes li{counter-increment:rpki-fix;position:relative;padding-left:3rem}
+.rpki-fixes li:before{content:counter(rpki-fix);position:absolute;left:0;top:.08rem;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:700}
+.rpki-related{padding:1.1rem 1.25rem;margin-top:1.5rem}.rpki-related h3{margin-top:0}.rpki-tool-link a{display:flex;flex-direction:column;gap:.1rem;padding:.75rem;background:var(--accent-soft);border-radius:8px;text-decoration:none}.rpki-tool-link span{color:var(--muted);font-size:.9rem}
+.announcement-card{margin:1.25rem 0;border:1px solid var(--code-line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);color:var(--code-ink);font-family:var(--font-mono);font-size:.88rem}
+.announcement-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:.8rem 1rem;background:#07110e;border-bottom:1px solid var(--code-line);font-size:.78rem;letter-spacing:.04em}
+.announcement-card details{border-bottom:1px solid var(--code-line)}.announcement-card details:last-child{border-bottom:0}
+.announcement-card summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:.82rem 1rem;cursor:pointer;list-style-position:inside}
+.announcement-card summary:hover{background:rgba(255,255,255,.04)}.announcement-card summary span{font-weight:700}.announcement-card summary code{font:inherit;color:#9cd9c0;text-align:right;overflow-wrap:anywhere}
+.announcement-card details p{margin:0;padding:0 1rem 1rem 2.15rem;color:#b7c9c1;font-family:var(--font-body);font-size:.94rem}.announcement-card mark{background:rgba(240,177,62,.22);color:#ffd27a;padding:.05em .3em;border-radius:3px}
+.rov-valid{color:#76e2ae}
+@media(max-width:620px){.announcement-card summary{grid-template-columns:1fr}.announcement-card summary code{text-align:left;padding-left:1.35rem}.announcement-head{align-items:flex-start;flex-direction:column}.rpki-related .read-next{grid-template-columns:1fr}}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .rpki-checks .fail em,:root:not(.lightm) .rpki-result.invalid strong{color:#ff8a80}}
+html.darkm .rpki-checks .fail em,html.darkm .rpki-result.invalid strong{color:#ff8a80}
+@media (prefers-reduced-motion:reduce){.rpki-anim{display:none}}
+@media(max-width:680px){.rpki-fields,.rpki-checks{grid-template-columns:1fr}.rpki-timeline{grid-template-columns:1fr;gap:.8rem}.rpki-timeline:before{left:20px;right:auto;top:12px;bottom:12px;border-top:0;border-left:3px solid var(--line)}.rpki-timeline div{text-align:left;padding-left:3.3rem}.rpki-timeline div:before{position:absolute;left:14px;top:7px;margin:0}.rpki-timeline time{min-height:0}.rpki-figure{padding:.5rem}.rpki-figure svg{font-size:90%}}
+
 /* ---------- tracks ---------- */
+.tracks-fresh{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:70ch}
+.tracks-fresh a{color:var(--accent);font-weight:600}
 .track-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;padding:1.4rem 1.5rem;margin:0 0 14px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
 .track-banner:hover{border-color:var(--accent)}
 .track-banner h3{margin:.3rem 0 .4rem;font-size:1.3rem}
@@ -643,8 +692,8 @@ html.lightm{color-scheme:light}
 <body>
 <header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a></nav></header>
 <main id="app" class="pp-main"></main>
-<section class="pp-about"><h2>About this tool</h2><p>Paste a Cisco IOS extended ACL and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous permit ip any any holes.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
-<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a></p></footer>
+<section class="pp-about"><h2>About this tool</h2><p>Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
+<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a></p></footer>
 <script>
 
 function markNav(){}
@@ -658,10 +707,11 @@ function toolRows(){
   }).join('') + '</ul>';
 }
 
-var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous permit ip any any holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL rules. v1 Cisco IOS only.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"}];
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL rules. v1 Cisco IOS only.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"}];
 </script>
 <script>
 function $(sel, el){ return (el||document).querySelector(sel); }
+var ACL_JUN_PORT_EXTRA = {http:80};
 var ACL_PORT_NAMES = {www:80,https:443,telnet:23,ssh:22,ftp:21,"ftp-data":20,smtp:25,domain:53,pop3:110,ntp:123,snmp:161,bgp:179,kerberos:88,ldap:389,gopher:70,finger:79,"netbios-ns":137,"netbios-dgm":138,"netbios-ss":139};
 var IP = {
  parse:function(s){
@@ -703,7 +753,7 @@ var TOOL_INTROS = {
 "optic": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Fiber links run on light, and light fades with distance and at every connector it passes. A "link budget" is the accounting: the transmitter\'s power, minus every loss, must still leave enough light for the receiver to see clearly. This tool does the ledger and gives a pass/fail verdict with a safety margin.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone running fiber between buildings or across a campus — and students learning why "it lights up" is not the same as "it is reliable".</p><div class="pi-try"><strong>Try this example:</strong> 10 km of single-mode fiber at 0.4 dB/km (4.0 dB of fiber loss), 4 connector pairs (2.0 dB), 2 splices (0.2 dB): total loss 6.2 dB. With a transmitter at 0 dBm and a receiver that needs −14 dBm, the budget is 14 dB and the margin is <b>7.8 dB</b> — a comfortable pass with room for aging and dirty connectors.</div><p class="pi-gloss"><b>dB</b> (decibel): the unit of light loss — every 3 dB is half the power gone. <b>dBm</b>: power measured against 1 milliwatt; 0 dBm = 1 mW.</p></div>',
 "ptp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some systems need every clock to agree on the time — 5G cell towers, stock-exchange timestamps, power grids. PTP (Precision Time Protocol) syncs clocks over the network, but each device in the chain adds a little error. This calculator adds up the error across a chain of clocks and checks the total against real-world limits.</p><p class="pi-plain"><strong>Who is this for?</strong> Timing engineers and telecom folks. For the curious: it answers "how wrong can the time be after passing through five devices?"</p><div class="pi-try"><strong>Try this example:</strong> 5 boundary clocks, 50 ns of time error each, 8 ns timestamp granularity, 20 ns of link asymmetry per hop. Each hop contributes 50 + 8 + 20 = 78 ns, so the worst case over 5 hops is <b>390 ns</b>. Against a 1000 ns (1 microsecond) budget, that passes with room to spare — now try 20 clocks and watch it fail.</div><p class="pi-gloss"><b>PTP</b>: a protocol that synchronizes clocks over a network to within nanoseconds. <b>Boundary clock</b>: a switch that participates in timing instead of just passing it through.</p></div>',
 "ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
-"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco firewall list here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
+"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco IOS extended ACL or a Juniper firewall filter here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
 "config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
 "timing-sim": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A full simulation of a timing network over time. A grandmaster clock feeds boundary clocks down a chain, and this models how each clock\'s servo wanders, how noise and asymmetry creep in hop by hop, and whether every clock stays within its ITU-T class (A through D) — second by second, on a live chart.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for timing engineers — here is what it does, and what you would ask your timing team for: "simulate the chain before we buy the clocks."</p><div class="pi-try"><strong>Try this example:</strong> run the default chain and watch the wander plot: each clock\'s time error breathing around zero as its servo steers it back. Now crank up the per-hop asymmetry and watch the Class D check (max time error within 5 ns) flip to fail — that is the cost of unequal path delays, visualized.</div><p class="pi-gloss"><b>PTP / SyncE</b>: the two technologies that distribute precise time and frequency over a network. <b>Servo</b>: the control loop inside each clock that continuously steers it toward its master.</p></div>',
 "wireshark-filter-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Wireshark can capture every packet on a network, but finding the ones you care about means writing "display filters" in a picky syntax. This tool builds them for you: pick fields from a menu, combine them with AND / OR / NOT, and get valid filter text plus a plain-English readout of what it matches.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever opened Wireshark and felt lost — students, sysadmins, the curious. You do not need to memorize a single field name.</p><div class="pi-try"><strong>Try this example:</strong> build "all HTTPS traffic to or from 10.0.0.5": add <code class="inline">ip.addr == 10.0.0.5</code>, AND, <code class="inline">tcp.port == 443</code>. The tool outputs <code class="inline">ip.addr == 10.0.0.5 && tcp.port == 443</code> — paste it straight into Wireshark\'s filter bar and only those packets remain.</div><p class="pi-gloss"><b>Display filter</b>: Wireshark\'s search language for packets you already captured (different from a capture filter, which decides what gets recorded in the first place).</p></div>',
@@ -715,8 +765,10 @@ var TOOL_INTROS = {
 function aclAnalyze(rules){
   var out=[], counts={shadowed:0,redundant:0,broad:0,clean:0};
   rules.forEach(function(r,i){
+    if(r.nextTerm){ out.push({status:"nextterm",by:[],decider:-1}); counts.clean++; return; }
     var decider=-1, j;
     for(j=0;j<i;j++){
+      if(rules[j].nextTerm) continue;
       if(out[j].status==="shadowed") continue; /* a dead rule can never match traffic, so it cannot cover anything */
       if(aclCovers(rules[j],r)){ decider=j; break; }
     }
@@ -725,6 +777,7 @@ function aclAnalyze(rules){
       var same=rules[decider].action===r.action;
       res.decider=decider+1;
       for(j=0;j<i;j++){
+        if(rules[j].nextTerm) continue;
         if(out[j].status==="shadowed") continue;
         if(!aclCovers(rules[j],r)) continue;
         if((rules[j].action===r.action)===same) res.by.push(j+1);
@@ -738,11 +791,128 @@ function aclAnalyze(rules){
   });
   return {results:out,counts:counts};
 }
+function aclCidrRange(s){
+  var p=String(s||"").split("/");
+  if(p.length!==2) return null;
+  var a=IP.parse(p[0]), n=parseInt(p[1],10);
+  if(!a.ok||isNaN(n)||n<0||n>32) return null;
+  var m=IP.mask(n);
+  return [((a.val&m)>>>0),((a.val|(~m>>>0))>>>0)];
+}
 function aclCovers(j,r){
   return aclProtoCovers(j.proto,r.proto)
     && j.src[0]<=r.src[0] && j.src[1]>=r.src[1]
     && j.dst[0]<=r.dst[0] && j.dst[1]>=r.dst[1]
     && j.ports[0]<=r.ports[0] && j.ports[1]>=r.ports[1];
+}
+function aclJunFinalize(t){
+  if(!t.action&&!t.nextTerm){ t.nextTerm=true; aclJunNote(t,"No terminating action: evaluation continues to the next term."); }
+  if(t.src.length>1) aclJunNote(t,"Multiple source addresses merged into one range — approximate.");
+  if(t.dst.length>1) aclJunNote(t,"Multiple destination addresses merged into one range — approximate.");
+  if(t.ports.length>1) aclJunNote(t,"Multiple port constraints merged into one range — approximate.");
+  return {
+    action:t.action||"permit",
+    proto:t.proto||"ip",
+    src:aclJunMerge(t.src,[0,4294967295]),
+    dst:aclJunMerge(t.dst,[0,4294967295]),
+    ports:aclJunMerge(t.ports,[0,65535]),
+    note:false, notes:t.notes.slice(),
+    nextTerm:!!t.nextTerm,
+    vendor:"juniper",
+    raw:"term "+t.term+" (filter "+t.filter+")"
+  };
+}
+function aclJunFromToks(t,toks){
+  var i=0;
+  while(i<toks.length){
+    var kw=String(toks[i]).toLowerCase();
+    if(kw==="source-address"||kw==="destination-address"){
+      var v=toks[i+1];
+      if(v===undefined){ aclJunNote(t,"Missing value after "+kw+" — treated as any."); i+=1; continue; }
+      var r=aclCidrRange(v);
+      if(!r){ var h=IP.parse(v); if(h.ok) r=[h.val,h.val]; }
+      if(r) (kw==="source-address"?t.src:t.dst).push(r);
+      else aclJunNote(t,"Could not parse "+kw+" '"+v+"' — treated as any.");
+      i+=2;
+    } else if(kw==="source-prefix-list"||kw==="destination-prefix-list"){
+      aclJunNote(t,"Prefix-list '"+(toks[i+1]||"")+"' is not expanded — match treated as any."); i+=2;
+    } else if(kw==="address-book"||kw==="address-set"){
+      aclJunNote(t,"Address-book reference is not expanded — match treated as any."); i+=(toks[i+1]?2:1);
+    } else if(kw==="protocol"){
+      if(toks[i+1]!==undefined) t.proto=aclJunProto(toks[i+1]);
+      i+=2;
+    } else if(kw==="source-port"||kw==="destination-port"){
+      var spec=aclJunPortSpec(toks,i+1);
+      if(spec){ t.ports.push(spec.range); if(spec.note) aclJunNote(t,spec.note); }
+      else aclJunNote(t,"Could not parse "+kw+" — treated as any port.");
+      i=spec?spec.next:i+1;
+    } else if(kw==="tcp-established"){
+      aclJunNote(t,"tcp-established: only already-established TCP sessions match."); i+=1;
+    } else if(kw==="icmp-type"){
+      aclJunNote(t,"icmp-type '"+(toks[i+1]||"")+"': analysis treats all ICMP as matching."); i+=2;
+    } else if(kw==="icmp-code"){
+      aclJunNote(t,"icmp-code '"+(toks[i+1]||"")+"': not modeled — treated as any."); i+=2;
+    } else {
+      aclJunNote(t,"'"+kw+"' is not modeled — treated as any."); i+=1;
+    }
+  }
+}
+function aclJunMerge(rs,full){
+  if(!rs.length) return full.slice();
+  var lo=rs[0][0],hi=rs[0][1],k;
+  for(k=1;k<rs.length;k++){ if(rs[k][0]<lo) lo=rs[k][0]; if(rs[k][1]>hi) hi=rs[k][1]; }
+  return [lo,hi];
+}
+function aclJunNewTerm(filter,term){
+  return {filter:filter,term:term,action:null,proto:null,src:[],dst:[],ports:[],notes:[],nextTerm:false};
+}
+function aclJunNote(t,s){ if(t.notes.indexOf(s)<0) t.notes.push(s); }
+function aclJunPortSpec(toks,i){
+  if(toks[i]==="["){
+    var vals=[],j=i+1;
+    while(j<toks.length&&toks[j]!=="]"){ var v=aclJunPortVal(toks[j]); if(v!==null) vals.push(v); j++; }
+    if(j>=toks.length||!vals.length) return null;
+    var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);
+    return {range:[lo,hi],note:vals.length>1?"Port list merged into one range — approximate.":null,next:j+1};
+  }
+  var one=String(toks[i]||""),rm=/^(\d+)-(\d+)$/.exec(one);
+  if(rm){
+    var a=parseInt(rm[1],10),b=parseInt(rm[2],10);
+    if(a<0||a>65535||b<0||b>65535) return null;
+    return {range:[Math.min(a,b),Math.max(a,b)],note:null,next:i+1};
+  }
+  var sv=aclJunPortVal(one);
+  if(sv===null) return null;
+  return {range:[sv,sv],note:null,next:i+1};
+}
+function aclJunPortVal(tok){
+  var t=String(tok||"").toLowerCase();
+  if(/^\d+$/.test(t)){ var v=parseInt(t,10); return (v>=0&&v<=65535)?v:null; }
+  if(ACL_JUN_PORT_EXTRA.hasOwnProperty(t)) return ACL_JUN_PORT_EXTRA[t];
+  var p=ACL_PORT_NAMES[t];
+  return (p===undefined)?null:p;
+}
+function aclJunProto(tok){
+  var t=String(tok||"").toLowerCase();
+  if(t==="tcp"||t==="udp"||t==="icmp") return t;
+  if(t==="6") return "tcp";
+  if(t==="17") return "udp";
+  if(t==="1") return "icmp";
+  return t;
+}
+function aclJunThenToks(t,toks){
+  var i=0;
+  while(i<toks.length){
+    var kw=String(toks[i]).toLowerCase();
+    if(kw==="accept"){ t.action="permit"; i+=1; }
+    else if(kw==="discard"){ t.action="deny"; i+=1; }
+    else if(kw==="reject"){ t.action="deny"; aclJunNote(t,"reject: sends ICMP unreachable/TCP reset; treated as deny for coverage."); i+=1; }
+    else if(kw==="next"&&String(toks[i+1]||"").toLowerCase()==="term"){ t.nextTerm=true; aclJunNote(t,"then next term: evaluation continues to the next term."); i+=2; }
+    else if(kw==="count"){ aclJunNote(t,"count: tallies matches only, does not filter."); i+=1; }
+    else if(kw==="log"){ aclJunNote(t,"log: logs matches only, does not filter."); i+=1; }
+    else if(kw==="syslog"){ aclJunNote(t,"syslog: logs matches only, does not filter."); i+=1; }
+    else i+=1;
+  }
 }
 function aclParse(text){
   var rules=[], skipped=[];
@@ -772,6 +942,76 @@ function aclParseAddr(toks,i){
   var w=IP.parse(toks[i+1]||"");
   if(w.ok) return {range:[(a.val&~w.val)>>>0,(a.val|w.val)>>>0],next:i+2};
   return {range:[a.val,a.val],next:i+1};
+}
+function aclParseJuniper(text){
+  var t=String(text||"");
+  var hasSet=/^set\s+firewall\b/mi.test(t), hasBrace=t.indexOf("{")>=0;
+  var rules=[],skipped=[],errors=[];
+  if(hasSet){ var s=aclParseJuniperSet(t); rules=rules.concat(s.rules); errors=errors.concat(s.errors); }
+  if(hasBrace){ var b=aclParseJuniperBrace(t); rules=rules.concat(b.rules); errors=errors.concat(b.errors); }
+  if(!hasSet&&!hasBrace){
+    t.split(/\r?\n/).forEach(function(raw){ var l=raw.trim(); if(l) skipped.push(l); });
+  }
+  return {rules:rules,skipped:skipped,errors:errors,vendor:"juniper"};
+}
+function aclParseJuniperBrace(text){
+  var rules=[],errors=[],v6={};
+  var clean=String(text||"").replace(/\/\*[\s\S]*?\*\//g,"").split("\n").map(function(l){
+    return l.replace(/\/\/.*$/,"").replace(/#.*$/,"");
+  }).join("\n");
+  var seg=clean.replace(/\{/g,"\n{\n").replace(/\}/g,"\n}\n").replace(/;/g,"\n").split("\n");
+  var stack=[],pending=null,curFamily=null,curFilter=null,curTerm=null,curSection=null;
+  for(var si=0;si<seg.length;si++){
+    var line=seg[si].trim();
+    if(!line) continue;
+    if(line==="{"){
+      var e=pending; pending=null; stack.push(e||{type:"other"});
+      if(e&&e.type==="family") curFamily=String(e.name||"").toLowerCase();
+      else if(e&&e.type==="filter"){ curFilter=e.name; if(curFamily==="inet6") v6[e.name]=true; }
+      else if(e&&e.type==="term"&&curFamily==="inet") curTerm=aclJunNewTerm(curFilter,e.name);
+      else if(e&&(e.type==="from"||e.type==="then")) curSection=e.type;
+      continue;
+    }
+    if(line==="}"){
+      var p=stack.pop()||{type:"other"};
+      if(p.type==="from"||p.type==="then") curSection=null;
+      else if(p.type==="term"){ if(curTerm){ rules.push(aclJunFinalize(curTerm)); curTerm=null; } }
+      else if(p.type==="filter") curFilter=null;
+      else if(p.type==="family") curFamily=null;
+      continue;
+    }
+    if(curTerm&&curFamily==="inet"&&(curSection==="from"||curSection==="then")){
+      var toks=line.split(/\s+/);
+      if(curSection==="from") aclJunFromToks(curTerm,toks); else aclJunThenToks(curTerm,toks);
+      continue;
+    }
+    var w=line.split(/\s+/),kw=w[0].toLowerCase();
+    if(kw==="family"&&w[1]) pending={type:"family",name:w[1]};
+    else if(kw==="filter"&&w[1]) pending={type:"filter",name:w[1]};
+    else if(kw==="term"&&w[1]) pending={type:"term",name:w[1]};
+    else if(kw==="from"&&curTerm) pending={type:"from"};
+    else if(kw==="then"&&curTerm) pending={type:"then"};
+    else pending=null;
+  }
+  Object.keys(v6).forEach(function(f){ errors.push("family inet6 filter '"+f+"': IPv6 firewall filters are not supported by this analyzer yet."); });
+  return {rules:rules,skipped:[],errors:errors,vendor:"juniper"};
+}
+function aclParseJuniperSet(text){
+  var terms={},order=[],errors=[],v6={};
+  String(text||"").split(/\r?\n/).forEach(function(raw){
+    var line=raw.trim();
+    if(!line||line.charAt(0)==="#"||line.slice(0,2)==="//") return;
+    var m=/^set\s+firewall\s+family\s+(inet6?)\s+filter\s+(\S+)\s+term\s+(\S+)\s+(from|then)\b\s*(.*)$/i.exec(line);
+    if(!m) return;
+    if(m[1].toLowerCase()==="inet6"){ v6[m[2]]=true; return; }
+    var key=m[2]+"\u0000"+m[3],t=terms[key];
+    if(!t){ t=aclJunNewTerm(m[2],m[3]); terms[key]=t; order.push(key); }
+    var toks=(m[5]||"").split(/\s+/).filter(function(x){return x!=="";});
+    if(m[4].toLowerCase()==="from") aclJunFromToks(t,toks); else aclJunThenToks(t,toks);
+  });
+  var rules=order.map(function(k){ return aclJunFinalize(terms[k]); });
+  Object.keys(v6).forEach(function(f){ errors.push("family inet6 filter '"+f+"': IPv6 firewall filters are not supported by this analyzer yet."); });
+  return {rules:rules,skipped:[],errors:errors,vendor:"juniper"};
 }
 function aclParseLine(raw){
   var toks=raw.split(/\s+/).filter(function(x){return x!=="";});
@@ -826,15 +1066,19 @@ function aclProtoCovers(jp,ip){
 }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function initACL(){
+  var vendor="cisco";
+  var ACL_SCOPE_CISCO="Numbered extended ACLs (<code class=\"inline\">access-list 101 …</code>) and bare <code class=\"inline\">permit</code>/<code class=\"inline\">deny</code> lines from a named ACL both parse. The analysis runs locally — your ACL never leaves this page.";
+  var ACL_SCOPE_JUNIPER="Junos <code class=\"inline\">set firewall family inet filter …</code> lines and brace-format (<code class=\"inline\">show configuration</code>) output both parse, IPv4 <code class=\"inline\">family inet</code> only. The analysis runs locally — your filter never leaves this page.";
   function badge(st){
     if(st==="shadowed") return '<span class="acl-badge sh">Shadowed</span>';
     if(st==="redundant") return '<span class="acl-badge rd">Redundant</span>';
     if(st==="broad") return '<span class="acl-badge br">Overly broad</span>';
+    if(st==="nextterm") return '<span class="acl-badge ok">Next term</span>';
     return '<span class="acl-badge ok">Clean</span>';
   }
   function run(){
     $("#acl-err").textContent="";
-    var parsed=aclParse($("#acl-in").value);
+    var parsed=vendor==="juniper"?aclParseJuniper($("#acl-in").value):aclParse($("#acl-in").value);
     var rules=parsed.rules;
     var a=aclAnalyze(rules);
     $("#acl-sh").textContent=String(a.counts.shadowed);
@@ -843,42 +1087,62 @@ function initACL(){
     $("#acl-cl").textContent=String(a.counts.clean);
     var html="";
     if(!rules.length){
-      html='<p style="color:var(--muted)">No extended ACL rules found yet. Paste lines like <code class="inline">access-list 101 permit tcp any any eq 443</code> and the findings land here.</p>';
+      html='<p style="color:var(--muted)">No firewall rules found yet. Paste Cisco lines like <code class="inline">access-list 101 permit tcp any any eq 443</code> or Juniper lines like <code class="inline">set firewall family inet filter web-acl term allow-web then accept</code> and the findings land here.</p>';
     } else {
       html='<div class="acl-findings">'+rules.map(function(r,i){
         var res=a.results[i], why="";
         if(res.status==="shadowed") why='Shadowed by rule '+res.by.join(", rule ")+': every packet this '+r.action+' rule could match is already matched earlier with the opposite action, so this line can never fire — the intent it documents is not what the firewall enforces.';
         else if(res.status==="redundant") why='Fully covered by rule '+res.by.join(", rule ")+' with the same action. Delete it and the firewall behaves identically — it only adds lookup cost and audit noise.';
         else if(res.status==="broad") why='This permits every protocol, from any source, to any destination. Anything not explicitly denied above it is open — see the explainer below.';
+        else if(res.status==="nextterm") why='This term uses <code class="inline">then next term</code>: it matches traffic but evaluation continues to the next term, so shadow/redundant order analysis does not apply to it.';
         else why='Reachable, and doing work no earlier rule already does for it.';
         var note=r.note?'<p class="why" style="color:var(--muted)">Note: this line uses <code class="inline">neq</code> or an unrecognized port operator, which this analyzer treats as the full port range — findings involving this rule are approximate.</p>':"";
+        (r.notes||[]).forEach(function(n){ note+='<p class="why" style="color:var(--muted)">'+esc(n)+'</p>'; });
         return '<div class="acl-row"><div class="acl-head"><span class="rn">Rule '+(i+1)+'</span>'+badge(res.status)+'</div><code>'+esc(r.raw)+'</code><p class="why">'+why+'</p>'+note+'</div>';
       }).join("")+'</div>';
     }
     if(parsed.skipped.length){
-      html+='<p style="color:var(--muted);font-size:.88rem;margin-top:.9rem">'+parsed.skipped.length+' line'+(parsed.skipped.length===1?"":"s")+' could not be parsed as an extended ACL rule and '+(parsed.skipped.length===1?"was":"were")+' skipped:</p><pre class="code"><code>'+esc(parsed.skipped.join("\n"))+'</code></pre>';
+      html+='<p style="color:var(--muted);font-size:.88rem;margin-top:.9rem">'+parsed.skipped.length+' line'+(parsed.skipped.length===1?"":"s")+' could not be parsed and '+(parsed.skipped.length===1?"was":"were")+' skipped:</p><pre class="code"><code>'+esc(parsed.skipped.join("\n"))+'</code></pre>';
     }
     $("#acl-findings").innerHTML=html;
+    if(parsed.errors&&parsed.errors.length) $("#acl-err").textContent=parsed.errors.join(" ");
+  }
+  function setVendor(v){
+    vendor=v;
+    $("#acl-v-cisco").classList.toggle("on",v==="cisco");
+    $("#acl-v-juniper").classList.toggle("on",v==="juniper");
+    $("#acl-label").textContent=v==="cisco"?"Cisco IOS extended ACL (IPv4)":"Juniper firewall filter, family inet (IPv4)";
+    $("#acl-in").value=window.ACL_SAMPLES[v];
+    $("#acl-scope-note").innerHTML=v==="cisco"?ACL_SCOPE_CISCO:ACL_SCOPE_JUNIPER;
+    $("#acl-jnote").style.display=v==="juniper"?"":"none";
+    run();
   }
   $("#acl-run").addEventListener("click",run);
   $("#acl-in").addEventListener("input",run);
-  run();
+  $("#acl-v-cisco").addEventListener("click",function(){ setVendor("cisco"); });
+  $("#acl-v-juniper").addEventListener("click",function(){ setVendor("juniper"); });
+  setVendor("cisco");
 }
 function pageACL(){
-  var sample="access-list 101 permit tcp any any eq 80\naccess-list 101 deny tcp 10.0.0.0 0.255.255.255 any eq 80\naccess-list 101 permit tcp 10.1.0.0 0.0.255.255 any eq 80\naccess-list 101 permit ip any any";
-  var h='<div class="page-head"><h1>Firewall ACL rule analyzer</h1><p class="lede">Paste a Cisco IOS extended ACL and this page reads it the way the firewall does — top-down, first match wins — and flags the rules that can never fire, the duplicates that add nothing, and the one line that quietly opens everything.</p></div>'
+  var sampleCisco="access-list 101 permit tcp any any eq 80\naccess-list 101 deny tcp 10.0.0.0 0.255.255.255 any eq 80\naccess-list 101 permit tcp 10.1.0.0 0.0.255.255 any eq 80\naccess-list 101 permit ip any any";
+  var sampleJuniper="set firewall family inet filter web-acl term allow-web from protocol tcp\nset firewall family inet filter web-acl term allow-web from destination-port 80\nset firewall family inet filter web-acl term allow-web then accept\nset firewall family inet filter web-acl term block-rfc1918-http from source-address 10.0.0.0/8\nset firewall family inet filter web-acl term block-rfc1918-http from protocol tcp\nset firewall family inet filter web-acl term block-rfc1918-http from destination-port 80\nset firewall family inet filter web-acl term block-rfc1918-http then discard\nset firewall family inet filter web-acl term dup-web from protocol tcp\nset firewall family inet filter web-acl term dup-web from destination-port 80\nset firewall family inet filter web-acl term dup-web then accept\nset firewall family inet filter web-acl term open-all then accept";
+  window.ACL_SAMPLES={cisco:sampleCisco,juniper:sampleJuniper};
+  var h='<div class="page-head"><h1>Firewall ACL rule analyzer</h1><p class="lede">Paste a Cisco IOS extended ACL or a Juniper firewall filter and this page reads it the way the firewall does — top-down, first match wins — and flags the rules that can never fire, the duplicates that add nothing, and the one line that quietly opens everything.</p></div>'
   +plainIntro("acl")
   +'<div class="tool-shell">'
   +'<div class="card panel"><h3>Paste your ACL</h3>'
-  +'<div class="field"><label for="acl-in">Cisco IOS extended ACL (IPv4)</label><textarea id="acl-in" rows="12" spellcheck="false" autocomplete="off">'+esc(sample)+'</textarea></div>'
+  +'<style>.acl-seg{display:flex;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap}.acl-seg .btn{opacity:.55}.acl-seg .btn.on{opacity:1;outline:2px solid var(--accent);outline-offset:1px}</style>'
+  +'<div class="acl-seg" role="group" aria-label="Firewall vendor syntax"><button type="button" class="btn on" id="acl-v-cisco">Cisco IOS</button><button type="button" class="btn" id="acl-v-juniper">Juniper</button></div>'
+  +'<div class="field"><label for="acl-in" id="acl-label">Cisco IOS extended ACL (IPv4)</label><textarea id="acl-in" rows="12" spellcheck="false" autocomplete="off">'+esc(sampleCisco)+'</textarea></div>'
   +'<div style="margin-top:.9rem"><button type="button" class="btn" id="acl-run">Analyze</button></div>'
-  +'<p style="color:var(--muted);font-size:.88rem;margin:.8rem 0 0">Numbered extended ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines from a named ACL both parse. The analysis runs locally — your ACL never leaves this page.</p>'
+  +'<p id="acl-scope-note" style="color:var(--muted);font-size:.88rem;margin:.8rem 0 0">Numbered extended ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines from a named ACL both parse. The analysis runs locally — your ACL never leaves this page.</p>'
   +'<div id="acl-err" class="err" role="alert" style="margin-top:.6rem"></div></div>'
   +'<div class="card panel"><h3>Findings</h3>'
   +'<div class="stat-strip"><div class="stat"><span class="v" id="acl-sh">—</span><span class="l">Shadowed</span></div>'
   +'<div class="stat"><span class="v" id="acl-rd">—</span><span class="l">Redundant</span></div>'
   +'<div class="stat"><span class="v" id="acl-br">—</span><span class="l">Overly broad</span></div>'
   +'<div class="stat"><span class="v" id="acl-cl">—</span><span class="l">Clean</span></div></div>'
+  +'<p id="acl-jnote" style="display:none;color:var(--muted);font-size:.92rem;border-left:3px solid var(--accent);padding:.35rem .7rem;margin:0 0 .8rem">Juniper filters end with an implicit default discard. Add an explicit final term with <code class="inline">then { discard; }</code> plus logging so drops are visible.</p>'
   +'<div id="acl-findings" aria-live="polite"></div>'
   +'</div>'
   +'</div>'
@@ -886,7 +1150,7 @@ function pageACL(){
   +'<ul><li><b>Shadowed vs redundant: both are dead rules, but only one is lying to you.</b> A rule is <b>shadowed</b> when an earlier rule with the <i>opposite</i> action already matches every packet it could ever see — the config says "deny this" while the wire says "permit," and the rule\'s hit counter will sit at zero forever. A rule is <b>redundant</b> when an earlier rule with the <i>same</i> action already covers it completely: delete it and the firewall behaves identically, so all it adds is lookup cost and audit noise. This analyzer only reports full containment — a rule half-covered by two different earlier rules is a subtler failure, and partial overlaps are deliberately not flagged as findings.</li>'
   +'<li><b>Why dead rules accumulate.</b> Rules get added under incident pressure and removed never. Subnets get re-carved, so last year\'s narrow exception ends up inside this year\'s broad permit. Firewall migrations concatenate two devices\' policies and inherit both. A "temporary" troubleshooting permit outlives the project it was opened for. Every firewall older than a few years carries rules nobody can explain — each one is either drag or a lie, and you cannot tell which without reading the policy top-down exactly the way the hardware does.</li>'
   +'<li><b><code class="inline">permit ip any any</code> turns the firewall off for everything the denies above it miss.</b> Every protocol, every port, any source to any destination — if that line sits above your cleanup deny, the only traffic still being filtered is whatever an earlier explicit deny happens to catch. It almost always arrives as a 2 a.m. troubleshooting step ("just open it up — is the firewall even the problem?") and then never leaves. If you genuinely need a broad permit, scope it: one protocol, named networks, and logging on, so at least the hole is visible in the logs.</li>'
-  +'<li><b>Parser scope, honestly stated.</b> This reads numbered extended IOS ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines, IPv4 only. Wildcard masks are applied bit-for-bit per octet (discontiguous masks included), and <code class="inline">eq</code>, <code class="inline">range</code>, <code class="inline">gt</code>, and <code class="inline">lt</code> port operators are modeled. <code class="inline">neq</code> and unrecognized port operators are treated as the full port range, and the rule is flagged with a note. Not modeled: object-groups and port groups (expand them before pasting), <code class="inline">time-range</code> schedules (a time-ranged rule is treated as always on), ICMP type/code detail, <code class="inline">established</code>, NAT and route-map interactions, and ASA/FTD syntax. Protocol <code class="inline">ip</code> is correctly treated as covering tcp, udp, and icmp when checking whether one rule contains another.</li></ul>'
+  +'<li><b>Parser scope, honestly stated.</b> This reads numbered extended IOS ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines, IPv4 only. Wildcard masks are applied bit-for-bit per octet (discontiguous masks included), and <code class="inline">eq</code>, <code class="inline">range</code>, <code class="inline">gt</code>, and <code class="inline">lt</code> port operators are modeled. <code class="inline">neq</code> and unrecognized port operators are treated as the full port range, and the rule is flagged with a note. Not modeled: object-groups and port groups (expand them before pasting), <code class="inline">time-range</code> schedules (a time-ranged rule is treated as always on), ICMP type/code detail, <code class="inline">established</code>, NAT and route-map interactions, and ASA/FTD syntax. Protocol <code class="inline">ip</code> is correctly treated as covering tcp, udp, and icmp when checking whether one rule contains another. Juniper firewall filters parse too — both <code class="inline">set firewall family inet filter …</code> lines and brace-format <code class="inline">show configuration</code> output, IPv4 <code class="inline">family inet</code> only (<code class="inline">family inet6</code> is not supported). <code class="inline">then accept</code> maps to permit; <code class="inline">then discard</code> and <code class="inline">then reject</code> map to deny (reject is noted: it sends an ICMP unreachable or TCP reset). Terms with <code class="inline">then next term</code> are shown but excluded from shadow/redundant verdicts, because evaluation continues to the next term. <code class="inline">source-prefix-list</code> / <code class="inline">destination-prefix-list</code> and address-book references are not expanded — they are treated as any, with a note. A term with no <code class="inline">from</code> clause matches everything, so a from-less <code class="inline">then accept</code> is flagged overly broad.</li></ul>'
   +'<p style="color:var(--muted);font-size:.92rem">Firewall policy is daily work on the <a href="/">Enterprise track</a>; the <a href="/articles/enterprise-career-path/">Enterprise Network Engineer career guide</a> covers where security policy sits in the role, and the <a href="/tools/sla/">SLA calculator</a> is handy for pricing the change window when you clean the dead rules out.</p></div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Related guides</h3>'
   +'<ul><li><a href="/articles/wireshark-filters/">Wireshark Display Filters</a> — the on-the-wire counterpart: filters show what traffic actually did, rule-order analysis shows what the ACL would let it do.</li>'
@@ -895,7 +1159,7 @@ function pageACL(){
   $("#app").innerHTML=h;
   markNav("tools"); document.title="Firewall ACL Rule Analyzer | Packet Path";
   var md=document.querySelector('meta[name="description"]');
-  if(md) md.setAttribute("content","Paste a Cisco IOS extended ACL and detect shadowed rules that can never fire, fully redundant duplicates, and dangerous overly-broad permit ip any any lines.");
+  if(md) md.setAttribute("content","Paste a Cisco IOS extended ACL or a Juniper firewall filter and detect shadowed rules that can never fire, fully redundant duplicates, and dangerous overly-broad allow-anything lines.");
   setLD({"@context":"https://schema.org","@type":"WebApplication","name":"Firewall ACL rule analyzer","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
   initACL();
 }
