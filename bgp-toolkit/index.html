@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BGP Toolkit — Free Network Engineering Tool | Packet Path</title>
-<meta name="description" content="One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.">
+<meta name="description" content="One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.">
 <link rel="canonical" href="https://allaboutitinfrastructure.com/tools/bgp-toolkit/">
 <meta property="og:title" content="BGP Toolkit — Free Network Engineering Tool | Packet Path">
-<meta property="og:description" content="One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.">
+<meta property="og:description" content="One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.">
 <meta property="og:url" content="https://allaboutitinfrastructure.com/tools/bgp-toolkit/">
 <meta property="og:type" content="website">
 <style>
@@ -241,6 +241,8 @@ html.darkm .rpki-checks .fail em,html.darkm .rpki-result.invalid strong{color:#f
 @media(max-width:680px){.rpki-fields,.rpki-checks{grid-template-columns:1fr}.rpki-timeline{grid-template-columns:1fr;gap:.8rem}.rpki-timeline:before{left:20px;right:auto;top:12px;bottom:12px;border-top:0;border-left:3px solid var(--line)}.rpki-timeline div{text-align:left;padding-left:3.3rem}.rpki-timeline div:before{position:absolute;left:14px;top:7px;margin:0}.rpki-timeline time{min-height:0}.rpki-figure{padding:.5rem}.rpki-figure svg{font-size:90%}}
 
 /* ---------- tracks ---------- */
+.tracks-fresh{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:70ch}
+.tracks-fresh a{color:var(--accent);font-weight:600}
 .track-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;padding:1.4rem 1.5rem;margin:0 0 14px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
 .track-banner:hover{border-color:var(--accent)}
 .track-banner h3{margin:.3rem 0 .4rem;font-size:1.3rem}
@@ -576,16 +578,22 @@ html.lightm{color-scheme:light}
 .cv-devices{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; margin-bottom:1rem; }
 .cv-pane{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); overflow:hidden; }
 .cv-pane-head{
-  display:flex; align-items:center; gap:.6rem;
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:.45rem .6rem;
   padding:.6rem .9rem; background:var(--cv-surface2); border-bottom:1px solid var(--cv-line);
 }
-.cv-pane-name{ font-size:1rem; }
-.cv-pane-meta{ flex:1; font-size:.8rem; color:var(--cv-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cv-pane-name{ font-size:1rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cv-pane-meta{ grid-column:1/-1; grid-row:2; min-width:0; font-size:.8rem; color:var(--cv-muted); white-space:normal; overflow-wrap:anywhere; }
 .cv-mini-btn{
   background:transparent; border:1px solid var(--cv-line); color:var(--cv-muted);
   border-radius:6px; font-size:.78rem; padding:.25rem .6rem; cursor:pointer;
 }
 .cv-mini-btn:hover{ border-color:var(--cv-err); color:var(--cv-err); }
+.cv-vendor-seg{ display:inline-flex; border:1px solid var(--cv-line); border-radius:7px; overflow:hidden; flex:none; }
+.cv-vendor-btn{ border:0; border-right:1px solid var(--cv-line); background:var(--cv-surface); color:var(--cv-muted); padding:.22rem .42rem; font-size:.7rem; font-weight:700; cursor:pointer; }
+.cv-vendor-btn:last-child{ border-right:0; }
+.cv-vendor-btn.on{ background:var(--cv-accent); color:var(--cv-on-accent); }
+.cv-vendor-btn:focus-visible{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+@media (max-width:640px){ .cv-pane-head{ grid-template-columns:minmax(0,1fr) auto; } .cv-vendor-seg{ grid-row:2; grid-column:1; justify-self:start; } .cv-pane-meta{ grid-row:3; } }
 .cv-ta{
   width:100%; display:block; border:0; resize:vertical; min-height:220px;
   font-family:var(--cv-mono); font-size:.82rem; line-height:1.5;
@@ -690,7 +698,7 @@ html.lightm{color-scheme:light}
 <body>
 <header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a></nav></header>
 <main id="app" class="pp-main"></main>
-<section class="pp-about"><h2>About this tool</h2><p>One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
+<section class="pp-about"><h2>About this tool</h2><p>One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
 <footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a></p></footer>
 <script>
 
@@ -705,7 +713,7 @@ function toolRows(){
   }).join('') + '</ul>';
 }
 
-var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous permit ip any any holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL rules. v1 Cisco IOS only.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"}];
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"}];
 </script>
 <script>
 function $(sel, el){ return (el||document).querySelector(sel); }
@@ -833,7 +841,8 @@ var BT_TABS = [
 ["bogon","Bogon Check"],
 ["comm","Community Decoder"],
 ["prop","Propagation"],
-["filter","Filter Generator"]
+["filter","Filter Generator"],
+["dpath","D-PATH"]
 ];
 var TOOL_INTROS = {
 "subnet": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Every device on a network has an address like 192.168.1.50, and the "/26" after it says how many addresses belong to the same local neighborhood. This calculator splits any address into its network: the network address, the broadcast address, how many devices fit, and the usable range — instantly, with the binary math shown.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home lab, studying for a CCNA, or carving up an office network. If you have ever wondered "how many IPs do I actually get?", this is the tool.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are already filled in — 192.168.7.129/26. The tool answers: network <code class="inline">192.168.7.128</code>, broadcast <code class="inline">192.168.7.191</code>, 62 usable addresses (<code class="inline">.129</code>–<code class="inline">.190</code>). Why 62? A /26 leaves 6 host bits: 2^6 = 64 addresses, minus the network and broadcast addresses.</div><p class="pi-gloss"><b>CIDR</b> (/24): shorthand for "the first 24 bits are the network part". <b>Broadcast</b>: the special address that reaches every device on the subnet at once.</p></div>',
@@ -844,14 +853,14 @@ var TOOL_INTROS = {
 "ttt": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> In high-frequency trading, money is made in microseconds: a price tick arrives, software decides, an order goes out. This tool adds up every stage — light traveling through fiber, switch hops, the trading software itself — into a waterfall chart showing exactly where each microsecond goes.</p><p class="pi-plain"><strong>Who is this for?</strong> Built for people working on low-latency trading systems. For everyone else, it is a fascinating look at how much happens in a blink: light itself needs about 5 microseconds for every kilometer of fiber.</p><div class="pi-try"><strong>Try this example:</strong> leave the default 1200 km fiber route. Propagation alone is 1200 × 5 µs = 6,000 µs (6 ms) — physics takes its cut before a single switch or line of code runs. Now add 2 switch hops at 1 µs each and watch the waterfall grow: on long routes, distance dwarfs everything else.</div><p class="pi-gloss"><b>Tick</b>: one price update from an exchange. <b>Serialization</b>: the time to push bits onto the wire — bigger message or slower link means longer.</p></div>',
 "optic": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Fiber links run on light, and light fades with distance and at every connector it passes. A "link budget" is the accounting: the transmitter\'s power, minus every loss, must still leave enough light for the receiver to see clearly. This tool does the ledger and gives a pass/fail verdict with a safety margin.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone running fiber between buildings or across a campus — and students learning why "it lights up" is not the same as "it is reliable".</p><div class="pi-try"><strong>Try this example:</strong> 10 km of single-mode fiber at 0.4 dB/km (4.0 dB of fiber loss), 4 connector pairs (2.0 dB), 2 splices (0.2 dB): total loss 6.2 dB. With a transmitter at 0 dBm and a receiver that needs −14 dBm, the budget is 14 dB and the margin is <b>7.8 dB</b> — a comfortable pass with room for aging and dirty connectors.</div><p class="pi-gloss"><b>dB</b> (decibel): the unit of light loss — every 3 dB is half the power gone. <b>dBm</b>: power measured against 1 milliwatt; 0 dBm = 1 mW.</p></div>',
 "ptp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some systems need every clock to agree on the time — 5G cell towers, stock-exchange timestamps, power grids. PTP (Precision Time Protocol) syncs clocks over the network, but each device in the chain adds a little error. This calculator adds up the error across a chain of clocks and checks the total against real-world limits.</p><p class="pi-plain"><strong>Who is this for?</strong> Timing engineers and telecom folks. For the curious: it answers "how wrong can the time be after passing through five devices?"</p><div class="pi-try"><strong>Try this example:</strong> 5 boundary clocks, 50 ns of time error each, 8 ns timestamp granularity, 20 ns of link asymmetry per hop. Each hop contributes 50 + 8 + 20 = 78 ns, so the worst case over 5 hops is <b>390 ns</b>. Against a 1000 ns (1 microsecond) budget, that passes with room to spare — now try 20 clocks and watch it fail.</div><p class="pi-gloss"><b>PTP</b>: a protocol that synchronizes clocks over a network to within nanoseconds. <b>Boundary clock</b>: a switch that participates in timing instead of just passing it through.</p></div>',
-"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
-"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco firewall list here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
-"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
+"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice. Then scroll to the link-failure lab: kill leaf link 1 and compare how many healthy flows classic rehashing moves for no reason versus resilient hashing.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
+"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco IOS extended ACL or a Juniper firewall filter here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
+"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco or Juniper router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
 "timing-sim": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A full simulation of a timing network over time. A grandmaster clock feeds boundary clocks down a chain, and this models how each clock\'s servo wanders, how noise and asymmetry creep in hop by hop, and whether every clock stays within its ITU-T class (A through D) — second by second, on a live chart.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for timing engineers — here is what it does, and what you would ask your timing team for: "simulate the chain before we buy the clocks."</p><div class="pi-try"><strong>Try this example:</strong> run the default chain and watch the wander plot: each clock\'s time error breathing around zero as its servo steers it back. Now crank up the per-hop asymmetry and watch the Class D check (max time error within 5 ns) flip to fail — that is the cost of unequal path delays, visualized.</div><p class="pi-gloss"><b>PTP / SyncE</b>: the two technologies that distribute precise time and frequency over a network. <b>Servo</b>: the control loop inside each clock that continuously steers it toward its master.</p></div>',
 "wireshark-filter-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Wireshark can capture every packet on a network, but finding the ones you care about means writing "display filters" in a picky syntax. This tool builds them for you: pick fields from a menu, combine them with AND / OR / NOT, and get valid filter text plus a plain-English readout of what it matches.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever opened Wireshark and felt lost — students, sysadmins, the curious. You do not need to memorize a single field name.</p><div class="pi-try"><strong>Try this example:</strong> build "all HTTPS traffic to or from 10.0.0.5": add <code class="inline">ip.addr == 10.0.0.5</code>, AND, <code class="inline">tcp.port == 443</code>. The tool outputs <code class="inline">ip.addr == 10.0.0.5 && tcp.port == 443</code> — paste it straight into Wireshark\'s filter bar and only those packets remain.</div><p class="pi-gloss"><b>Display filter</b>: Wireshark\'s search language for packets you already captured (different from a capture filter, which decides what gets recorded in the first place).</p></div>',
 "wifi-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Your Wi-Fi shares invisible airspace with every neighbor\'s router. In the 2.4 GHz band only channels 1, 6, and 11 avoid overlapping — pick anything else and you are shouting over someone. Enter the access points your phone\'s Wi-Fi scanner can hear and this tool maps the spectral overlap and recommends the quietest channels.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home or office router — the most "normal person" tool on this site. If your video calls stutter, start here.</p><div class="pi-try"><strong>Try this example:</strong> add your neighbor\'s router on channel 6, 2.4 GHz, 20 MHz wide. The spectral graph shows it sprawling across channels 4–8, and the tool recommends channel <b>1</b> or <b>11</b> — the non-overlapping escapes. Move your own AP there and the interference is gone.</div><p class="pi-gloss"><b>RSSI</b>: signal strength as your device hears it, in dBm — closer to 0 means stronger. <b>Channel width</b>: how much airspace one Wi-Fi signal occupies (20, 40, 80, or 160 MHz).</p></div>',
 "qos-simulator": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Networks handle congestion with "token buckets": picture a bucket that fills with tokens at your contracted rate. Each packet spends tokens as it passes; when the bucket runs dry, extra packets get marked down or dropped. This simulator sets the bucket up the way a Cisco router would and lets you watch traffic get colored green, yellow, and red.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers learning QoS and certification students. The bucket analogy is the whole lesson — everything else is details.</p><div class="pi-try"><strong>Try this example:</strong> pick the 1R2C policer, CIR 1,000,000 bps, Bc 8000 bits. Fire one 1000-byte packet (8000 bits): it <b>conforms</b> (green) and the bucket hits exactly zero. Fire a second one instantly: it <b>exceeds</b> (yellow) — no tokens have had time to refill yet. That is the entire token-bucket idea in two packets.</div><p class="pi-gloss"><b>CIR</b>: the committed rate you are paying for. <b>Conform / exceed / violate</b>: the three colors — within contract, over but tolerated, over the hard limit.</p></div>',
-"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block.</p></div>',
+"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, a D-PATH (RFC 10039) attribute decoder with loop checker, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block. <b>D-PATH</b>: a new BGP attribute (RFC 10039) that stamps every domain a route crosses, so gateway routers can refuse routing loops between EVPN and IPVPN domains.</p></div>',
 "iperf3-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> iPerf3 is the standard tool for measuring real network speed: run it on two machines and it reports the actual throughput between them. But its command flags are cryptic. This builder constructs correct client and server commands with plain-English explanations, ready-made presets, and a linter that catches classic mistakes — like UDP tests with no bandwidth limit.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever argued "the network is slow" — run this on both ends and get a number instead of an argument.</p><div class="pi-try"><strong>Try this example:</strong> server <code class="inline">192.0.2.10</code>, 8 parallel streams, 30 seconds. The tool builds <code class="inline">iperf3 -c 192.0.2.10 -P 8 -t 30</code> — eight streams at once defeat per-connection limits and reveal the true capacity. Copy, paste, run.</div><p class="pi-gloss"><b>Throughput</b>: the data rate you actually get — always less than the sticker speed. <b>Parallel streams (-P)</b>: multiple simultaneous connections, which work around per-connection bottlenecks.</p></div>'
 };
 function bindCopyButtons(root){
@@ -947,6 +956,30 @@ function btDecodeCommunity(c){
   if(bi===666) return {text:"Blackhole convention — widely used to signal discard; exact meaning is operator-specific, verify with AS"+ai, src:"common operator convention"};
   if(bi===70||bi===80||bi===90) return {text:"Conventional local-preference marker (RFC 1998-style); exact meaning is operator-specific", src:"RFC 1998 conventional"};
   return null;
+}
+var btDpathLast = null;
+function btDpathRenderDecode(r){
+  var h='<div class="bt-card">';
+  var src=r.kind==="attr"?"BGP attribute with header (flags 0x90, type 36)"
+    :r.kind==="value"?"Attribute value (no header)"
+    :"CLI-style text (converted to one segment)";
+  h+='<p class="note">'+esc(src)+' — <b>'+r.domainCount+' domain'+(r.domainCount===1?'':'s')+'</b> in '+r.segments.length+' segment'+(r.segments.length===1?'':'s')+'.</p>';
+  h+='<table class="bt-table"><tr><th>Segment</th><th>#</th><th>Domain</th><th>SAFI type</th><th>Position</th></tr>';
+  var gi=0, total=r.domainCount;
+  r.segments.forEach(function(seg,si){
+    seg.forEach(function(d){
+      gi++;
+      var pos="";
+      if(gi===1) pos='Last domain — added most recently';
+      if(gi===total) pos=(pos?pos+'; ':'')+'Domain of origin';
+      h+='<tr><td>'+(si+1)+'</td><td>'+gi+'</td><td class="bt-comm">'+d.global+':'+d.local+'</td>'
+        +'<td>'+esc(DPathCore.safiName(d.safi))+'</td><td class="bt-src">'+esc(pos)+'</td></tr>';
+    });
+  });
+  h+='</table>';
+  h+='<p class="bt-note">Read left to right: entry 1 is the domain most recently entered, entry '+total+' is where the route was born. '
+    +'The 4-octet part of a DOMAIN-ID can encode an ASN, an IPv4 address, or anything else — this decoder shows the raw integers, like RFC 10039 recommends.</p></div>';
+  return h;
 }
 function btError(el,msg){ el.innerHTML='<div class="bt-err">'+esc(msg)+'</div>'; }
 function btExpandV6(ip){
@@ -1134,6 +1167,7 @@ function btShowTab(name){
   else if(name==="comm") btTabComm(body);
   else if(name==="prop") btTabProp(body);
   else if(name==="filter") btTabFilter(body);
+  else if(name==="dpath") btTabDpath(body);
 }
 function btSplitCommunities(input){
   var s=input||"", out=[], m;
@@ -1213,6 +1247,113 @@ function btTabComm(body){
       }
     });
     out.innerHTML=h+'</table><p class="bt-note">Database: IANA well-known + RFC 1997/3765/7999/8326, NTT, GTT, DTAG, Lumen, Cogent, Arelion, HE, AT&T, Tata, Telxius, PCCW. Spotted a missing documented community? Tell us and we\u2019ll add it with its source.</p></div>';
+  });
+}
+function btTabDpath(body){
+  body.innerHTML=
+  '<div class="card panel pi-intro"><h3>Plain English</h3>'
+  +'<p class="pi-plain"><strong>What does this do?</strong> D-PATH is a new BGP attribute (RFC 10039) that works like a passport: every network domain a route crosses gets stamped on it, so a gateway router that sees its own stamp refuses to let the route back in — no more routing loops when EVPN and IPVPN domains are stitched together. This tab decodes real D-PATH attributes, checks routes for loops, compares two routes by the D-PATH best-path rule, and simulates what a gateway prepends.</p>'
+  +'<p class="pi-plain"><strong>Who is this for?</strong> Network engineers working with EVPN/IPVPN interconnects — or anyone curious what the new attribute on the wire actually says. Everything runs in your browser; nothing is sent anywhere.</p>'
+  +'<div class="pi-try"><strong>Try this example:</strong> the decoder below is pre-filled with a real D-PATH attribute. Press <b>Decode</b> to see the two stamped domains, then run the loop check against <span class="inline">6500:1</span>.</div>'
+  +'<p class="pi-gloss"><b>D-PATH</b>: Domain Path — the list of domains a route has visited, carried as BGP path attribute type 36. <b>DOMAIN-ID</b>: the stamp each domain assigns itself, written global:local (e.g. 6500:2). <b>Gateway PE</b>: the boundary router that re-announces routes between domains and adds the stamps.</p></div>'
+
+  /* ---- decoder ---- */
+  +'<div class="card panel"><h3>D-PATH decoder</h3>'
+  +'<p class="note">Paste a D-PATH attribute as hex — the full attribute with its header (flags, type 36, length) or just the value. Whitespace, colons, dashes and <span class="inline">0x</span> prefixes are fine. Or type CLI-style text like <span class="inline">&lt;6500:2:IPVPN&gt;, &lt;6500:1:EVPN&gt;</span>.</p>'
+  +'<div class="field"><label for="bt-dp-in">D-PATH attribute</label><textarea id="bt-dp-in" rows="3" spellcheck="false">90240f020000196400028000001964000146</textarea></div>'
+  +'<div style="margin-top:.8rem;display:flex;gap:.6rem;flex-wrap:wrap">'+btBtn("bt-dp-go","Decode")
+  +'<button type="button" class="btn btn-ghost" id="bt-dp-cli">Try CLI format</button></div>'
+  +'<div id="bt-dp-out"></div></div>'
+
+  /* ---- loop checker ---- */
+  +'<div class="card panel"><h3>Loop checker</h3>'
+  +'<p class="note">A gateway PE must refuse to re-originate a route whose D-PATH already contains one of its own DOMAIN-IDs — the SAFI type is ignored for this check. Decode a route above, enter your gateway\'s local DOMAIN-IDs, and get the verdict.</p>'
+  +btField("bt-dp-local","Your gateway\u2019s local DOMAIN-IDs (comma-separated)","6500:1, 6500:2","")
+  +'<div style="margin-top:.8rem">'+btBtn("bt-dp-loop","Check for loop")+'</div><div id="bt-dp-loop-out"></div></div>'
+
+  /* ---- best-path compare ---- */
+  +'<div class="card panel"><h3>Best-path compare (D-PATH step)</h3>'
+  +'<p class="note">After Local Preference, RFC 10039 says: discard the candidate(s) without the <b>shortest D-PATH</b>. A missing D-PATH counts as length 0. Paste two D-PATH values and see which one wins this step.</p>'
+  +'<div class="grid-2">'
+  +'<div class="field"><label for="bt-dp-cmp-a">Route A D-PATH</label><textarea id="bt-dp-cmp-a" rows="2" spellcheck="false">020000196400028000001964000146</textarea></div>'
+  +'<div class="field"><label for="bt-dp-cmp-b">Route B D-PATH</label><textarea id="bt-dp-cmp-b" rows="2" spellcheck="false">0100001964000146</textarea></div></div>'
+  +'<div style="margin-top:.8rem">'+btBtn("bt-dp-cmp-go","Compare")+'</div><div id="bt-dp-cmp-out"></div></div>'
+
+  /* ---- prepend simulator ---- */
+  +'<div class="card panel"><h3>Gateway prepend simulator</h3>'
+  +'<p class="note">Act as a gateway PE: take the D-PATH you received, stamp your own domain on the left, and get the new value to advertise onward. (If the segment is already full at 255 domains, a new segment starts.)</p>'
+  +'<div class="grid-2">'
+  +'<div class="field"><label for="bt-dp-pre-in">Received D-PATH</label><textarea id="bt-dp-pre-in" rows="2" spellcheck="false">0100001964000146</textarea></div>'
+  +btField("bt-dp-pre-me","My domain (global:local)","6500:2","6500:2")+'</div>'
+  +'<div class="field" style="max-width:16rem"><label for="bt-dp-pre-safi">Advertising into (ISF SAFI type)</label><select id="bt-dp-pre-safi"><option value="128">IPVPN — type 128</option><option value="70">EVPN — type 70</option><option value="0">Local ISF route — type 0</option></select></div>'
+  +'<div style="margin-top:.8rem">'+btBtn("bt-dp-pre-go","Simulate prepend")+'</div><div id="bt-dp-pre-out"></div></div>'
+
+  /* ---- honest scope ---- */
+  +'<div class="bt-scope"><strong>Honest scope.</strong> D-PATH only rides inter-subnet-forwarding routes — SAFI 128 (IPVPN) and SAFI 70 (EVPN); it must not be attached to anything else. It is <b>off by default</b> and has to be explicitly configured on gateway PEs. In No Propagation Mode (the default), the gateway re-initializes attributes and D-PATH is <b>not</b> propagated — so the loop protection is lost with it; Uniform Propagation Mode carries D-PATH onward. The ISF_SAFI_TYPE tag is informational only: loop detection and best-path both ignore it. <a href="/articles/rfc10039-dpath/">Read the RFC 10039 explainer</a>.</div>';
+
+  /* ---- decoder ---- */
+  $("#bt-dp-cli").addEventListener("click",function(){
+    $("#bt-dp-in").value="<6500:2:IPVPN>, <6500:1:EVPN>";
+  });
+  $("#bt-dp-go").addEventListener("click",function(){
+    var out=$("#bt-dp-out"), r=DPathCore.decodeInput($("#bt-dp-in").value);
+    if(!r.ok){ btDpathLast=null; btError(out,"Malformed D-PATH. "+r.reason); return; }
+    btDpathLast=r;
+    out.innerHTML=btDpathRenderDecode(r);
+  });
+
+  /* ---- loop checker ---- */
+  $("#bt-dp-loop").addEventListener("click",function(){
+    var out=$("#bt-dp-loop-out");
+    if(!btDpathLast){ btError(out,"Decode a route in the decoder above first, then run this check."); return; }
+    var p=DPathCore.parseLocalIds($("#bt-dp-local").value);
+    if(p.bad.length){ btError(out,"Could not read "+p.bad.map(function(b){return "\u201c"+b+"\u201d";}).join(", ")+" — use global:local integers like 6500:1."); return; }
+    if(!p.ids.length){ btError(out,"Enter at least one local DOMAIN-ID, e.g. 6500:1, 6500:2."); return; }
+    var r=DPathCore.loopCheck(btDpathLast,p.ids);
+    if(r.loop){
+      out.innerHTML='<div class="bt-card"><p style="color:var(--danger);font-weight:700;font-size:1.05rem">LOOP DETECTED</p>'
+        +'<p class="note">Your DOMAIN-ID <b>'+esc(r.matches.map(function(m){return m.global+":"+m.local;}).join(", "))+'</b> already appears in this D-PATH.'
+        +' The SAFI type is ignored for loop detection — only the DOMAIN-ID matters.</p>'
+        +'<p class="note"><b>Consequence:</b> this route must not be re-exported to another domain. Drop it here; the loop dies at the door.</p></div>';
+    }else{
+      out.innerHTML='<div class="bt-card"><p style="color:var(--ok);font-weight:700;font-size:1.05rem">CLEAN</p>'
+        +'<p class="note">None of your local DOMAIN-IDs ('+esc(p.ids.map(function(x){return x.global+":"+x.local;}).join(", "))+') appear in this D-PATH. It is safe to re-originate this route onward.</p></div>';
+    }
+  });
+
+  /* ---- best-path compare ---- */
+  $("#bt-dp-cmp-go").addEventListener("click",function(){
+    var out=$("#bt-dp-cmp-out");
+    var a=DPathCore.decodeInput($("#bt-dp-cmp-a").value), b=DPathCore.decodeInput($("#bt-dp-cmp-b").value);
+    if(!a.ok){ btError(out,"Route A: malformed D-PATH. "+a.reason); return; }
+    if(!b.ok){ btError(out,"Route B: malformed D-PATH. "+b.reason); return; }
+    var w=DPathCore.compare(a.domainCount,b.domainCount);
+    var h='<div class="bt-card"><dl class="bt-kv"><dt>Route A D-PATH length</dt><dd>'+a.domainCount+' domain'+(a.domainCount===1?'':'s')+'</dd>'
+      +'<dt>Route B D-PATH length</dt><dd>'+b.domainCount+' domain'+(b.domainCount===1?'':'s')+'</dd></dl>';
+    if(w===-1){
+      h+='<p class="note"><b>Tie</b> — both routes carry a D-PATH of the same length. The rest of the normal BGP best-path steps decide; this tool stops at the D-PATH step and will not invent further tie-breaks.</p>';
+    }else{
+      var winner=w===0?"A":"B", loser=w===0?"B":"A";
+      h+='<p class="note"><b>Route '+winner+' wins the D-PATH step.</b> After Local Preference, the shortest D-PATH wins — Route '+winner+' ('+(w===0?a:b).domainCount+' domain'+((w===0?a:b).domainCount===1?'':'s')+') beats Route '+loser+' ('+(w===0?b:a).domainCount+'). A missing D-PATH would count as 0 and win outright.</p>';
+    }
+    out.innerHTML=h+'</div>';
+  });
+
+  /* ---- prepend simulator ---- */
+  $("#bt-dp-pre-go").addEventListener("click",function(){
+    var out=$("#bt-dp-pre-out");
+    var r=DPathCore.decodeInput($("#bt-dp-pre-in").value);
+    if(!r.ok){ btError(out,"Received D-PATH: malformed. "+r.reason); return; }
+    var me=DPathCore.parseLocalIds($("#bt-dp-pre-me").value);
+    if(me.bad.length||me.ids.length!==1){ btError(out,"Enter your domain as one global:local ID, e.g. 6500:2."); return; }
+    var safi=parseInt($("#bt-dp-pre-safi").value,10);
+    var np=DPathCore.prepend(r,me.ids[0],safi);
+    var hex=DPathCore.bytesToHex(DPathCore.serialize(np));
+    var chain=np.segments[0].map(function(d){return DPathCore.fmtDomain(d);}).join(" \u2190 ");
+    out.innerHTML='<div class="bt-card"><p class="note">Your gateway stamps <b>'+esc(me.ids[0].global+":"+me.ids[0].local+" ("+DPathCore.safiName(safi)+")")+'</b> on the left. New attribute value to advertise ('+np.domainCount+' domain'+(np.domainCount===1?'':'s')+'):</p>'
+      +'<pre class="code">'+esc(hex)+'</pre>'
+      +'<p class="bt-note">Path reads right-to-left back to the origin: '+esc(chain)+'. The router adds the attribute header (flags 0x90, type 36) itself — this is the value only.</p></div>';
+    bindCopyButtons(out);
   });
 }
 function btTabFilter(body){
@@ -1476,7 +1617,7 @@ function pageBGPToolkit(){
   var h=BT_CSS
   +'<div class="page-head">'
   +'<h1>BGP Toolkit</h1>'
-  +'<p class="lede">Is your prefix healthy? Look up any prefix or ASN, watch it propagate across RIPE RIS collectors, decode BGP communities, and generate peering filters \u2014 plus a one-click hijack verdict nobody else gives you.</p></div>'
+  +'<p class="lede">Is your prefix healthy? Look up any prefix or ASN, watch it propagate across RIPE RIS collectors, decode BGP communities, and generate peering filters \u2014 plus a one-click hijack verdict nobody else gives you, and the new RFC 10039 D-PATH attribute decoder.</p></div>'
   +plainIntro("bgp-toolkit")
   +'<div class="bt-tabs" role="tablist" aria-label="BGP toolkit sections">'+tabs+'</div>'
   +'<div id="bt-body"></div>'
@@ -1484,12 +1625,13 @@ function pageBGPToolkit(){
   +'<div class="related"><h3>Go deeper</h3><ul>'
   +'<li><a href="/articles/bgp-explained/">BGP explained</a> \u2014 how path selection really works.</li>'
   +'<li><a href="/tools/acl-analyzer/">ACL rule analyzer</a> \u2014 the filter side of edge hygiene.</li>'
+  +'<li><a href="/articles/rfc10039-dpath/">RFC 10039 D-PATH explained</a> \u2014 the new BGP attribute that stops EVPN/IPVPN routing loops; decoded by the D-PATH tab above.</li>'
   +'</ul></div>'
   +'<div style="margin-top:1.6rem">'+toolRows()+'</div>';
   $("#app").innerHTML=h;
-  markNav("tools"); document.title="BGP Toolkit \u2014 Hijack Verdict, Lookup, Communities | Packet Path";
+  markNav("tools"); document.title="BGP Toolkit \u2014 Hijack Verdict, D-PATH Decoder, Lookup | Packet Path";
   var md=document.querySelector('meta[name="description"]');
-  if(md) md.setAttribute("content","Free BGP toolkit: one-click hijack verdict for any prefix, prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator. Live RIPEstat data, in your browser.");
+  if(md) md.setAttribute("content","Free BGP toolkit: one-click hijack verdict for any prefix, prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, loop checker and prepend simulator, propagation tracker, and peering filter generator. Live RIPEstat data, in your browser.");
   setLD({"@context":"https://schema.org","@type":"WebApplication","name":"BGP Toolkit","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
   btInit();
   bindCopyButtons($("#app"));
