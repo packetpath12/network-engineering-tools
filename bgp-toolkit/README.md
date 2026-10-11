@@ -31,6 +31,12 @@ Nine BGP workflows in one page, with live data from the RIPEstat API:
 
 - **Filter generator** — peer ASN to ready-to-paste IOS-XE + JunOS prefix-lists.
 
+- **D-PATH decoder (RFC 10039)** — decode the new BGP Domain Path attribute
+  (type 36): per-segment breakdown with DOMAIN-IDs and SAFI types, malformed
+  verdicts in plain English, a one-click loop checker against your gateway's
+  local DOMAIN-IDs (SAFI ignored), a shortest-D-PATH best-path comparison,
+  and a gateway prepend simulator.
+
 **Live version:**
 [allaboutitinfrastructure.com/tools/bgp-toolkit/](https://allaboutitinfrastructure.com/tools/bgp-toolkit/)
 
