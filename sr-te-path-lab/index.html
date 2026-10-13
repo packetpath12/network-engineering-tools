@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Segment Routing Policy Lab — Free Network Engineering Tool | Packet Path</title>
+<meta name="description" content="Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.">
+<link rel="canonical" href="https://allaboutitinfrastructure.com/tools/sr-te-path-lab/">
+<meta property="og:title" content="Segment Routing Policy Lab — Free Network Engineering Tool | Packet Path">
+<meta property="og:description" content="Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.">
+<meta property="og:url" content="https://allaboutitinfrastructure.com/tools/sr-te-path-lab/">
+<meta property="og:type" content="website">
+<style>
+:root{
+  color-scheme:light dark;
+  --font-head:"Spectral",Georgia,"Times New Roman",serif;
+  --font-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f7faf8; --surface:#ffffff; --surface2:#eef4f1; --surface3:#e6eee9;
+  --ink:#142a25; --muted:#4f635b; --faint:#789089;
+  --line:#dde7e1; --line-soft:#eaf0ec;
+  --accent:#0a7d5f; --accent-strong:#076a51; --on-accent:#ffffff; --accent-soft:rgba(10,125,95,.10);
+  --teal:#0b6e99; --teal-soft:rgba(11,110,153,.10);
+  --amber:#9c5c00; --amber-soft:rgba(156,92,0,.10);
+  --warn-bg:#fff8e8; --warn-line:#e4b54d;
+  --code-bg:#0e1f1a; --code-ink:#e6f3ed; --code-line:#243530;
+  --link:#0b6e99;
+  --shadow:0 1px 2px rgba(16,40,32,.07),0 10px 28px -16px rgba(16,40,32,.25);
+  --radius:12px; --radius-sm:8px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a1210; --surface:#101816; --surface2:#141e1b; --surface3:#1a2522;
+    --ink:#e9f2ee; --muted:#a5b9b0; --faint:#7c938a;
+    --line:#223029; --line-soft:#1a2421;
+    --accent:#3cd79a; --accent-strong:#2fbe85; --on-accent:#05231a; --accent-soft:rgba(60,215,154,.12);
+    --teal:#5fc4e6; --teal-soft:rgba(95,196,230,.10);
+    --amber:#f0b13e; --amber-soft:rgba(240,177,62,.10);
+    --warn-bg:rgba(240,177,62,.07); --warn-line:#8a6a24;
+    --code-bg:#050b09; --code-ink:#dcf2e7; --code-line:#22302b;
+    --link:#5fc4e6;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.55);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.62}
+img{max-width:100%}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.18;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 .55em}
+h2{font-size:clamp(1.35rem,2.8vw,1.75rem);margin:1.7em 0 .5em}
+h3{font-size:1.12rem;margin:1.5em 0 .4em}
+p{margin:0 0 1.05em}
+::selection{background:var(--accent);color:var(--on-accent)}
+.wrap{max-width:1150px;margin:0 auto;padding:0 20px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:-999px;top:0;background:var(--ink);color:var(--bg);padding:.7rem 1rem;border-radius:0 0 8px 0;z-index:200;font-weight:700;text-decoration:none}
+.skip-link:focus{left:0}
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar-inner{display:flex;align-items:center;gap:14px;min-height:60px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--font-head);font-weight:700;font-size:1.18rem;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand:hover{text-decoration:none}
+.brand svg{flex:none}
+.brand .dot{color:var(--accent)}
+.mainnav{display:flex;gap:2px;margin-left:6px}
+.mainnav a{color:var(--muted);text-decoration:none;font-weight:700;font-size:.94rem;padding:.5rem .7rem;border-radius:8px;white-space:nowrap}
+.mainnav a:hover{color:var(--ink);background:var(--surface2)}
+.mainnav a[aria-current="page"]{color:var(--ink);background:var(--accent-soft)}
+.top-search{margin-left:auto;display:flex;align-items:center;gap:8px}
+.top-search input{width:170px;max-width:34vw;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:.42rem .9rem;font:inherit;font-size:.9rem}
+.top-search input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.theme-btn{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.theme-btn:hover{border-color:var(--accent)}
+.theme-btn .moon{display:none}
+html.darkm .theme-btn .moon{display:block}
+html.darkm .theme-btn .sun{display:none}
+html.lightm .theme-btn .moon{display:none}
+@media (prefers-color-scheme:dark){
+  html:not(.lightm):not(.darkm) .theme-btn .moon{display:block}
+  html:not(.lightm):not(.darkm) .theme-btn .sun{display:none}
+}
+.menu{display:none}
+/* ---------- layout helpers ---------- */
+main{min-height:60vh}
+.page-head{padding:2.4rem 0 1.2rem}
+.page-head .lede{font-size:1.12rem;color:var(--muted);max-width:62ch}
+.section-title{display:flex;align-items:baseline;gap:12px;margin:2.6rem 0 1.1rem;border-top:1px solid var(--line);padding-top:1.4rem}
+.section-title h2{margin:0;font-size:1.45rem}
+.section-title .more{margin-left:auto;font-size:.92rem;font-weight:700;white-space:nowrap}
+.lead-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:2rem;align-items:stretch;padding:2.6rem 0 1rem}
+.lede{font-size:1.13rem;color:var(--muted);max-width:56ch}
+.lede strong{color:var(--ink)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:1.3rem 0 0}
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.98rem;padding:.66rem 1.15rem;border-radius:10px;text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:var(--font-body)}
+.btn:hover{background:var(--accent-strong);color:var(--on-accent);text-decoration:none}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.btn-sm{padding:.42rem .85rem;font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.soft{background:var(--surface2);border:1px solid var(--line-soft)}
+/* ---------- tool rows (home + tools hub) ---------- */
+.tool-list{display:grid;gap:12px;margin:0 0 .5rem;padding:0;list-style:none}
+.tool-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.05rem 1.25rem;box-shadow:var(--shadow)}
+.tool-row > a{color:inherit;text-decoration:none;display:contents}
+.tool-ic{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--surface3);border:1px solid var(--line)}
+.tool-row h3{margin:0 0 .2rem;font-family:var(--font-body);font-size:1.04rem;font-weight:700}
+.tool-row p{margin:0;color:var(--muted);font-size:.94rem;max-width:70ch}
+.tool-go{font-weight:700;font-size:.95rem;white-space:nowrap;color:var(--accent)}
+.tool-go .arr{display:inline-block;transition:transform .15s ease}
+.tool-row:hover .tool-go .arr{transform:translateX(4px)}
+/* ---------- mini tool card (home lead) ---------- */
+.mini-tool{padding:1.35rem;display:flex;flex-direction:column;gap:.9rem}
+.mini-tool header{display:flex;align-items:center;gap:10px}
+.mini-tool header .t{font-family:var(--font-head);font-weight:700;font-size:1.15rem}
+.mini-tool .foot{margin-top:auto}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.3rem;letter-spacing:.02em}
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.55rem .7rem}
+.field textarea{min-height:120px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .9rem;font-size:.94rem;background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem;margin:.4rem 0 0}
+.kv dt{color:var(--muted);font-weight:700;white-space:nowrap}
+.kv dd{margin:0;font-family:var(--font-mono);font-size:.93rem;overflow-wrap:anywhere}
+.err{color:#b3261e;font-size:.9rem;font-weight:700}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .err{color:#ff8a80}}
+html.darkm .err{color:#ff8a80}
+/* ---------- articles ---------- */
+.featured{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);overflow:hidden;text-decoration:none;color:inherit;transition:border-color .15s}
+.featured:hover{border-color:var(--accent)}
+.featured .fimg{min-height:300px}
+.featured .fimg img,.art-card img{width:100%;height:100%;object-fit:cover;display:block}
+.featured .fbody{padding:1.8rem;display:flex;flex-direction:column;justify-content:center}
+.featured h3{font-size:clamp(1.4rem,2.6vw,2rem);margin:.4rem 0 .6rem}
+.featured p{color:var(--muted);margin:0 0 1rem;max-width:52ch}
+.art-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.art-card{overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s ease}
+.art-card:hover{border-color:var(--accent)}
+.art-card .ci{aspect-ratio:16/9;overflow:hidden;background:var(--surface3)}
+.art-card img{transition:transform .3s ease}
+.art-card:hover img{transform:scale(1.03)}
+.art-card .cb{padding:1.1rem 1.15rem 1.25rem;display:flex;flex-direction:column;gap:.45rem;flex:1}
+.art-card h3{font-size:1.06rem;margin:0;font-family:var(--font-body);font-weight:700;line-height:1.35}
+.art-card .ex{color:var(--muted);font-size:.93rem;margin:0;flex:1}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.8rem;color:var(--faint)}
+.chip{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:.18rem .65rem}
+.chip.teal{color:var(--teal);background:var(--teal-soft)}
+.chip.amber{color:var(--amber);background:var(--amber-soft)}
+.level-tag{font-size:.74rem;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem}
+.topic-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 1.3rem}
+.topic-filters button{font:inherit;font-size:.9rem;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.4rem 1rem;cursor:pointer}
+.topic-filters button[aria-pressed="true"]{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
+.topic-filters button:hover{border-color:var(--accent);color:var(--ink)}
+.topic-filters button[aria-pressed="true"]:hover{color:var(--on-accent)}
+/* ---------- article page ---------- */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:200;transition:width .08s linear}
+.art-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:2.5rem;padding:1.5rem 0 3rem}
+.art-main{min-width:0}
+.art-hero{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:0 0 1.6rem}
+.art-hero img{width:100%;aspect-ratio:21/9;object-fit:cover;display:block}
+.art-body h2{scroll-margin-top:80px}
+.toc{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 110px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.1rem;font-size:.9rem}
+.toc h4{margin:0 0 .6rem;font-family:var(--font-body);font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.toc ol{margin:0;padding-left:1.1rem;display:grid;gap:.35rem}
+.toc a{color:var(--muted);text-decoration:none}
+.toc a:hover{color:var(--accent);text-decoration:underline}
+.byline{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;color:var(--muted);font-size:.92rem;margin:0 0 1rem}
+.key-take{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);padding:1.1rem 1.25rem;margin:1.2rem 0 1.8rem}
+.key-take h4{margin:0 0 .5rem;font-family:var(--font-body);font-size:.85rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)}
+.key-take ul{margin:0;padding-left:1.2rem;display:grid;gap:.35rem}
+.callout{border:1px solid var(--line);border-left:5px solid var(--teal);background:var(--teal-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.9rem 1.1rem;margin:1.3rem 0;font-size:.96rem}
+.callout.warn{border-left-color:var(--amber);background:var(--warn-bg);border-color:var(--warn-line)}
+.callout.key{border-left-color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+.callout strong.t{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;color:var(--teal)}
+.callout.warn strong.t{color:var(--amber)}
+.callout.key strong.t{color:var(--accent)}
+pre.code{position:relative;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:10px;padding:1rem 3.4rem 1rem 1.1rem;overflow:auto;font-family:var(--font-mono);font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+pre.code code{font:inherit}
+.copy-btn{position:absolute;top:.55rem;right:.55rem;background:var(--surface3);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:.74rem;font-weight:700;border-radius:6px;padding:.28rem .6rem;cursor:pointer}
+.copy-btn:hover{border-color:var(--accent)}
+code.inline{font-family:var(--font-mono);font-size:.86em;background:var(--surface3);border:1px solid var(--line);border-radius:5px;padding:.08em .4em}
+table.tbl{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.94rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+table.tbl th,table.tbl td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.tbl thead th{background:var(--surface2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);white-space:nowrap}
+.tbl-wrap{overflow-x:auto;margin:0 -20px;padding:0 20px}
+.read-next{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:2.5rem 0 0}
+.read-next a{text-decoration:none;color:inherit}
+.read-next .rn{padding:1.1rem 1.25rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.read-next .rn:hover{border-color:var(--accent)}
+.read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
+.read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+/* ---------- RPKI article lab ---------- */
+.rpki-figure{margin:1.5rem 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;overflow:hidden}
+.rpki-figure svg{display:block;min-width:0}
+.rpki-figure figcaption{margin-top:.65rem;color:var(--muted);font-size:.9rem;text-align:center}
+.rpki-lab{padding:1.2rem;margin:1.25rem 0}
+.rpki-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.rpki-presets button{font:inherit;font-size:.86rem;font-weight:700;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.45rem .72rem;cursor:pointer}
+.rpki-presets button:hover,.rpki-presets button:focus-visible{border-color:var(--accent);outline:none}
+.rpki-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rpki-fields label{display:grid;gap:.25rem;color:var(--muted);font-size:.82rem;font-weight:700}
+.rpki-fields input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .65rem}
+.rpki-fields input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.rpki-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:1rem 0}
+.rpki-checks div{display:grid;grid-template-columns:auto 1fr;gap:.15rem .55rem;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem}
+.rpki-checks span{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface3);font-weight:700}
+.rpki-checks b{font-size:.86rem}.rpki-checks em{font-style:normal;font-size:.82rem;color:var(--muted)}
+.rpki-checks .pass em{color:var(--accent);font-weight:700}.rpki-checks .fail em{color:#b3261e;font-weight:700}
+.rpki-result{display:flex;align-items:baseline;gap:.65rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:.9rem}
+.rpki-result>span{color:var(--muted);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rpki-result strong{font-family:var(--font-mono);font-size:1.35rem}
+.rpki-result.valid strong{color:var(--accent)}.rpki-result.invalid strong{color:#b3261e}.rpki-result.notfound strong{color:var(--amber)}
+.rpki-result p{width:100%;margin:0;color:var(--muted);font-size:.92rem}
+.rpki-honesty{margin-bottom:0}
+.rpki-timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:relative;margin:1.4rem 0 1.6rem;gap:0}
+.rpki-timeline:before{content:"";position:absolute;left:7%;right:7%;top:36px;border-top:3px solid var(--line)}
+.rpki-timeline div{position:relative;padding:0 .55rem;text-align:center}
+.rpki-timeline div:before{content:"";display:block;width:13px;height:13px;margin:30px auto .65rem;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent)}
+.rpki-timeline time{display:block;min-height:2.7rem;color:var(--accent);font-weight:700;font-size:.82rem;line-height:1.35}
+.rpki-timeline p{font-size:.84rem;line-height:1.4;margin:0;color:var(--muted)}
+.rpki-fixes{counter-reset:rpki-fix;list-style:none;padding:0;display:grid;gap:1rem}
+.rpki-fixes li{counter-increment:rpki-fix;position:relative;padding-left:3rem}
+.rpki-fixes li:before{content:counter(rpki-fix);position:absolute;left:0;top:.08rem;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:700}
+.rpki-related{padding:1.1rem 1.25rem;margin-top:1.5rem}.rpki-related h3{margin-top:0}.rpki-tool-link a{display:flex;flex-direction:column;gap:.1rem;padding:.75rem;background:var(--accent-soft);border-radius:8px;text-decoration:none}.rpki-tool-link span{color:var(--muted);font-size:.9rem}
+.announcement-card{margin:1.25rem 0;border:1px solid var(--code-line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);color:var(--code-ink);font-family:var(--font-mono);font-size:.88rem}
+.announcement-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:.8rem 1rem;background:#07110e;border-bottom:1px solid var(--code-line);font-size:.78rem;letter-spacing:.04em}
+.announcement-card details{border-bottom:1px solid var(--code-line)}.announcement-card details:last-child{border-bottom:0}
+.announcement-card summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:.82rem 1rem;cursor:pointer;list-style-position:inside}
+.announcement-card summary:hover{background:rgba(255,255,255,.04)}.announcement-card summary span{font-weight:700}.announcement-card summary code{font:inherit;color:#9cd9c0;text-align:right;overflow-wrap:anywhere}
+.announcement-card details p{margin:0;padding:0 1rem 1rem 2.15rem;color:#b7c9c1;font-family:var(--font-body);font-size:.94rem}.announcement-card mark{background:rgba(240,177,62,.22);color:#ffd27a;padding:.05em .3em;border-radius:3px}
+.rov-valid{color:#76e2ae}
+@media(max-width:620px){.announcement-card summary{grid-template-columns:1fr}.announcement-card summary code{text-align:left;padding-left:1.35rem}.announcement-head{align-items:flex-start;flex-direction:column}.rpki-related .read-next{grid-template-columns:1fr}}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .rpki-checks .fail em,:root:not(.lightm) .rpki-result.invalid strong{color:#ff8a80}}
+html.darkm .rpki-checks .fail em,html.darkm .rpki-result.invalid strong{color:#ff8a80}
+@media (prefers-reduced-motion:reduce){.rpki-anim{display:none}}
+@media(max-width:680px){.rpki-fields,.rpki-checks{grid-template-columns:1fr}.rpki-timeline{grid-template-columns:1fr;gap:.8rem}.rpki-timeline:before{left:20px;right:auto;top:12px;bottom:12px;border-top:0;border-left:3px solid var(--line)}.rpki-timeline div{text-align:left;padding-left:3.3rem}.rpki-timeline div:before{position:absolute;left:14px;top:7px;margin:0}.rpki-timeline time{min-height:0}.rpki-figure{padding:.5rem}.rpki-figure svg{font-size:90%}}
+
+/* ---------- tracks ---------- */
+.tracks-fresh{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:70ch}
+.tracks-fresh a{color:var(--accent);font-weight:600}
+.track-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;padding:1.4rem 1.5rem;margin:0 0 14px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.track-banner:hover{border-color:var(--accent)}
+.track-banner h3{margin:.3rem 0 .4rem;font-size:1.3rem}
+.track-banner p{margin:0;color:var(--muted);font-size:.95rem;max-width:70ch}
+.track-banner .go{font-weight:700;color:var(--accent);white-space:nowrap}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.steps a{text-decoration:none;color:inherit}
+.step{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:1rem 1.2rem}
+.step:hover{border-color:var(--accent)}
+.step-n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--surface3);border:1px solid var(--line);flex:none}
+.step h3{margin:0 0 .2rem;font-size:1.02rem;font-family:var(--font-body)}
+.step p{margin:0;color:var(--muted);font-size:.9rem}
+.step img,.step .noimg{width:120px;height:68px;object-fit:cover;border-radius:var(--radius-sm);background:var(--surface3)}
+/* ---------- gear ---------- */
+.gear-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.gear-card{padding:1.3rem;display:flex;flex-direction:column;gap:.55rem}
+.gear-card .gcat{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--teal)}
+.gear-card h3{margin:0;font-size:1.15rem}
+.gear-card p{margin:0;color:var(--muted);font-size:.93rem;flex:1}
+.gear-card .why{background:var(--surface2);border-radius:var(--radius-sm);padding:.7rem .85rem;font-size:.88rem}
+.gear-card .why b{color:var(--ink)}
+.disclosure{font-size:.9rem;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius-sm);padding:.9rem 1.1rem;margin:1.4rem 0 0}
+/* ---------- search ---------- */
+.search-results{list-style:none;margin:1rem 0 3rem;padding:0;display:grid;gap:0}
+.search-results li{border-bottom:1px solid var(--line);padding:1rem 0}
+.search-results h3{margin:0 0 .3rem;font-size:1.15rem;font-family:var(--font-body)}
+.search-results .snip{color:var(--muted);font-size:.94rem;margin:0}
+mark{background:var(--amber-soft);color:inherit;border-radius:3px;padding:0 .15em}
+/* ---------- about / misc ---------- */
+.about-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin:1.2rem 0}
+.about-cols .card{padding:1.3rem}
+.about-cols h3{margin:.1rem 0 .5rem;font-size:1.15rem}
+.about-cols p:last-child{margin-bottom:0}
+.footer{border-top:1px solid var(--line);margin-top:3rem;padding:2rem 0 2.6rem;color:var(--muted);font-size:.92rem}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1.5rem}
+.footer h4{font-family:var(--font-body);font-size:.84rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);margin:0 0 .6rem}
+.footer ul{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}
+.footer a{color:var(--muted);text-decoration:none}
+.footer a:hover{color:var(--accent);text-decoration:underline}
+.footer .fine{margin-top:1.8rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.84rem;color:var(--faint);display:flex;flex-wrap:wrap;gap:8px 24px}
+/* ---------- tool pages ---------- */
+.tool-tabs{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px;margin:0 0 1.4rem}
+.tool-tabs button{font:inherit;font-weight:700;font-size:.92rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.5rem 1.1rem;cursor:pointer}
+.tool-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.tool-pane{display:none}
+.tool-pane.on{display:block}
+.tool-shell{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1.5rem;align-items:start}
+.panel{padding:1.4rem}
+.panel h3{margin-top:0;font-size:1.15rem}
+.pi-intro{margin:0 0 1.2rem}
+.pi-intro h3{margin-top:0}
+.pi-plain{font-size:.93rem;line-height:1.65;margin:.55rem 0;color:var(--ink)}
+.pi-try{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem .95rem;font-size:.92rem;line-height:1.62;margin:.75rem 0}
+.pi-gloss{font-size:.85rem;color:var(--muted);line-height:1.6;margin:.55rem 0 0}
+.pi-gloss b{color:var(--ink)}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface3);border:1px solid var(--line);margin:.5rem 0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:pointer}
+.bitgrid{font-family:var(--font-mono);font-size:.82rem;line-height:1.5;overflow-wrap:anywhere;word-break:break-all}
+.bitgrid .net{color:var(--amber);font-weight:700}
+.bitgrid .host{color:var(--teal)}
+.quiz-q{font-family:var(--font-head);font-size:clamp(1.3rem,3vw,1.8rem);margin:.4rem 0 1rem}
+.quiz-feedback{border-radius:var(--radius-sm);padding:.8rem 1rem;margin:1rem 0 0;font-weight:700;display:none}
+.quiz-feedback.ok{display:block;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent)}
+html.darkm .quiz-feedback.ok,html:not(.lightm):not(.darkm) .quiz-feedback.ok{color:var(--accent)}
+.quiz-feedback.bad{display:block;background:#fbe9e7;color:#b3261e;border:1px solid #e0a49e}
+@media (prefers-color-scheme:dark){html:not(.lightm) .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}}
+html.darkm .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}
+.quiz-score{display:flex;gap:16px;flex-wrap:wrap;font-size:.95rem;color:var(--muted);margin:.8rem 0 0}
+.quiz-score b{color:var(--ink);font-family:var(--font-mono)}
+.explain{font-weight:400;font-size:.94rem;margin-top:.4rem;display:block}
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:1.2rem 0}
+.stat{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem}
+.stat .v{font-family:var(--font-mono);font-weight:600;font-size:1.22rem;display:block;overflow-wrap:anywhere}
+.stat .l{font-size:.8rem;color:var(--muted)}
+/* ---------- SLA / capacity / tick-to-trade tools ---------- */
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+.seg button{font:inherit;font-weight:700;font-size:.88rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.42rem .95rem;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:.55rem 0 0}
+.presets button{font:inherit;font-size:.85rem;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.32rem .85rem;cursor:pointer}
+.presets button:hover{border-color:var(--accent);color:var(--ink)}
+.comp-head{display:grid;grid-template-columns:minmax(0,1fr) 92px 150px 38px;gap:8px;align-items:end;font-size:.82rem;font-weight:700;color:var(--muted);letter-spacing:.02em;margin-top:.8rem}
+.comp-row{display:grid;grid-template-columns:minmax(0,1fr) 92px 150px 38px;gap:8px;align-items:center;margin-top:8px}
+.comp-row input,.comp-row select{font:inherit;font-size:.95rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.5rem .65rem;width:100%}
+.comp-row .del{background:transparent;border:1px solid var(--line);border-radius:var(--radius-sm);color:var(--muted);font-size:1.05rem;cursor:pointer;line-height:1;padding:.45rem 0}
+.comp-row .del:hover{border-color:var(--amber);color:var(--amber)}
+.comp-row .del:disabled{opacity:.35;cursor:default}
+@media (max-width:560px){
+  .comp-head{display:none}
+  .comp-row{grid-template-columns:1fr 1fr}
+  .comp-row .nm{grid-column:1/-1}
+}
+.ttt-bar{display:flex;height:36px;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:var(--surface3);margin:.9rem 0 0}
+.ttt-bar span{display:block;height:100%;min-width:0;transition:none}
+.ttt-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:.65rem 0 0;font-size:.85rem;color:var(--muted)}
+.ttt-legend .dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;font-style:normal;vertical-align:-1px}
+/* ---------- ECMP hash visualizer ---------- */
+.ec-bars{display:grid;gap:7px;margin:.9rem 0 0}
+.ec-bar{display:grid;grid-template-columns:96px minmax(0,1fr) 112px;gap:10px;align-items:center;font-size:.85rem}
+.ec-bar .lab{color:var(--muted);font-weight:700;white-space:nowrap}
+.ec-bar .tr{position:relative;height:18px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:5px}
+.ec-bar .fl{position:absolute;top:0;left:0;bottom:0;background:var(--teal);border-radius:4px 0 0 4px;min-width:2px}
+.ec-bar .exp{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--amber)}
+.ec-bar .n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+.ec-heat{display:grid;gap:3px;margin:.9rem 0 0;align-items:stretch}
+.ec-cell{position:relative;aspect-ratio:1.5;border-radius:4px;background:var(--surface3);overflow:hidden}
+.ec-fill{position:absolute;inset:0;background:var(--teal)}
+.ec-cell .n{position:relative;display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-mono);font-size:.66rem}
+.ec-ax{font-family:var(--font-mono);font-size:.68rem;color:var(--faint);display:flex;align-items:center;justify-content:center}
+.ec-good{color:#1c7a43}
+.ec-bad{color:#b3261e}
+.ec-mid{color:#9a6206}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .ec-good{color:#4cc38a}:root:not(.lightm) .ec-bad{color:#ff8a80}:root:not(.lightm) .ec-mid{color:#f0b13e}}
+html.darkm .ec-good{color:#4cc38a}
+html.darkm .ec-bad{color:#ff8a80}
+html.darkm .ec-mid{color:#f0b13e}
+@media (max-width:560px){.ec-bar{grid-template-columns:70px minmax(0,1fr) 92px}.ec-bar .n{font-size:.7rem}.ec-cell .n{font-size:.55rem}
+  #ec-seg{display:flex;max-width:100%}
+  #ec-seg button{white-space:normal;flex:1 1 0;min-width:0}}
+/* ---------- ACL rule analyzer ---------- */
+.acl-findings{display:grid;gap:10px;margin:.9rem 0 0}
+.acl-row{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.75rem .9rem}
+.acl-row .acl-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acl-row .rn{font-weight:700;font-size:.9rem;white-space:nowrap}
+.acl-row code{display:block;font-family:var(--font-mono);font-size:.82rem;overflow-wrap:anywhere;margin:.35rem 0 0;color:var(--muted)}
+.acl-row .why{font-size:.9rem;margin:.35rem 0 0}
+.acl-badge{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:.18rem .65rem;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.acl-badge.sh{background:#fbe9e7;border-color:#e0a49e;color:#b3261e}
+.acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+.acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
+.acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
+html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+/* ---------- manual theme overrides ---------- */
+html.darkm{--bg:#0a1210;--surface:#101816;--surface2:#141e1b;--surface3:#1a2522;--ink:#e9f2ee;--muted:#a5b9b0;--faint:#7c938a;--line:#223029;--line-soft:#1a2421;--accent:#3cd79a;--accent-strong:#2fbe85;--on-accent:#05231a;--accent-soft:rgba(60,215,154,.12);--teal:#5fc4e6;--teal-soft:rgba(95,196,230,.10);--amber:#f0b13e;--amber-soft:rgba(240,177,62,.10);--warn-bg:rgba(240,177,62,.07);--warn-line:#8a6a24;--code-bg:#050b09;--code-ink:#dcf2e7;--code-line:#22302b;--link:#5fc4e6;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.55);color-scheme:dark}
+html.lightm{color-scheme:light}
+/* ---------- responsive ---------- */
+@media (max-width:1020px){
+  .art-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tool-shell{grid-template-columns:1fr}
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .gear-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .mainnav{display:none}
+  .menu{display:block;position:relative;margin-left:auto;z-index:120}
+  .menu:not([open]) nav{display:none}
+  .menu summary{list-style:none;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:10px;width:40px;height:40px;display:grid;place-items:center}
+  .menu summary::-webkit-details-marker{display:none}
+  .menu nav{position:fixed;z-index:1000;right:12px;top:64px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:.6rem;min-width:220px;display:grid;gap:2px}
+  .menu nav a{color:var(--ink);text-decoration:none;font-weight:700;padding:.55rem .8rem;border-radius:8px;display:block}
+  .menu nav a:hover{background:var(--surface2)}
+  .top-search{margin-left:0}
+  .lead-grid,.art-layout{grid-template-columns:1fr}
+  .toc{display:none}
+  .featured{grid-template-columns:1fr}
+  .featured .fimg{min-height:200px}
+  .read-next{grid-template-columns:1fr}
+  .about-cols{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .step	img,.step .noimg{width:88px;height:52px}
+}
+@media (max-width:560px){
+  .art-grid{grid-template-columns:1fr}
+  .gear-grid{grid-template-columns:1fr}
+  .stat-strip{grid-template-columns:1fr 1fr}
+  .tool-row{grid-template-columns:auto minmax(0,1fr)}
+  .tool-go{display:none}
+  .top-search input{width:110px}
+  .track-banner{grid-template-columns:1fr}
+  .track-banner .go{display:none}
+  .tool-tabs{max-width:100%;overflow-x:auto}
+}
+@media print{
+  .topbar,.menu,.theme-btn,.top-search,.toc,.progress,.read-next,.footer,.tool-tabs button:not([aria-selected="true"]){display:none}
+  body{font-size:12pt;background:#fff;color:#000}
+  .art-layout,.lead-grid,.card,.tool-shell{grid-template-columns:1fr}
+  .card{box-shadow:none;break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important;animation:none!important}
+}
+/* Packet Path — PTP/SyncE timing chain simulator: scoped styles.
+ * All classes are prefixed `tsim-`. Theme comes from the site's CSS vars
+ * (OS light/dark aware); fallbacks keep the fragment usable standalone. */
+.tsim-root { font-size: 15px; line-height: 1.55; }
+.tsim-crumb { font-size: .85rem; margin-bottom: .4rem; }
+.tsim-crumb a { color: var(--link, #0b6e99); text-decoration: none; font-weight: 700; }
+.tsim-crumb a:hover { text-decoration: underline; }
+.tsim-crumb span { color: var(--faint, #789089); margin: 0 .35rem; }
+.tsim-root h1 { font-family: var(--font-head, Georgia, serif); font-size: 1.9rem; line-height: 1.2; margin: .2rem 0 .5rem; color: var(--ink, #142a25); }
+.tsim-lede { color: var(--muted, #4f635b); max-width: 70ch; margin: 0 0 .6rem; }
+.tsim-simplabel {
+  display: inline-block; font-size: .8rem; font-weight: 700;
+  color: var(--amber, #9c5c00); background: var(--amber-soft, rgba(156,92,0,.10));
+  border: 1px solid var(--warn-line, #e4b54d); border-radius: 999px;
+  padding: .25rem .7rem; margin: 0 0 1rem;
+}
+.tsim-bar { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin-bottom: .6rem; }
+.tsim-btn {
+  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  color: var(--ink, #142a25); background: var(--surface, #fff);
+  border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px);
+  padding: .42rem .7rem;
+}
+.tsim-btn:hover { border-color: var(--accent, #0a7d5f); }
+.tsim-btn.on { background: var(--accent, #0a7d5f); border-color: var(--accent, #0a7d5f); color: var(--on-accent, #fff); }
+.tsim-btn.tsim-run { background: var(--accent, #0a7d5f); border-color: var(--accent, #0a7d5f); color: var(--on-accent, #fff); font-size: .95rem; padding: .5rem 1.1rem; }
+.tsim-btn.tsim-danger { color: #b23a48; border-color: #d8a3ab; margin-top: .6rem; }
+.tsim-in {
+  font: inherit; font-size: .85rem; color: var(--ink, #142a25);
+  background: var(--surface, #fff); border: 1px solid var(--line, #dde7e1);
+  border-radius: var(--radius-sm, 8px); padding: .4rem .55rem;
+}
+.tsim-num { width: 5.2rem; }
+.tsim-simbar label { font-size: .85rem; color: var(--muted, #4f635b); display: inline-flex; align-items: center; gap: .35rem; }
+.tsim-check input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--accent, #0a7d5f); }
+.tsim-err { color: #b23a48; font-size: .85rem; font-weight: 600; }
+.tsim-ws { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: .9rem; margin-bottom: .9rem; }
+@media (max-width: 900px) { .tsim-ws { grid-template-columns: 1fr; } }
+.tsim-card {
+  background: var(--surface, #fff); border: 1px solid var(--line, #dde7e1);
+  border-radius: var(--radius, 12px); padding: .9rem 1rem; margin-bottom: .9rem;
+  box-shadow: var(--shadow, 0 1px 2px rgba(16,40,32,.07));
+}
+.tsim-card h3 { margin: 0 0 .6rem; font-size: 1.02rem; color: var(--ink, #142a25); }
+.tsim-sub { font-weight: 400; font-size: .78rem; color: var(--muted, #4f635b); }
+.tsim-muted { color: var(--muted, #4f635b); font-size: .82rem; }
+.tsim-ed { width: 100%; height: auto; display: block; border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px); cursor: crosshair; touch-action: none; }
+.tsim-chart { width: 100%; height: auto; display: block; border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px); }
+.tsim-hint, .tsim-note { font-size: .82rem; color: var(--muted, #4f635b); margin: .55rem 0 0; }
+.tsim-note b { color: var(--ink, #142a25); }
+.tsim-legend { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin-top: .5rem; font-size: .82rem; }
+.tsim-leg i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .3rem; vertical-align: baseline; }
+.tsim-leg em { font-style: normal; color: var(--muted, #4f635b); }
+.tsim-cfghead { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; flex-wrap: wrap; }
+.tsim-chip {
+  font-size: .72rem; font-weight: 700; padding: .15rem .55rem; border-radius: 999px;
+  background: var(--accent-soft, rgba(10,125,95,.10)); color: var(--accent-strong, #076a51);
+  border: 1px solid var(--line, #dde7e1);
+}
+.tsim-f { display: block; margin-bottom: .55rem; font-size: .85rem; color: var(--muted, #4f635b); }
+.tsim-f .tsim-in { display: block; width: 100%; margin-top: .2rem; box-sizing: border-box; }
+.tsim-inrow { display: flex; align-items: center; gap: .4rem; margin-top: .2rem; }
+.tsim-inrow .tsim-in { flex: 1; margin-top: 0; }
+.tsim-unit { font-size: .78rem; color: var(--faint, #789089); white-space: nowrap; }
+.tsim-twrap { overflow-x: auto; }
+.tsim-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.tsim-table th, .tsim-table td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line-soft, #eaf0ec); }
+.tsim-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted, #4f635b); }
+.tsim-table td.num { font-family: var(--font-mono, ui-monospace, monospace); white-space: nowrap; }
+.tsim-verdict { font-size: .72rem; font-weight: 800; padding: .18rem .55rem; border-radius: 999px; letter-spacing: .03em; }
+.tsim-verdict.pass { background: var(--accent-soft, rgba(10,125,95,.10)); color: var(--accent-strong, #076a51); border: 1px solid var(--accent, #0a7d5f); }
+.tsim-verdict.fail { background: rgba(178,58,72,.08); color: #b23a48; border: 1px solid #d8a3ab; }
+.tsim-warn { color: var(--amber, #9c5c00); font-size: .78rem; font-weight: 600; }
+.tsim-blist { list-style: none; margin: .4rem 0 0; padding: 0; }
+.tsim-blist li { margin-bottom: .55rem; }
+.tsim-brow { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; font-size: .87rem; }
+.tsim-brow .num { font-family: var(--font-mono, ui-monospace, monospace); white-space: nowrap; }
+.tsim-bbar { height: .45rem; background: var(--surface2, #eef4f1); border-radius: 999px; margin-top: .25rem; overflow: hidden; }
+.tsim-bbar i { display: block; height: 100%; background: var(--accent, #0a7d5f); border-radius: 999px; }
+.tsim-what { border-left: 4px solid var(--amber, #9c5c00); }
+.tsim-what ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+.tsim-what li { margin-bottom: .45rem; font-size: .9rem; }
+.tsim-how { margin-top: 1.4rem; }
+.tsim-how h2 { font-family: var(--font-head, Georgia, serif); font-size: 1.35rem; margin: 0 0 .6rem; color: var(--ink, #142a25); }
+.tsim-how h3 { font-size: 1rem; margin: 1.1rem 0 .35rem; color: var(--ink, #142a25); }
+.tsim-how p, .tsim-how li { font-size: .9rem; color: var(--muted, #4f635b); }
+.tsim-how p b, .tsim-how li b { color: var(--ink, #142a25); }
+.tsim-how ul { padding-left: 1.2rem; }
+.tsim-eq {
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: .82rem;
+  background: var(--code-bg, #0e1f1a); color: var(--code-ink, #e6f3ed);
+  border-radius: var(--radius-sm, 8px); padding: .7rem .9rem; overflow-x: auto; margin: .5rem 0;
+}
+.tsim-eq .cm { color: var(--faint, #789089); }
+.tsim-results { margin-top: .4rem; }
+/* ============================================================================
+   Packet Path — Network config verifier styles.
+   All classes are prefixed `cv-` and scoped under .cv-wrap.
+   Colors come from the site's CSS variables, with fallbacks so the fragment
+   also renders standalone.
+   ============================================================================ */
+.cv-wrap{
+  --cv-bg:var(--bg,#f7faf8);
+  --cv-surface:var(--surface,#ffffff);
+  --cv-surface2:var(--surface2,#eef4f1);
+  --cv-ink:var(--ink,#142a25);
+  --cv-muted:var(--muted,#4f635b);
+  --cv-faint:var(--faint,#789089);
+  --cv-line:var(--line,#dde7e1);
+  --cv-line-soft:var(--line-soft,#eaf0ec);
+  --cv-accent:var(--accent,#0a7d5f);
+  --cv-accent-strong:var(--accent-strong,#076a51);
+  --cv-on-accent:var(--on-accent,#ffffff);
+  --cv-accent-soft:var(--accent-soft,rgba(10,125,95,.10));
+  --cv-teal:var(--teal,#0b6e99);
+  --cv-amber:var(--amber,#9c5c00);
+  --cv-err:#b3261e;
+  --cv-radius:var(--radius,12px);
+  --cv-radius-sm:var(--radius-sm,8px);
+  --cv-mono:var(--font-mono,"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);
+  color:var(--cv-ink);
+}
+@media (prefers-color-scheme:dark){
+  .cv-wrap{ --cv-err:#ff8a80; }
+}
+
+/* crumb + header */
+.cv-crumb{ font-size:.9rem; color:var(--cv-muted); margin-bottom:1rem; }
+.cv-crumb a{ color:var(--cv-teal); text-decoration:none; font-weight:700; }
+.cv-crumb a:hover{ text-decoration:underline; }
+.cv-crumb-sep{ margin:0 .5rem; color:var(--cv-faint); }
+.cv-head{ margin-bottom:1.4rem; }
+.cv-head h1{ font-size:1.9rem; margin:.5rem 0 .6rem; line-height:1.25; }
+.cv-scope-badge{
+  display:inline-block; font-size:.78rem; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--cv-accent);
+  background:var(--cv-accent-soft); border:1px solid var(--cv-accent);
+  border-radius:999px; padding:.28rem .8rem;
+}
+.cv-lede{ font-size:1.08rem; color:var(--cv-muted); max-width:64ch; }
+.cv-honest{
+  background:var(--cv-surface2); border:1px solid var(--cv-line);
+  border-left:4px solid var(--cv-accent); border-radius:var(--cv-radius-sm);
+  padding:.8rem 1rem; font-size:.94rem; max-width:72ch;
+}
+.cv-honest strong{ color:var(--cv-ink); }
+
+/* device panes */
+.cv-devices{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; margin-bottom:1rem; }
+.cv-pane{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); overflow:hidden; }
+.cv-pane-head{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:.45rem .6rem;
+  padding:.6rem .9rem; background:var(--cv-surface2); border-bottom:1px solid var(--cv-line);
+}
+.cv-pane-name{ font-size:1rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cv-pane-meta{ grid-column:1/-1; grid-row:2; min-width:0; font-size:.8rem; color:var(--cv-muted); white-space:normal; overflow-wrap:anywhere; }
+.cv-mini-btn{
+  background:transparent; border:1px solid var(--cv-line); color:var(--cv-muted);
+  border-radius:6px; font-size:.78rem; padding:.25rem .6rem; cursor:pointer;
+}
+.cv-mini-btn:hover{ border-color:var(--cv-err); color:var(--cv-err); }
+.cv-vendor-seg{ display:inline-flex; border:1px solid var(--cv-line); border-radius:7px; overflow:hidden; flex:none; }
+.cv-vendor-btn{ border:0; border-right:1px solid var(--cv-line); background:var(--cv-surface); color:var(--cv-muted); padding:.22rem .42rem; font-size:.7rem; font-weight:700; cursor:pointer; }
+.cv-vendor-btn:last-child{ border-right:0; }
+.cv-vendor-btn.on{ background:var(--cv-accent); color:var(--cv-on-accent); }
+.cv-vendor-btn:focus-visible{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+@media (max-width:640px){ .cv-pane-head{ grid-template-columns:minmax(0,1fr) auto; } .cv-vendor-seg{ grid-row:2; grid-column:1; justify-self:start; } .cv-pane-meta{ grid-row:3; } }
+.cv-ta{
+  width:100%; display:block; border:0; resize:vertical; min-height:220px;
+  font-family:var(--cv-mono); font-size:.82rem; line-height:1.5;
+  color:var(--cv-ink); background:var(--cv-surface); padding:.8rem .9rem;
+}
+.cv-ta:focus{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+
+/* actions */
+.cv-actions{ display:flex; flex-wrap:wrap; gap:.6rem; margin:.4rem 0 .4rem; }
+.cv-btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  background:transparent; color:var(--cv-ink); border:1px solid var(--cv-line);
+  font-weight:700; font-size:.95rem; padding:.6rem 1.1rem; border-radius:10px; cursor:pointer;
+}
+.cv-btn:hover{ border-color:var(--cv-accent); background:var(--cv-accent-soft); }
+.cv-btn-primary{ background:var(--cv-accent); border-color:transparent; color:var(--cv-on-accent); }
+.cv-btn-primary:hover{ background:var(--cv-accent-strong); color:var(--cv-on-accent); }
+.cv-privacy{ font-size:.82rem; color:var(--cv-faint); margin:.2rem 0 1rem; }
+
+/* results */
+.cv-results{ margin-top:1rem; }
+.cv-hint{ color:var(--cv-muted); background:var(--cv-surface); border:1px dashed var(--cv-line); border-radius:var(--cv-radius); padding:1rem 1.2rem; }
+.cv-summary{ margin-bottom:1.2rem; }
+.cv-stat-strip{ display:flex; flex-wrap:wrap; gap:.7rem; margin-bottom:.8rem; }
+.cv-stat{
+  background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius-sm);
+  padding:.55rem .9rem; min-width:86px; text-align:center;
+}
+.cv-stat .v{ display:block; font-size:1.35rem; font-weight:800; }
+.cv-stat .l{ display:block; font-size:.76rem; color:var(--cv-muted); }
+.cv-stat.cv-total{ border-color:var(--cv-accent); }
+.cv-stat.cv-total .v{ color:var(--cv-accent); }
+.cv-check-key{ font-size:.85rem; color:var(--cv-muted); max-width:78ch; }
+.cv-check-key strong{ color:var(--cv-ink); }
+
+/* callouts */
+.cv-callout{
+  border:1px solid var(--cv-line); border-left:4px solid var(--cv-amber);
+  background:var(--cv-surface); border-radius:var(--cv-radius-sm);
+  padding:.9rem 1.1rem; margin-bottom:1.2rem;
+}
+.cv-callout.cv-ok{ border-left-color:var(--cv-accent); }
+
+/* findings */
+.cv-findings{ display:grid; gap:.7rem; margin-bottom:1.6rem; }
+.cv-finding{
+  background:var(--cv-surface); border:1px solid var(--cv-line);
+  border-radius:var(--cv-radius-sm); padding:.75rem 1rem;
+}
+.cv-finding-head{ display:flex; align-items:center; gap:.6rem; margin-bottom:.3rem; }
+.cv-badge-sev{ font-size:.72rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:999px; padding:.18rem .7rem; }
+.cv-badge-sev.cv-err{ color:var(--cv-err); border:1px solid var(--cv-err); }
+.cv-badge-sev.cv-warn{ color:var(--cv-amber); border:1px solid var(--cv-amber); }
+.cv-check-tag{ font-size:.76rem; color:var(--cv-muted); }
+.cv-finding-title{ font-weight:700; margin-bottom:.25rem; }
+.cv-finding-detail{ font-size:.92rem; color:var(--cv-muted); }
+
+/* topology */
+.cv-sec{ font-size:1.15rem; margin:1.6rem 0 .7rem; }
+.cv-sec-sm{ font-size:1rem; margin:1.1rem 0 .5rem; }
+.cv-dim{ color:var(--cv-muted); font-weight:400; font-size:.85em; }
+.cv-svg{ width:100%; max-width:640px; height:auto; display:block; margin:.4rem 0 .8rem;
+  background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); }
+.cv-node{ fill:var(--cv-surface); stroke:var(--cv-accent); stroke-width:2.5; }
+.cv-node-label{ fill:var(--cv-ink); font-size:12px; font-weight:800; }
+.cv-link-line{ stroke:var(--cv-accent); stroke-width:2; opacity:.75; }
+.cv-link-label{ fill:var(--cv-muted); font-size:11px; font-family:var(--cv-mono); }
+.cv-links{ list-style:none; padding:0; margin:0 0 1rem; display:grid; gap:.5rem; }
+.cv-links li{ background:var(--cv-surface); border:1px solid var(--cv-line-soft); border-radius:var(--cv-radius-sm); padding:.55rem .9rem; font-size:.92rem; }
+.cv-inline{ font-family:var(--cv-mono); font-size:.86em; background:var(--cv-surface2); border:1px solid var(--cv-line-soft); border-radius:5px; padding:.1em .45em; }
+
+/* per-device detail */
+.cv-dev{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius-sm); margin-bottom:.6rem; }
+.cv-dev summary{ cursor:pointer; padding:.7rem 1rem; list-style:none; }
+.cv-dev summary::-webkit-details-marker{ display:none; }
+.cv-dev summary::before{ content:"▸ "; color:var(--cv-accent); font-weight:700; }
+.cv-dev[open] summary::before{ content:"▾ "; }
+.cv-dev-body{ padding:0 1rem 1rem; border-top:1px solid var(--cv-line-soft); }
+.cv-table{ width:100%; border-collapse:collapse; font-size:.88rem; margin:.8rem 0; }
+.cv-table th{ text-align:left; font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; color:var(--cv-muted); padding:.4rem .5rem; border-bottom:1px solid var(--cv-line); }
+.cv-table td{ padding:.4rem .5rem; border-bottom:1px solid var(--cv-line-soft); }
+.cv-shut{ color:var(--cv-amber); font-weight:700; }
+.cv-kv{ display:grid; grid-template-columns:150px 1fr; gap:.3rem .8rem; font-size:.9rem; margin:.6rem 0; }
+.cv-kv dt{ color:var(--cv-muted); font-weight:700; }
+.cv-kv dd{ margin:0; }
+.cv-rib-row{ display:flex; gap:.8rem; font-size:.88rem; padding:.25rem 0; align-items:baseline; flex-wrap:wrap; }
+.cv-rib-label{ min-width:96px; font-weight:700; color:var(--cv-muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+.cv-warns{ margin:.8rem 0 0; padding-left:1.2rem; font-size:.88rem; color:var(--cv-amber); }
+
+/* how-it-works */
+.cv-how{ margin-top:2.4rem; border-top:1px solid var(--cv-line); padding-top:1.4rem; }
+.cv-how h2{ font-size:1.4rem; margin-bottom:.8rem; }
+.cv-how h3{ font-size:1.05rem; margin:1.2rem 0 .4rem; }
+.cv-how p, .cv-how li{ font-size:.94rem; color:var(--cv-muted); max-width:76ch; }
+.cv-how strong{ color:var(--cv-ink); }
+.cv-how ul{ padding-left:1.3rem; }
+.cv-how li{ margin-bottom:.4rem; }
+
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Segment Routing Policy Lab","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0"}}</script>
+</head>
+<body>
+<header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a></nav></header>
+<main id="app" class="pp-main"></main>
+<section class="pp-about"><h2>About this tool</h2><p>Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
+<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a></p></footer>
+<script>
+
+function markNav(){}
+function setLD(){}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+var CURRENT_TOOL="";
+function toolRows(){
+  var rows = TOOLS_CLEAN.filter(function(t){ return t.id !== CURRENT_TOOL; });
+  return '<ul class="tool-list">' + rows.map(function(t){
+    return '<li class="tool-row"><a href="/tools/'+t.id+'/"><span><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></span><span class="tool-go">Open <span class="arr" aria-hidden="true">\u2192</span></span></a></li>';
+  }).join('') + '</ul>';
+}
+
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"},{id:"sr-te-path-lab",slug:"sr-te-path-lab",title:"Segment Routing Policy Lab",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",chip:""}];
+</script>
+<script>
+function $(sel, el){ return (el||document).querySelector(sel); }
+function $$(sel, el){ return Array.prototype.slice.call((el||document).querySelectorAll(sel)); }
+var SrTe = (function () {
+'use strict';
+
+var SRGB_BASE = 16000;   // default SRGB start (IOS XR default SRGB 16000-23999)
+var SRLB_BASE = 15000;   // default SRLB start (IOS XR default SRLB 15000-15999)
+var DEFAULT_MSD = 10;    // IOS XR default Maximum SID Depth
+
+/* ---------------- addressing ---------------- */
+function nodeIndex(topo, id) {
+  for (var i = 0; i < topo.nodes.length; i++) if (topo.nodes[i].id === id) return i;
+  return -1;
+}
+function nodeSid(topo, idx) { return SRGB_BASE + idx; }
+function adjSids(linkIdx) { return [SRLB_BASE + linkIdx * 2, SRLB_BASE + linkIdx * 2 + 1]; } // a->b, b->a
+function linkIndex(topo, linkId) {
+  for (var i = 0; i < topo.links.length; i++) if (topo.links[i].id === linkId) return i;
+  return -1;
+}
+
+/* Resolve a SID label to what it means in this topology.
+ * -> {kind:'node', node:idx} | {kind:'adj', link:idx, from:idx, to:idx} | null */
+function resolveSid(topo, sid) {
+  if (sid >= SRGB_BASE && sid < SRGB_BASE + topo.nodes.length)
+    return { kind: 'node', node: sid - SRGB_BASE };
+  if (sid >= SRLB_BASE) {
+    var k = sid - SRLB_BASE, li = Math.floor(k / 2);
+    if (li < topo.links.length) {
+      var L = topo.links[li], a = nodeIndex(topo, L.a), b = nodeIndex(topo, L.b);
+      return { kind: 'adj', link: li, from: (k % 2 === 0) ? a : b, to: (k % 2 === 0) ? b : a };
+    }
+  }
+  return null;
+}
+
+/* ---------------- graph ---------------- */
+function buildAdj(topo, skipLink) {
+  var adj = [];
+  for (var i = 0; i < topo.nodes.length; i++) adj.push([]);
+  for (var li = 0; li < topo.links.length; li++) {
+    if (li === skipLink) continue;
+    var L = topo.links[li], a = nodeIndex(topo, L.a), b = nodeIndex(topo, L.b);
+    if (a < 0 || b < 0) continue;
+    adj[a].push({ to: b, link: li });
+    adj[b].push({ to: a, link: li });
+  }
+  return adj;
+}
+
+/* Deterministic Dijkstra. costFn(link, fromIdx, toIdx) -> non-negative number.
+ * skipNodes: array of node indices to exclude (except src/dst, enforced by caller).
+ * Ties keep the first-discovered predecessor (node-index order) -> repeatable. */
+function dijkstra(topo, src, costFn, skipLink, skipNodes) {
+  var n = topo.nodes.length, INF = 1e18;
+  var dist = [], prev = [], done = [], skip = {};
+  for (var i = 0; i < n; i++) { dist.push(INF); prev.push(-1); done.push(false); }
+  (skipNodes || []).forEach(function (s) { skip[s] = true; });
+  var adj = buildAdj(topo, skipLink);
+  dist[src] = 0;
+  for (var iter = 0; iter < n; iter++) {
+    var u = -1, best = INF;
+    for (var i = 0; i < n; i++)
+      if (!done[i] && !skip[i] && dist[i] < best) { best = dist[i]; u = i; }
+    if (u < 0) break;
+    done[u] = true;
+    var edges = adj[u];
+    for (var e = 0; e < edges.length; e++) {
+      var v = edges[e].to;
+      if (done[v] || skip[v]) continue;
+      var w = costFn(topo.links[edges[e].link], u, v);
+      if (w < 0) w = 0;
+      var nd = dist[u] + w;
+      if (nd < dist[v] - 1e-9) { dist[v] = nd; prev[v] = u; } // strict: ties keep first
+    }
+  }
+  return { dist: dist, prev: prev };
+}
+
+function pathFromPrev(prev, src, dst) {
+  if (src === dst) return [src];
+  var p = [], cur = dst, guard = prev.length + 1;
+  while (cur !== -1 && guard-- > 0) { p.unshift(cur); if (cur === src) break; cur = prev[cur]; }
+  return (p[0] === src) ? p : null;
+}
+
+/* Next hop of the shortest path from src toward dst (plain IGP cost). -1 if none. */
+function nextHop(topo, src, dst, costFn) {
+  if (src === dst) return src;
+  var r = dijkstra(topo, src, costFn || igpCostFn, -1, []);
+  var p = pathFromPrev(r.prev, src, dst);
+  return (p && p.length > 1) ? p[1] : -1;
+}
+
+function igpCostFn(L) { return L.igp; }
+function objectiveCostFn(objective) {
+  if (objective === 'te') return function (L) { return L.te; };
+  if (objective === 'delay') return function (L) { return L.delayUs; };
+  if (objective === 'hops') return function () { return 1; };
+  return igpCostFn; // 'igp' default
+}
+function pathDelayUs(topo, path) {
+  var d = 0;
+  for (var i = 0; i + 1 < path.length; i++) d += linkBetween(topo, path[i], path[i + 1]).delayUs;
+  return d;
+}
+function linkBetween(topo, u, v) {
+  for (var li = 0; li < topo.links.length; li++) {
+    var L = topo.links[li], a = nodeIndex(topo, L.a), b = nodeIndex(topo, L.b);
+    if ((a === u && b === v) || (a === v && b === u)) return L;
+  }
+  return null;
+}
+function pathIgpCost(topo, path) {
+  var c = 0;
+  for (var i = 0; i + 1 < path.length; i++) c += linkBetween(topo, path[i], path[i + 1]).igp;
+  return c;
+}
+function pathMinBw(topo, path) {
+  var m = Infinity;
+  for (var i = 0; i + 1 < path.length; i++) {
+    var bw = linkBetween(topo, path[i], path[i + 1]).bwMbps;
+    if (bw < m) m = bw;
+  }
+  return m;
+}
+
+/* ---------------- CSPF (induced graph: prune, then Dijkstra) ---------------- */
+function pruneLinks(topo, c) {
+  var kept = [], removed = [];
+  var exL = {}, exC = {}, exS = {};
+  (c.excludeLinkIds || []).forEach(function (id) { exL[id] = true; });
+  (c.excludeColors || []).forEach(function (x) { exC[String(x).toLowerCase()] = true; });
+  (c.excludeSrlgs || []).forEach(function (x) { exS[String(x).toLowerCase()] = true; });
+  for (var li = 0; li < topo.links.length; li++) {
+    var L = topo.links[li], cause = null;
+    if (exL[L.id]) cause = 'link';
+    else if (c.minBw && L.bwMbps < c.minBw) cause = 'bandwidth';
+    else if ((L.aff || []).some(function (x) { return exC[String(x).toLowerCase()]; })) cause = 'affinity';
+    else if ((L.srlg || []).some(function (x) { return exS[String(x).toLowerCase()]; })) cause = 'srlg';
+    if (cause) removed.push({ link: li, id: L.id, cause: cause });
+    else kept.push(li);
+  }
+  return { kept: kept, removed: removed };
+}
+
+/* cspf(topo, {src, dst, objective, minBw, maxDelayUs, maxHops,
+ *              excludeColors, excludeSrlgs, excludeNodes, excludeLinkIds})
+ * failedConstraint: null | 'endpoint-excluded' | 'no-path' | 'max-delay' | 'max-hops' */
+function cspf(topo, o) {
+  var src = nodeIndex(topo, o.src), dst = nodeIndex(topo, o.dst);
+  var out = { feasible: false, path: null, nodeIds: null, cost: null, delayUs: null,
+              hops: null, minBw: null, failedConstraint: null, pruned: null, detail: '' };
+  if (src < 0 || dst < 0) { out.failedConstraint = 'endpoint-excluded'; out.detail = 'head-end or endpoint is not in the topology'; return out; }
+  var exN = (o.excludeNodes || []).map(function (id) { return nodeIndex(topo, id); }).filter(function (x) { return x >= 0; });
+  if (exN.indexOf(src) >= 0 || exN.indexOf(dst) >= 0) {
+    out.failedConstraint = 'endpoint-excluded';
+    out.detail = 'the head-end or the endpoint itself is in the excluded-node list';
+    return out;
+  }
+  var pr = pruneLinks(topo, o);
+  out.pruned = { bandwidth: 0, affinity: 0, srlg: 0, link: 0 };
+  pr.removed.forEach(function (r) { out.pruned[r.cause]++; });
+  var keptSet = {};
+  pr.kept.forEach(function (li) { keptSet[li] = true; });
+  var costFn = objectiveCostFn(o.objective || 'igp');
+  // Dijkstra over the pruned graph: skip every removed link
+  var n = topo.nodes.length, INF = 1e18;
+  var dist = [], prev = [], done = [], skip = {};
+  for (var i = 0; i < n; i++) { dist.push(INF); prev.push(-1); done.push(false); }
+  exN.forEach(function (s) { skip[s] = true; });
+  var adj = buildAdj(topo, -1);
+  dist[src] = 0;
+  for (var iter = 0; iter < n; iter++) {
+    var u = -1, best = INF;
+    for (var i = 0; i < n; i++) if (!done[i] && !skip[i] && dist[i] < best) { best = dist[i]; u = i; }
+    if (u < 0) break;
+    done[u] = true;
+    var edges = adj[u];
+    for (var e = 0; e < edges.length; e++) {
+      if (!keptSet[edges[e].link]) continue;
+      var v = edges[e].to;
+      if (done[v] || skip[v]) continue;
+      var nd = dist[u] + Math.max(0, costFn(topo.links[edges[e].link], u, v));
+      if (nd < dist[v] - 1e-9) { dist[v] = nd; prev[v] = u; }
+    }
+  }
+  var path = pathFromPrev(prev, src, dst);
+  if (!path) {
+    out.failedConstraint = 'no-path';
+    var bits = [];
+    ['bandwidth', 'affinity', 'srlg', 'link'].forEach(function (k) {
+      if (out.pruned[k]) bits.push(out.pruned[k] + ' by ' + (k === 'bandwidth' ? 'minimum bandwidth' : k === 'link' ? 'link exclusion' : k + ' exclusion'));
+    });
+    if (exN.length) bits.push(exN.length + ' node(s) excluded');
+    out.detail = 'no path remained after pruning' + (bits.length ? ' (' + bits.join(', ') + ')' : ' (topology is disconnected)');
+    return out;
+  }
+  var delay = pathDelayUs(topo, path), hops = path.length - 1;
+  if (o.maxDelayUs && delay > o.maxDelayUs) {
+    out.failedConstraint = 'max-delay';
+    out.detail = 'shortest feasible path needs ' + delay + 'us end-to-end, above your ' + o.maxDelayUs + 'us limit';
+    return out;
+  }
+  if (o.maxHops && hops > o.maxHops) {
+    out.failedConstraint = 'max-hops';
+    out.detail = 'shortest feasible path is ' + hops + ' hops, above your limit of ' + o.maxHops;
+    return out;
+  }
+  out.feasible = true;
+  out.path = path;
+  out.nodeIds = path.map(function (i) { return topo.nodes[i].id; });
+  out.cost = dist[dst];
+  out.delayUs = delay;
+  out.hops = hops;
+  out.minBw = pathMinBw(topo, path);
+  return out;
+}
+
+/* ---------------- explicit SID-list validation ---------------- */
+function explicitPath(topo, srcId, sids) {
+  var src = nodeIndex(topo, srcId);
+  var out = { valid: false, path: null, nodeIds: null, trace: [], error: null, igpCost: null, hops: null };
+  if (src < 0) { out.error = 'head-end "' + srcId + '" is not in the topology'; return out; }
+  if (!sids || !sids.length) { out.error = 'the SID list is empty'; return out; }
+  var cur = src, full = [src];
+  for (var s = 0; s < sids.length; s++) {
+    var sid = sids[s], r = resolveSid(topo, sid);
+    if (!r) {
+      out.error = 'SID ' + sid + ' is not a known node-SID (16000-' + (SRGB_BASE + topo.nodes.length - 1) +
+        ') or adjacency-SID in this topology';
+      return out;
+    }
+    if (r.kind === 'node') {
+      if (r.node === cur) {
+        out.trace.push({ sid: sid, kind: 'node', action: 'pop', detail: 'already at ' + topo.nodes[cur].id + ' — SID popped, no move' });
+        continue;
+      }
+      var rr = dijkstra(topo, cur, igpCostFn, -1, []);
+      var seg = pathFromPrev(rr.prev, cur, r.node);
+      if (!seg) { out.error = 'node-SID ' + sid + ' (' + topo.nodes[r.node].id + ') is unreachable from ' + topo.nodes[cur].id; return out; }
+      for (var k = 1; k < seg.length; k++) full.push(seg[k]);
+      out.trace.push({ sid: sid, kind: 'node', action: 'steer', detail: 'steer to ' + topo.nodes[r.node].id + ' along IGP shortest path (' + seg.map(function (i) { return topo.nodes[i].id; }).join(' > ') + ')' });
+      cur = r.node;
+    } else {
+      if (r.from !== cur) {
+        out.error = 'adjacency-SID ' + sid + ' leaves ' + topo.nodes[r.from].id + ', but the packet is at ' + topo.nodes[cur].id + ' — hop-by-hop reachability fails here';
+        return out;
+      }
+      full.push(r.to);
+      out.trace.push({ sid: sid, kind: 'adj', action: 'adj-hop', detail: 'force the link ' + topo.nodes[r.from].id + ' > ' + topo.nodes[r.to].id });
+      cur = r.to;
+    }
+  }
+  out.valid = true;
+  out.path = full;
+  out.nodeIds = full.map(function (i) { return topo.nodes[i].id; });
+  out.igpCost = pathIgpCost(topo, full);
+  out.hops = full.length - 1;
+  return out;
+}
+
+/* ---------------- candidate-path selection ---------------- */
+function prefOf(cp) { return (cp.preference === undefined || cp.preference === null || cp.preference === '') ? 100 : Number(cp.preference); }
+
+function selectActive(cands) {
+  // cands: [{name, type:'dynamic'|'explicit', preference, valid, cost, failWhy}]
+  var valid = cands.filter(function (c) { return c.valid; });
+  var log = [];
+  if (!valid.length) {
+    cands.forEach(function (c) {
+      log.push({ name: c.name, verdict: 'lost', reason: 'invalid — ' + (c.failWhy || 'no feasible path') });
+    });
+    return { winner: null, log: log };
+  }
+  var ranked = valid.slice().sort(function (a, b) {
+    var pa = prefOf(a), pb = prefOf(b);
+    if (pb !== pa) return pb - pa;                       // highest preference wins (IOS XR)
+    if (a.cost !== b.cost) return a.cost - b.cost;       // lab tie-break 1: lower objective cost
+    if (a.type !== b.type) return a.type === 'dynamic' ? -1 : 1; // lab tie-break 2: dynamic first
+    return a.name < b.name ? -1 : 1;
+  });
+  var w = ranked[0], wp = prefOf(w);
+  cands.forEach(function (c) {
+    if (!c.valid) { log.push({ name: c.name, verdict: 'lost', reason: 'invalid — ' + (c.failWhy || 'no feasible path') }); return; }
+    var p = prefOf(c);
+    if (c === w) {
+      var why = 'highest preference (' + p + ')' + (ranked.length > 1 ? ' — beats ' + ranked[1].name + ' (preference ' + prefOf(ranked[1]) + ')' : '');
+      log.push({ name: c.name, verdict: 'won', reason: why });
+    } else if (p < wp) {
+      log.push({ name: c.name, verdict: 'lost', reason: 'preference ' + p + ' < ' + wp + ' — on IOS XR the highest preference wins' });
+    } else if (c.cost > w.cost) {
+      log.push({ name: c.name, verdict: 'lost', reason: 'preference tied at ' + p + ' — lab tie-break: higher computed cost (' + c.cost + ' vs ' + w.cost + ')' });
+    } else {
+      log.push({ name: c.name, verdict: 'lost', reason: 'preference and cost tied — lab tie-break prefers the dynamic path (repeatability; not an IOS XR rule)' });
+    }
+  });
+  return { winner: w, log: log };
+}
+
+/* ---------------- SID-list compression ---------------- */
+/* Walk the computed path; wherever the next hop lies on the plain IGP shortest
+ * path toward a farther node on the path, emit one node-SID, else an adj-SID. */
+function compressSids(topo, pathIdxs) {
+  var sids = [];
+  var i = 0;
+  while (i < pathIdxs.length - 1) {
+    var j = i, u = pathIdxs[i];
+    for (var k = pathIdxs.length - 1; k > i; k--) {
+      if (nextHop(topo, u, pathIdxs[k], igpCostFn) === pathIdxs[i + 1]) { j = k; break; }
+    }
+    if (j > i) {
+      sids.push({ label: nodeSid(topo, pathIdxs[j]), kind: 'node', node: topo.nodes[pathIdxs[j]].id, from: topo.nodes[u].id });
+      i = j;
+    } else {
+      var li = -1, L = linkBetween(topo, u, pathIdxs[i + 1]);
+      for (var q = 0; q < topo.links.length; q++) if (topo.links[q] === L) { li = q; break; }
+      var s = adjSids(li), fwd = (nodeIndex(topo, L.a) === u) ? s[0] : s[1];
+      sids.push({ label: fwd, kind: 'adj', link: L.id, from: topo.nodes[u].id, to: topo.nodes[pathIdxs[i + 1]].id });
+      i++;
+    }
+  }
+  return sids;
+}
+
+/* ---------------- full policy computation ---------------- */
+function computePolicy(topo, policy, msd) {
+  msd = (msd === undefined || msd === null || msd === '') ? DEFAULT_MSD : Number(msd);
+  var cands = (policy.candidatePaths || []).map(function (cp) {
+    var c = { name: cp.name, type: cp.type, preference: prefOf(cp), valid: false, cost: null, failWhy: null, detail: null };
+    if (cp.type === 'dynamic') {
+      var d = cp.dynamic || {};
+      var r = cspf(topo, { src: policy.headend, dst: policy.endpoint,
+        objective: d.objective || 'igp', minBw: d.minBw || 0,
+        maxDelayUs: d.maxDelayUs || 0, maxHops: d.maxHops || 0,
+        excludeColors: d.excludeColors || [], excludeSrlgs: d.excludeSrlgs || [],
+        excludeNodes: d.excludeNodes || [], excludeLinkIds: d.excludeLinkIds || [] });
+      c.result = r;
+      if (r.feasible) {
+        c.valid = true; c.cost = r.cost;
+        c.detail = 'path ' + r.nodeIds.join(' > ') + ' — cost ' + r.cost + ' (' + (d.objective || 'igp') + '), ' + r.delayUs + 'us, ' + r.hops + ' hops, min BW ' + r.minBw + ' Mbps';
+      } else { c.failWhy = r.failedConstraint + (r.detail ? ': ' + r.detail : ''); }
+    } else {
+      var e = explicitPath(topo, policy.headend, cp.explicitSids || []);
+      c.result = e;
+      if (e.valid) {
+        c.valid = true; c.cost = e.igpCost;
+        c.detail = 'path ' + e.nodeIds.join(' > ') + ' — ' + e.hops + ' hops, IGP cost ' + e.igpCost;
+      } else { c.failWhy = 'SID list rejected: ' + e.error; }
+    }
+    return c;
+  });
+  var sel = selectActive(cands);
+  var out = { candidates: cands, winner: sel.winner, log: sel.log, winningSids: null, msd: msd, msdOk: true, msdNote: '' };
+  if (sel.winner && sel.winner.type === 'dynamic' && sel.winner.result.feasible) {
+    var sids = compressSids(topo, sel.winner.result.path);
+    out.winningSids = sids;
+    if (sids.length > msd) {
+      out.msdOk = false;
+      out.msdNote = 'the label stack needs ' + sids.length + ' labels but this head-end allows MSD ' + msd +
+        ' — a real router would reject the policy; shorten the path or raise MSD (per-platform limit)';
+    }
+  } else if (sel.winner && sel.winner.type === 'explicit' && sel.winner.result.valid) {
+    // The winner's stack is the operator's own list; still run the MSD check on it.
+    var esids = (sel.winner.result.trace || []).map(function (tr) {
+      return { label: tr.sid, kind: tr.kind };
+    });
+    out.winningSids = esids;
+    if (esids.length > msd) {
+      out.msdOk = false;
+      out.msdNote = 'your explicit SID list has ' + esids.length + ' labels but this head-end allows MSD ' + msd +
+        ' — a real router would reject the policy; compress the list or raise MSD (per-platform limit)';
+    }
+  }
+  return out;
+}
+
+/* ---------------- TI-LFA (simplified P/Q-space, RFC 7490 concept) ---------------- */
+/* Protects directed link from->to. P-space: nodes the PLR (from) can still reach
+ * without crossing the failed link. Q-space: nodes that can still reach the
+ * destination (to) without crossing it. Repair node: a PQ node minimizing the
+ * repair length; ties prefer the one closest to the destination (Q-first). */
+function tilfa(topo, linkId, fromId, toId) {
+  var li = linkIndex(topo, linkId);
+  var from = nodeIndex(topo, fromId), to = nodeIndex(topo, toId);
+  var out = { link: linkId, from: fromId, to: toId, p: [], q: [], pq: [],
+              possible: false, repairNode: null, repairPath: null, repairSids: null, reason: '' };
+  if (li < 0 || from < 0 || to < 0) { out.reason = 'unknown link or node'; return out; }
+  var rp = dijkstra(topo, from, igpCostFn, li, []);
+  var rq = dijkstra(topo, to, igpCostFn, li, []);
+  var pSet = {}, qSet = {};
+  for (var i = 0; i < topo.nodes.length; i++) {
+    if (rp.dist[i] < 1e17) pSet[i] = true;
+    if (rq.dist[i] < 1e17) qSet[i] = true;
+  }
+  out.p = Object.keys(pSet).map(Number).filter(function (x) { return x !== from; }).map(function (x) { return topo.nodes[x].id; });
+  out.q = Object.keys(qSet).map(Number).filter(function (x) { return x !== to; }).map(function (x) { return topo.nodes[x].id; });
+  var best = null, bestLen = 1e18, bestQ = 1e18;
+  Object.keys(pSet).forEach(function (ks) {
+    var x = Number(ks);
+    // The PLR itself and the protected destination are never repair candidates:
+    // a "repair via the destination" is just the plain alternate path, not a
+    // tunnel repair (the UI says so explicitly).
+    if (x === from || x === to || !qSet[x]) return;
+    var len = rp.dist[x] + rq.dist[x];
+    if (len < bestLen - 1e-9 || (Math.abs(len - bestLen) < 1e-9 && rq.dist[x] < bestQ)) {
+      best = x; bestLen = len; bestQ = rq.dist[x];
+    }
+  });
+  if (best === null) {
+    out.possible = false;
+    out.reason = 'no PQ node exists — after this link fails there is no alternate way around it, so TI-LFA cannot build a repair tunnel; traffic drops until the IGP converges';
+    return out;
+  }
+  var p1 = pathFromPrev(rp.prev, from, best), p2 = pathFromPrev(rq.prev, to, best).reverse();
+  var full = p1.concat(p2.slice(1));
+  out.possible = true;
+  out.pq = [topo.nodes[best].id];
+  out.repairNode = topo.nodes[best].id;
+  out.repairPath = full.map(function (x) { return topo.nodes[x].id; });
+  out.repairSids = [nodeSid(topo, best), nodeSid(topo, to)];
+  out.reason = 'repair via PQ node ' + topo.nodes[best].id + ' (reachable from ' + fromId + ' without the failed link, and able to reach ' + toId + ' without it)';
+  return out;
+}
+
+/* ---------------- Flex-Algo (metric + exclude only) ---------------- */
+function flexAlgo(topo, srcId, o) {
+  // o: {id (128-255), metric: 'igp'|'te'|'delay', excludeColors: []}
+  var src = nodeIndex(topo, srcId);
+  var out = { id: o.id, metric: o.metric, perDst: {}, changed: [] };
+  var pr = pruneLinks(topo, { excludeColors: o.excludeColors || [] });
+  var keptSet = {};
+  pr.kept.forEach(function (li) { keptSet[li] = true; });
+  var costFn = objectiveCostFn(o.metric || 'igp');
+  var n = topo.nodes.length, INF = 1e18;
+  // SPF on pruned graph with algo metric
+  var dist = [], prev = [], done = [];
+  for (var i = 0; i < n; i++) { dist.push(INF); prev.push(-1); done.push(false); }
+  var adj = buildAdj(topo, -1);
+  dist[src] = 0;
+  for (var iter = 0; iter < n; iter++) {
+    var u = -1, best = INF;
+    for (var i = 0; i < n; i++) if (!done[i] && dist[i] < best) { best = dist[i]; u = i; }
+    if (u < 0) break;
+    done[u] = true;
+    var edges = adj[u];
+    for (var e = 0; e < edges.length; e++) {
+      if (!keptSet[edges[e].link]) continue;
+      var v = edges[e].to;
+      if (done[v]) continue;
+      var nd = dist[u] + Math.max(0, costFn(topo.links[edges[e].link], u, v));
+      if (nd < dist[v] - 1e-9) { dist[v] = nd; prev[v] = u; }
+    }
+  }
+  for (var d = 0; d < n; d++) {
+    if (d === src) continue;
+    var dstId = topo.nodes[d].id;
+    var algoPath = pathFromPrev(prev, src, d);
+    var r0 = dijkstra(topo, src, igpCostFn, -1, []);
+    var basePath = pathFromPrev(r0.prev, src, d);
+    var aIds = algoPath ? algoPath.map(function (x) { return topo.nodes[x].id; }) : null;
+    var bIds = basePath ? basePath.map(function (x) { return topo.nodes[x].id; }) : null;
+    var changed = JSON.stringify(aIds) !== JSON.stringify(bIds);
+    out.perDst[dstId] = { path: aIds, cost: algoPath ? dist[d] : null, algo0Path: bIds, changed: changed };
+    if (changed) out.changed.push(dstId);
+  }
+  return out;
+}
+
+/* ---------------- presets ---------------- */
+function mkNode(id, x, y) { return { id: id, x: x, y: y }; }
+function mkLink(id, a, b, igp, te, delayUs, bwMbps, aff, srlg) {
+  return { id: id, a: a, b: b, igp: igp, te: te, delayUs: delayUs, bwMbps: bwMbps, aff: aff || [], srlg: srlg || [] };
+}
+var PRESETS = [
+  { name: 'SP backbone (8 nodes)',
+    topo: {
+      nodes: [mkNode('PE1', 8, 50), mkNode('P1', 28, 24), mkNode('P2', 28, 76),
+              mkNode('P3', 55, 24), mkNode('P4', 55, 76),
+              mkNode('PE2', 90, 50), mkNode('PE3', 76, 8), mkNode('PE4', 76, 92)],
+      links: [
+        mkLink('l-pe1-p1', 'PE1', 'P1', 10, 10, 100, 10000),
+        mkLink('l-pe1-p2', 'PE1', 'P2', 10, 10, 100, 1000, ['red'], ['s1']),
+        mkLink('l-p1-p3', 'P1', 'P3', 10, 10, 100, 10000),
+        mkLink('l-p2-p4', 'P2', 'P4', 10, 10, 100, 10000),
+        mkLink('l-p1-p4', 'P1', 'P4', 30, 30, 500, 10000, ['blue'], ['s2']),
+        mkLink('l-p2-p3', 'P2', 'P3', 30, 30, 500, 10000, ['blue'], ['s2']),
+        mkLink('l-p3-pe2', 'P3', 'PE2', 10, 10, 100, 10000),
+        mkLink('l-p4-pe2', 'P4', 'PE2', 10, 10, 100, 1000, ['red'], ['s1']),
+        mkLink('l-p3-pe3', 'P3', 'PE3', 10, 10, 150, 1000),
+        mkLink('l-p4-pe4', 'P4', 'PE4', 10, 10, 150, 1000),
+        mkLink('l-p3-p4', 'P3', 'P4', 5, 5, 50, 40000)
+      ]
+    } },
+  { name: 'Multi-PoP enterprise (7 nodes)',
+    topo: {
+      nodes: [mkNode('HQ', 12, 42), mkNode('DC1', 36, 20), mkNode('DC2', 36, 64),
+              mkNode('BR1', 62, 14), mkNode('BR2', 62, 42), mkNode('BR3', 62, 72),
+              mkNode('CLOUD', 90, 42)],
+      links: [
+        mkLink('l-hq-dc1', 'HQ', 'DC1', 10, 10, 80, 10000),
+        mkLink('l-hq-dc2', 'HQ', 'DC2', 10, 10, 80, 10000),
+        mkLink('l-dc1-dc2', 'DC1', 'DC2', 5, 5, 30, 40000),
+        mkLink('l-dc1-br1', 'DC1', 'BR1', 20, 20, 200, 1000, ['red']),
+        mkLink('l-dc1-br2', 'DC1', 'BR2', 20, 20, 200, 1000),
+        mkLink('l-dc2-br2', 'DC2', 'BR2', 20, 20, 200, 1000),
+        mkLink('l-dc2-br3', 'DC2', 'BR3', 20, 20, 200, 1000, ['red']),
+        mkLink('l-br1-cloud', 'BR1', 'CLOUD', 15, 40, 300, 2000),
+        mkLink('l-br2-cloud', 'BR2', 'CLOUD', 15, 15, 120, 10000),
+        mkLink('l-br3-cloud', 'BR3', 'CLOUD', 15, 40, 300, 2000),
+        mkLink('l-hq-cloud', 'HQ', 'CLOUD', 50, 50, 600, 1000, ['blue'])
+      ]
+    } }
+];
+
+return {
+  SRGB_BASE: SRGB_BASE, SRLB_BASE: SRLB_BASE, DEFAULT_MSD: DEFAULT_MSD,
+  nodeIndex: nodeIndex, nodeSid: nodeSid, adjSids: adjSids, linkIndex: linkIndex,
+  resolveSid: resolveSid, dijkstra: dijkstra, pathFromPrev: pathFromPrev,
+  nextHop: nextHop, linkBetween: linkBetween, pathIgpCost: pathIgpCost,
+  cspf: cspf, explicitPath: explicitPath, prefOf: prefOf, selectActive: selectActive,
+  compressSids: compressSids, computePolicy: computePolicy, tilfa: tilfa,
+  flexAlgo: flexAlgo, PRESETS: PRESETS
+};
+})();
+var TOOL_INTROS = {
+"subnet": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Every device on a network has an address like 192.168.1.50, and the "/26" after it says how many addresses belong to the same local neighborhood. This calculator splits any address into its network: the network address, the broadcast address, how many devices fit, and the usable range — instantly, with the binary math shown.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home lab, studying for a CCNA, or carving up an office network. If you have ever wondered "how many IPs do I actually get?", this is the tool.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are already filled in — 192.168.7.129/26. The tool answers: network <code class="inline">192.168.7.128</code>, broadcast <code class="inline">192.168.7.191</code>, 62 usable addresses (<code class="inline">.129</code>–<code class="inline">.190</code>). Why 62? A /26 leaves 6 host bits: 2^6 = 64 addresses, minus the network and broadcast addresses.</div><p class="pi-gloss"><b>CIDR</b> (/24): shorthand for "the first 24 bits are the network part". <b>Broadcast</b>: the special address that reaches every device on the subnet at once.</p></div>',
+"bdp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A fast link can still feel slow if data spends most of its time waiting for acknowledgments. The bandwidth-delay product is how much data must be "in flight" at all times to keep the pipe full — like making sure there are always enough cars on the highway, not just a high speed limit. This tool computes it from your bandwidth and round-trip time, and shows what packet loss really costs.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone troubleshooting "the link is 1 Gbps but transfers crawl" — especially over long-distance or satellite links. Also the clearest possible lesson in why TCP window size matters.</p><div class="pi-try"><strong>Try this example:</strong> leave the defaults — 1000 Mbps, 50 ms round-trip. The bandwidth-delay product is 1 Gbps × 0.05 s = 50 million bits = <b>6.25 MB</b>: that is the TCP window your machines need. The tool also shows the trap: a classic 64 KB window would throttle this path to about 10 Mbps, roughly 1% of the line.</div><p class="pi-gloss"><b>RTT</b> (round-trip time): how long a packet takes to go there and back. <b>TCP window</b>: how much data a sender may transmit before waiting for an "I got it".</p></div>',
+"quiz": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Flashcards that never run out. It generates endless subnetting questions — network addresses, broadcast addresses, host counts — checks your answers, and explains each one step by step. The fastest way to make subnet math automatic.</p><p class="pi-plain"><strong>Who is this for?</strong> CCNA students and anyone prepping for a networking interview. If subnetting still takes you more than 30 seconds, this is your gym.</p><div class="pi-try"><strong>Try this example:</strong> hit "New question" until you get something like "What is the broadcast address of 10.1.4.66/27?" Work it out: a /27 moves in blocks of 32, so 66 sits in the 64–95 block, and the broadcast is the last address — <code class="inline">10.1.4.95</code>. Type it in and the tool walks you through the whole thing.</div><p class="pi-gloss"><b>Broadcast</b>: the last address in a subnet; one packet to it reaches every device.</p></div>',
+"sla": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> "99.9% uptime" sounds great until you convert it: about 8 hours and 46 minutes of allowed downtime per year. This tool translates any SLA percentage into real downtime per year, month, and week — and shows what happens when you chain components: two 99.9% parts do not make 99.9%, they make 99.8%.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone signing a vendor contract, writing an SLA, or deciding whether a second internet link is worth the money.</p><div class="pi-try"><strong>Try this example:</strong> enter 99.9%. The tool shows about 8.76 hours of downtime per year — roughly 43 minutes a month. Then add a second 99.9% component in series and watch the total drop to 99.80%: availability multiplies (0.999 × 0.999 = 0.998), so every extra box in the path spends some of your budget.</div><p class="pi-gloss"><b>SLA</b> (service-level agreement): the uptime promise in a contract, with penalties if missed. <b>Nines</b>: each extra 9 (99.9% to 99.99%) cuts allowed downtime by 10×.</p></div>',
+"dcap": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Big data centers wire servers in a "spine-leaf" grid: servers plug into leaf switches, leaves plug into spine switches. This planner tells you how many of each switch you need for your server count, and whether your uplinks are fat enough — the oversubscription ratio. A 3:1 ratio means your servers could, in theory, demand three times what the uplinks can carry.</p><p class="pi-plain"><strong>Who is this for?</strong> Infrastructure planners and students learning data-center design. The core idea is universal though: it is the same math as "how many apartments share one water main".</p><div class="pi-try"><strong>Try this example:</strong> enter 128 servers, 2 NICs each at 10 Gbps, 25 Gbps uplinks, 32-port switches, 3:1 target. The tool plans <b>10 leaf</b> switches and <b>4 spines</b>, with real oversubscription of 2.80:1 and about 500 Gbps of bisection bandwidth — comfortably inside your target.</div><p class="pi-gloss"><b>Oversubscription</b>: total server-facing capacity divided by uplink capacity. <b>Bisection bandwidth</b>: how much traffic can cross from one half of the fabric to the other at once.</p></div>',
+"ttt": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> In high-frequency trading, money is made in microseconds: a price tick arrives, software decides, an order goes out. This tool adds up every stage — light traveling through fiber, switch hops, the trading software itself — into a waterfall chart showing exactly where each microsecond goes.</p><p class="pi-plain"><strong>Who is this for?</strong> Built for people working on low-latency trading systems. For everyone else, it is a fascinating look at how much happens in a blink: light itself needs about 5 microseconds for every kilometer of fiber.</p><div class="pi-try"><strong>Try this example:</strong> leave the default 1200 km fiber route. Propagation alone is 1200 × 5 µs = 6,000 µs (6 ms) — physics takes its cut before a single switch or line of code runs. Now add 2 switch hops at 1 µs each and watch the waterfall grow: on long routes, distance dwarfs everything else.</div><p class="pi-gloss"><b>Tick</b>: one price update from an exchange. <b>Serialization</b>: the time to push bits onto the wire — bigger message or slower link means longer.</p></div>',
+"optic": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Fiber links run on light, and light fades with distance and at every connector it passes. A "link budget" is the accounting: the transmitter\'s power, minus every loss, must still leave enough light for the receiver to see clearly. This tool does the ledger and gives a pass/fail verdict with a safety margin.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone running fiber between buildings or across a campus — and students learning why "it lights up" is not the same as "it is reliable".</p><div class="pi-try"><strong>Try this example:</strong> 10 km of single-mode fiber at 0.4 dB/km (4.0 dB of fiber loss), 4 connector pairs (2.0 dB), 2 splices (0.2 dB): total loss 6.2 dB. With a transmitter at 0 dBm and a receiver that needs −14 dBm, the budget is 14 dB and the margin is <b>7.8 dB</b> — a comfortable pass with room for aging and dirty connectors.</div><p class="pi-gloss"><b>dB</b> (decibel): the unit of light loss — every 3 dB is half the power gone. <b>dBm</b>: power measured against 1 milliwatt; 0 dBm = 1 mW.</p></div>',
+"ptp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some systems need every clock to agree on the time — 5G cell towers, stock-exchange timestamps, power grids. PTP (Precision Time Protocol) syncs clocks over the network, but each device in the chain adds a little error. This calculator adds up the error across a chain of clocks and checks the total against real-world limits.</p><p class="pi-plain"><strong>Who is this for?</strong> Timing engineers and telecom folks. For the curious: it answers "how wrong can the time be after passing through five devices?"</p><div class="pi-try"><strong>Try this example:</strong> 5 boundary clocks, 50 ns of time error each, 8 ns timestamp granularity, 20 ns of link asymmetry per hop. Each hop contributes 50 + 8 + 20 = 78 ns, so the worst case over 5 hops is <b>390 ns</b>. Against a 1000 ns (1 microsecond) budget, that passes with room to spare — now try 20 clocks and watch it fail.</div><p class="pi-gloss"><b>PTP</b>: a protocol that synchronizes clocks over a network to within nanoseconds. <b>Boundary clock</b>: a switch that participates in timing instead of just passing it through.</p></div>',
+"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice. Then scroll to the link-failure lab: kill leaf link 1 and compare how many healthy flows classic rehashing moves for no reason versus resilient hashing.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
+"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco IOS extended ACL or a Juniper firewall filter here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
+"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco or Juniper router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
+"timing-sim": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A full simulation of a timing network over time. A grandmaster clock feeds boundary clocks down a chain, and this models how each clock\'s servo wanders, how noise and asymmetry creep in hop by hop, and whether every clock stays within its ITU-T class (A through D) — second by second, on a live chart.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for timing engineers — here is what it does, and what you would ask your timing team for: "simulate the chain before we buy the clocks."</p><div class="pi-try"><strong>Try this example:</strong> run the default chain and watch the wander plot: each clock\'s time error breathing around zero as its servo steers it back. Now crank up the per-hop asymmetry and watch the Class D check (max time error within 5 ns) flip to fail — that is the cost of unequal path delays, visualized.</div><p class="pi-gloss"><b>PTP / SyncE</b>: the two technologies that distribute precise time and frequency over a network. <b>Servo</b>: the control loop inside each clock that continuously steers it toward its master.</p></div>',
+"wireshark-filter-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Wireshark can capture every packet on a network, but finding the ones you care about means writing "display filters" in a picky syntax. This tool builds them for you: pick fields from a menu, combine them with AND / OR / NOT, and get valid filter text plus a plain-English readout of what it matches.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever opened Wireshark and felt lost — students, sysadmins, the curious. You do not need to memorize a single field name.</p><div class="pi-try"><strong>Try this example:</strong> build "all HTTPS traffic to or from 10.0.0.5": add <code class="inline">ip.addr == 10.0.0.5</code>, AND, <code class="inline">tcp.port == 443</code>. The tool outputs <code class="inline">ip.addr == 10.0.0.5 && tcp.port == 443</code> — paste it straight into Wireshark\'s filter bar and only those packets remain.</div><p class="pi-gloss"><b>Display filter</b>: Wireshark\'s search language for packets you already captured (different from a capture filter, which decides what gets recorded in the first place).</p></div>',
+"wifi-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Your Wi-Fi shares invisible airspace with every neighbor\'s router. In the 2.4 GHz band only channels 1, 6, and 11 avoid overlapping — pick anything else and you are shouting over someone. Enter the access points your phone\'s Wi-Fi scanner can hear and this tool maps the spectral overlap and recommends the quietest channels.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home or office router — the most "normal person" tool on this site. If your video calls stutter, start here.</p><div class="pi-try"><strong>Try this example:</strong> add your neighbor\'s router on channel 6, 2.4 GHz, 20 MHz wide. The spectral graph shows it sprawling across channels 4–8, and the tool recommends channel <b>1</b> or <b>11</b> — the non-overlapping escapes. Move your own AP there and the interference is gone.</div><p class="pi-gloss"><b>RSSI</b>: signal strength as your device hears it, in dBm — closer to 0 means stronger. <b>Channel width</b>: how much airspace one Wi-Fi signal occupies (20, 40, 80, or 160 MHz).</p></div>',
+"qos-simulator": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Networks handle congestion with "token buckets": picture a bucket that fills with tokens at your contracted rate. Each packet spends tokens as it passes; when the bucket runs dry, extra packets get marked down or dropped. This simulator sets the bucket up the way a Cisco router would and lets you watch traffic get colored green, yellow, and red.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers learning QoS and certification students. The bucket analogy is the whole lesson — everything else is details.</p><div class="pi-try"><strong>Try this example:</strong> pick the 1R2C policer, CIR 1,000,000 bps, Bc 8000 bits. Fire one 1000-byte packet (8000 bits): it <b>conforms</b> (green) and the bucket hits exactly zero. Fire a second one instantly: it <b>exceeds</b> (yellow) — no tokens have had time to refill yet. That is the entire token-bucket idea in two packets.</div><p class="pi-gloss"><b>CIR</b>: the committed rate you are paying for. <b>Conform / exceed / violate</b>: the three colors — within contract, over but tolerated, over the hard limit.</p></div>',
+"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, a D-PATH (RFC 10039) attribute decoder with loop checker, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block. <b>D-PATH</b>: a new BGP attribute (RFC 10039) that stamps every domain a route crosses, so gateway routers can refuse routing loops between EVPN and IPVPN domains.</p></div>',
+"iperf3-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> iPerf3 is the standard tool for measuring real network speed: run it on two machines and it reports the actual throughput between them. But its command flags are cryptic. This builder constructs correct client and server commands with plain-English explanations, ready-made presets, and a linter that catches classic mistakes — like UDP tests with no bandwidth limit.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever argued "the network is slow" — run this on both ends and get a number instead of an argument.</p><div class="pi-try"><strong>Try this example:</strong> server <code class="inline">192.0.2.10</code>, 8 parallel streams, 30 seconds. The tool builds <code class="inline">iperf3 -c 192.0.2.10 -P 8 -t 30</code> — eight streams at once defeat per-connection limits and reveal the true capacity. Copy, paste, run.</div><p class="pi-gloss"><b>Throughput</b>: the data rate you actually get — always less than the sticker speed. <b>Parallel streams (-P)</b>: multiple simultaneous connections, which work around per-connection bottlenecks.</p></div>',
+"sr-te-path-lab": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Segment Routing lets a router steer traffic down an exact path by stamping a stack of labels — called SIDs — onto each packet, instead of letting every router make its own hop-by-hop decision. This lab is a sandbox for that idea: draw a network, define an SR policy (a head-end router, a color, and a destination), then add candidate paths two ways — <em>dynamic</em>, where the lab computes the best path under constraints you set (bandwidth, delay, colors to avoid), and <em>explicit</em>, where you type the SID list yourself. The lab picks the winner, builds the label stack, checks it against the router\'s label-depth limit, and can even animate TI-LFA backup paths and Flex-Algo routing.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and service-provider WAN engineers learning Segment Routing traffic engineering — and anyone studying for CCNP/CCIE Service Provider who wants to <em>see</em> CSPF, candidate-path selection, and TI-LFA instead of just reading about them.</p><p class="pi-plain"><strong>Try this example.</strong> Load the "SP backbone" preset. Head-end <code class="inline">PE1</code>, color <code class="inline">100</code>, endpoint <code class="inline">PE2</code>. Add candidate <code class="inline">CP1-dynamic</code> (dynamic, minimize IGP metric, preference 100) and <code class="inline">CP2-explicit</code> (SID list <code class="inline">15000, 16004, 16005</code> — the PE1&rarr;P1 adjacency, then the node-SIDs of P4 and PE2 — preference 150). Press Compute. Expect: CP1 computes <code class="inline">PE1 &gt; P1 &gt; P3 &gt; PE2</code> (cost 30, 300&micro;s, 3 hops, compressed to the single label 16005). CP2 validates to <code class="inline">PE1 &gt; P1 &gt; P3 &gt; P4 &gt; PE2</code> (4 hops, IGP cost 35). CP2 wins — preference 150 beats 100, because on IOS XR the <em>highest</em> preference wins.</p><p class="pi-gloss"><b>SID</b>: segment identifier — a label that tells a router "go to this node" (node-SID) or "use this exact link" (adjacency-SID). <b>SRGB</b>: the block of labels a network reserves for node-SIDs (16000&ndash;23999 by default). <b>CSPF</b>: constrained shortest path first — prune links that break your constraints, then run Dijkstra on what\'s left. <b>Candidate path</b>: one option inside an SR policy; the highest-preference valid one carries traffic. <b>TI-LFA</b>: pre-computed backup path that kicks in within ~50ms of a link failure. <b>Flex-Algo</b>: alternate routing calculation (algorithm 128+) with its own metric and constraints. <b>MSD</b>: maximum SID depth — how many labels a router\'s hardware can push.</p></div>'
+};
+function bindCopyButtons(root){
+  $$("pre.code",root).forEach(function(pre){
+    if($(".copy-btn",pre)) return;
+    var b=document.createElement("button"); b.className="copy-btn"; b.type="button"; b.textContent="Copy";
+    b.addEventListener("click",function(){
+      var txt=pre.textContent.replace(/Copy$/,"");
+      function done(){ b.textContent="Copied"; setTimeout(function(){b.textContent="Copy";},1600); }
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(function(){b.textContent="Copy failed";}); }
+      else { var ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");done();}catch(e){b.textContent="Copy failed";} document.body.removeChild(ta); }
+    });
+    pre.appendChild(b);
+  });
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function pageSrTeLab(){
+  document.title="Segment Routing Policy Lab \u2014 Packet Path";
+  var srtSeoTitle="Segment Routing Policy Lab: SR-TE Path Calculator with CSPF, TI-LFA & Flex-Algo";
+  var srtMetaDescription="Free interactive Segment Routing lab: draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, see why a path won, compress SID lists with MSD checks, animate TI-LFA backups, and compare Flex-Algo routing — in your browser.";
+  document.querySelector('meta[name="description"]').setAttribute("content",srtMetaDescription);
+  var srtOgTitle=document.querySelector('meta[property="og:title"]'); if(srtOgTitle) srtOgTitle.setAttribute("content",srtSeoTitle);
+  var srtOgDescription=document.querySelector('meta[property="og:description"]'); if(srtOgDescription) srtOgDescription.setAttribute("content",srtMetaDescription);
+  setLD({"@context":"https://schema.org","@type":"WebApplication","name":"Segment Routing Policy Lab","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
+
+  var css='<style>'
+    +'.srt-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1.2rem 0;border-bottom:1px solid var(--line);padding-bottom:.6rem}'
+    +'.srt-tab{font:inherit;font-weight:700;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:8px;padding:.58rem .85rem;cursor:pointer}'
+    +'.srt-tab[aria-selected="true"]{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}'
+    +'.srt-panel[hidden]{display:none}'
+    +'.srt-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(260px,3fr);gap:1rem;align-items:start}'
+    +'.srt-controls{display:flex;gap:.55rem;flex-wrap:wrap;align-items:end;margin:0 0 .85rem}'
+    +'.srt-controls .srt-grow{flex:1 1 210px}'
+    +'.srt-mini-field{min-width:130px;flex:1 1 150px}'
+    +'.srt-mini-field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:.25rem}'
+    +'.srt-mini-field input,.srt-mini-field select{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.48rem .6rem}'
+    +'.srt-topo-wrap{position:relative;background:var(--surface2);border:1px solid var(--line);border-radius:12px;overflow:hidden}'
+    +'.srt-topo{display:block;width:100%;height:340px;touch-action:none}'
+    +'.srt-link{stroke:var(--faint);stroke-width:.65;cursor:pointer}'
+    +'.srt-link.srt-selected{stroke:var(--accent);stroke-width:1.2}'
+    +'.srt-link.srt-failed{stroke:#b3261e;stroke-width:1.2;stroke-dasharray:2 1.4}'
+    +'.srt-link-label{font:2.15px var(--font-mono);fill:var(--muted);paint-order:stroke;stroke:var(--surface2);stroke-width:.9;stroke-linejoin:round;pointer-events:none}'
+    +'.srt-node{cursor:grab}'
+    +'.srt-node:active{cursor:grabbing}'
+    +'.srt-node circle{fill:var(--surface);stroke:var(--ink);stroke-width:.7}'
+    +'.srt-node.srt-selected circle{stroke:var(--accent);stroke-width:1.25;fill:var(--accent-soft)}'
+    +'.srt-node text{font:700 2.4px var(--font-body);fill:var(--ink);text-anchor:middle;pointer-events:none}'
+    +'.srt-node .srt-sid-label{font:1.8px var(--font-mono);fill:var(--muted)}'
+    +'.srt-active-path,.srt-repair-path{fill:none;stroke:var(--teal);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}'
+    +'.srt-primary-path{fill:none;stroke:var(--amber);stroke-width:1.2;stroke-linecap:round;stroke-dasharray:2 1;pointer-events:none}'
+    +'.srt-card{padding:1rem 1.1rem;margin:.8rem 0}'
+    +'.srt-card h3,.srt-card h4{margin-top:0}'
+    +'.srt-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}'
+    +'.srt-form-grid .srt-wide{grid-column:1/-1}'
+    +'.srt-field label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:.25rem}'
+    +'.srt-field input,.srt-field select,.srt-field textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.52rem .62rem}'
+    +'.srt-field textarea{min-height:74px;resize:vertical;font-family:var(--font-mono);font-size:.88rem}'
+    +'.srt-note{font-size:.9rem;color:var(--muted);line-height:1.5}'
+    +'.srt-status{padding:.85rem 1rem;border-radius:9px;background:var(--surface2);border:1px solid var(--line);margin:.8rem 0}'
+    +'.srt-status.srt-ok{background:var(--accent-soft);border-color:var(--accent)}'
+    +'.srt-status.srt-bad{background:var(--warn-bg);border-color:var(--warn-line)}'
+    +'.srt-candidates,.srt-decision{display:grid;gap:.6rem;margin:.75rem 0}'
+    +'.srt-candidate,.srt-decision-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem;padding:.75rem .85rem;background:var(--surface2);border:1px solid var(--line-soft);border-radius:9px}'
+    +'.srt-candidate p,.srt-decision-row p{margin:.2rem 0 0}'
+    +'.srt-pill{display:inline-block;border-radius:999px;padding:.16rem .55rem;font-size:.74rem;font-weight:700;background:var(--surface3);color:var(--muted)}'
+    +'.srt-pill.srt-won{background:var(--accent-soft);color:var(--accent-strong)}'
+    +'.srt-sids{display:flex;gap:.4rem;flex-wrap:wrap;margin:.55rem 0}'
+    +'.srt-sid{font-family:var(--font-mono);font-size:.82rem;background:var(--surface3);border:1px solid var(--line);border-radius:7px;padding:.3rem .5rem}'
+    +'.srt-two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}'
+    +'.srt-list{margin:.45rem 0;padding-left:1.2rem}'
+    +'.srt-list li{margin:.18rem 0}'
+    +'.srt-table{width:100%;border-collapse:collapse;font-size:.9rem;margin:.7rem 0}'
+    +'.srt-table th,.srt-table td{text-align:left;padding:.55rem .65rem;border-bottom:1px solid var(--line)}'
+    +'.srt-table th{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}'
+    +'.srt-table tr.srt-changed td{background:var(--teal-soft)}'
+    +'.srt-anim-caption{min-height:2.4rem;font-weight:700;color:var(--teal);margin:.7rem 0}'
+    +'.srt-bounds{padding:1.1rem 1.2rem;margin-top:1.3rem;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:12px}'
+    +'.srt-bounds h3{margin-top:0}'
+    +'.srt-empty{color:var(--muted);font-style:italic;margin:.6rem 0}'
+    +'@media(max-width:760px){.srt-grid,.srt-two{grid-template-columns:1fr}.srt-topo{height:300px}.srt-form-grid{grid-template-columns:1fr}.srt-form-grid .srt-wide{grid-column:auto}.srt-candidate,.srt-decision-row{grid-template-columns:1fr}.srt-table,.srt-table tbody,.srt-table tr,.srt-table td{display:block}.srt-table thead{display:none}.srt-table tr{border:1px solid var(--line);border-radius:8px;margin:.6rem 0;overflow:hidden}.srt-table td{border-bottom:1px solid var(--line-soft)}.srt-table td:before{content:attr(data-label);display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}}'
+    +'</style>';
+
+  var html='<div class="page-head"><h1>Segment Routing Policy Lab</h1><p class="lede">Design SR-MPLS traffic-engineering policies on a topology you draw: dynamic candidate paths computed with CSPF under bandwidth, delay, affinity and hop constraints, explicit SID lists you type yourself, honest winner selection, SID-list compression with MSD checks, TI-LFA backup animation, and Flex-Algo comparison — all in your browser.</p></div>'
+    +plainIntro("sr-te-path-lab")
+    +'<div class="srt-tabs" role="tablist" aria-label="Segment Routing lab sections">'
+    +'<button class="srt-tab" role="tab" aria-selected="true" data-tab="topology">Topology</button>'
+    +'<button class="srt-tab" role="tab" aria-selected="false" data-tab="policy">SR Policy</button>'
+    +'<button class="srt-tab" role="tab" aria-selected="false" data-tab="tilfa">TI-LFA</button>'
+    +'<button class="srt-tab" role="tab" aria-selected="false" data-tab="flex">Flex-Algo</button></div>'
+
+    +'<section class="srt-panel" id="srt-panel-topology" role="tabpanel">'
+    +'<div class="srt-controls">'
+    +'<div class="srt-mini-field srt-grow"><label for="srt-preset">Topology preset</label><select id="srt-preset"><option value="0">SP backbone (8 nodes)</option><option value="1">Multi-PoP enterprise (7 nodes)</option></select></div>'
+    +'<button class="btn btn-ghost btn-sm" id="srt-load" type="button">Load preset</button>'
+    +'<div class="srt-mini-field"><label for="srt-new-node">New node ID</label><input id="srt-new-node" placeholder="e.g. P5" maxlength="16"></div>'
+    +'<button class="btn btn-ghost btn-sm" id="srt-add-node" type="button">Add node</button></div>'
+    +'<div class="srt-controls"><div class="srt-mini-field"><label for="srt-link-a">Link from</label><select id="srt-link-a"></select></div><div class="srt-mini-field"><label for="srt-link-b">Link to</label><select id="srt-link-b"></select></div><button class="btn btn-ghost btn-sm" id="srt-add-link" type="button">Add link</button><button class="btn btn-ghost btn-sm" id="srt-remove-selected" type="button">Remove selected</button></div>'
+    +'<div id="srt-topology-error" class="err" aria-live="polite"></div>'
+    +'<div class="srt-grid"><div class="srt-topo-wrap"><svg id="srt-topo" class="srt-topo" viewBox="0 0 100 62" role="img" aria-label="Editable Segment Routing topology"></svg></div><div id="srt-selection" class="card srt-card"><h3>Selection</h3><p class="srt-empty">Select a node or link to inspect it. Drag nodes to rearrange the topology.</p></div></div></section>'
+
+    +'<section class="srt-panel" id="srt-panel-policy" role="tabpanel" hidden>'
+    +'<div class="card srt-card"><h3>SR policy</h3><div class="srt-form-grid"><div class="srt-field"><label for="srt-headend">Head-end</label><select id="srt-headend"></select></div><div class="srt-field"><label for="srt-endpoint">Endpoint</label><select id="srt-endpoint"></select></div><div class="srt-field"><label for="srt-color">Color</label><input id="srt-color" type="number" value="100" min="0"></div><div class="srt-field"><label for="srt-msd">Maximum SID depth (MSD)</label><input id="srt-msd" type="number" value="10" min="1"></div></div></div>'
+    +'<div class="srt-two"><div class="card srt-card"><h3>Add dynamic path</h3><div class="srt-form-grid">'
+    +'<div class="srt-field"><label for="srt-d-name">Name</label><input id="srt-d-name" value="CP1-dynamic"></div><div class="srt-field"><label for="srt-d-pref">Preference <span class="srt-note">(blank = 100)</span></label><input id="srt-d-pref" type="number" value="100"></div>'
+    +'<div class="srt-field srt-wide"><label for="srt-d-obj">Objective</label><select id="srt-d-obj"><option value="igp">Minimize IGP metric</option><option value="te">Minimize TE metric</option><option value="delay">Minimize delay</option><option value="hops">Minimize hops</option></select></div>'
+    +'<div class="srt-field"><label for="srt-d-bw">Minimum available BW (Mbps)</label><input id="srt-d-bw" type="number" placeholder="none"></div><div class="srt-field"><label for="srt-d-delay">Maximum delay (µs)</label><input id="srt-d-delay" type="number" placeholder="none"></div><div class="srt-field"><label for="srt-d-hops">Maximum hops</label><input id="srt-d-hops" type="number" placeholder="none"></div><div class="srt-field"><label for="srt-d-colors">Exclude affinity colors</label><input id="srt-d-colors" placeholder="red, blue"></div><div class="srt-field"><label for="srt-d-srlgs">Exclude SRLG groups</label><input id="srt-d-srlgs" placeholder="s1, s2"></div><div class="srt-field"><label for="srt-d-nodes">Exclude nodes</label><input id="srt-d-nodes" placeholder="P2, P4"></div><div class="srt-field srt-wide"><label for="srt-d-links">Exclude link IDs</label><input id="srt-d-links" placeholder="l-p1-p3"></div></div><button class="btn btn-sm" id="srt-add-dynamic" type="button">Add dynamic path</button></div>'
+    +'<div class="card srt-card"><h3>Add explicit path</h3><div class="srt-form-grid"><div class="srt-field"><label for="srt-e-name">Name</label><input id="srt-e-name" value="CP2-explicit"></div><div class="srt-field"><label for="srt-e-pref">Preference <span class="srt-note">(blank = 100)</span></label><input id="srt-e-pref" type="number" value="150"></div><div class="srt-field srt-wide"><label for="srt-e-sids">SID list</label><textarea id="srt-e-sids">15000, 16004, 16005</textarea></div></div><button class="btn btn-sm" id="srt-add-explicit" type="button">Add explicit path</button><p class="srt-note">Example: <code class="inline">15000, 16004, 16005</code>. Each label is validated hop by hop.</p></div></div>'
+    +'<div class="card srt-card"><h3>Candidate paths</h3><div id="srt-candidates" class="srt-candidates"></div><button class="btn" id="srt-compute-policy" type="button">Compute policy</button><div id="srt-policy-error" class="err" aria-live="polite"></div></div><div id="srt-policy-results" aria-live="polite"></div></section>'
+
+    +'<section class="srt-panel" id="srt-panel-tilfa" role="tabpanel" hidden>'
+    +'<div class="card srt-card"><h3>Protect a link</h3><div class="srt-form-grid"><div class="srt-field"><label for="srt-tilfa-link">Protected link</label><select id="srt-tilfa-link"></select></div><div class="srt-field"><label for="srt-tilfa-direction">Direction</label><select id="srt-tilfa-direction"></select></div></div><p class="srt-note">For link protection the destination is the far end.</p><div class="srt-controls"><button class="btn" id="srt-compute-tilfa" type="button">Compute backup</button><button class="btn btn-ghost" id="srt-animate-tilfa" type="button" disabled>Animate on topology</button></div><div id="srt-tilfa-results" aria-live="polite"></div><div id="srt-anim-caption" class="srt-anim-caption"></div><p class="srt-note">Simplified P/Q-space model of the RFC 7490 idea — real implementations also handle node/SRLG protection, multiple failures, and hardware label operations.</p></div></section>'
+
+    +'<section class="srt-panel" id="srt-panel-flex" role="tabpanel" hidden>'
+    +'<div class="card srt-card"><h3>Compare Algorithm 0 with Flex-Algo</h3><div class="srt-form-grid"><div class="srt-field"><label for="srt-flex-id">Flex-Algo ID (128–255)</label><input id="srt-flex-id" type="number" min="128" max="255" value="128"></div><div class="srt-field"><label for="srt-flex-metric">Metric type</label><select id="srt-flex-metric"><option value="igp">IGP metric</option><option value="te">TE metric</option><option value="delay">Delay</option></select></div><div class="srt-field"><label for="srt-flex-colors">Exclude affinity colors</label><input id="srt-flex-colors" placeholder="red, blue"></div><div class="srt-field"><label for="srt-flex-src">Source node</label><select id="srt-flex-src"></select></div></div><button class="btn" id="srt-compute-flex" type="button">Compute comparison</button><div id="srt-flex-results" aria-live="polite"></div><p class="srt-note">Metric + affinity-exclude only. Real Flex-Algo also supports affinity include-any/include-all, SRLG exclude, and multi-area — not modeled here.</p></div></section>'
+
+    +'<div class="srt-bounds"><h3>Where this lab stops</h3><p>SR-MPLS only (no SRv6) · single IGP area/level · one shortest path per computation (no ECMP per-segment multi-path) · TI-LFA is a simplified P/Q-space model, not a full RFC 7490 implementation · delay and bandwidth are static link attributes you set, not measured values · equal-preference tie-breaks (lower cost, then dynamic-first) are this lab\'s rules for repeatable results, not IOS XR behavior.</p></div>'
+    +'<div class="card srt-card" style="margin-top:1rem"><h3>Go deeper</h3><p><a href="/articles/bgp-explained/">BGP: How the Internet Actually Finds a Path</a> — for contrast, see how paths get picked when you are <em>not</em> steering them.</p></div>'
+    +'<div style="margin-top:1.6rem">'+toolRows()+'</div>';
+
+  $("#app").innerHTML=css+html;
+  markNav("tools");
+
+  var topo=JSON.parse(JSON.stringify(SrTe.PRESETS[0].topo));
+  var selected=null;
+  var candidates=[];
+  var policyResult=null;
+  var tilfaResult=null;
+  var topoDecor={winner:null,failed:null,primary:null,repair:null};
+  var animTimers=[];
+
+  function list(v){ return String(v||"").split(",").map(function(x){return x.trim();}).filter(Boolean); }
+  function num(v){ return String(v).trim()===""?0:Number(v); }
+  function nodeById(id){ for(var i=0;i<topo.nodes.length;i++) if(topo.nodes[i].id===id) return topo.nodes[i]; return null; }
+  function linkById(id){ for(var i=0;i<topo.links.length;i++) if(topo.links[i].id===id) return topo.links[i]; return null; }
+  function pathPoints(ids){ return (ids||[]).map(function(id){var n=nodeById(id);return n?n.x+","+n.y:"";}).filter(Boolean).join(" "); }
+  function safeName(s,fallback){ s=String(s||"").trim(); return s||fallback; }
+  function uniqueName(base,existing){ var n=base,i=2; while(existing(n)){n=base+"-"+i++;} return n; }
+  function showTab(name){
+    $$(".srt-tab").forEach(function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-tab")===name));});
+    $$(".srt-panel").forEach(function(p){p.hidden=p.id!=="srt-panel-"+name;});
+  }
+  $$(".srt-tab").forEach(function(b){b.addEventListener("click",function(){showTab(b.getAttribute("data-tab"));});});
+
+  function options(selectedId){ return topo.nodes.map(function(n){return '<option value="'+esc(n.id)+'"'+(n.id===selectedId?' selected':'')+'>'+esc(n.id)+'</option>';}).join(""); }
+  function syncSelects(){
+    var oldH=$("#srt-headend").value||topo.nodes[0].id;
+    var oldE=$("#srt-endpoint").value||(topo.nodes[topo.nodes.length-1]||topo.nodes[0]).id;
+    var oldF=$("#srt-flex-src").value||topo.nodes[0].id;
+    ["#srt-link-a","#srt-link-b"].forEach(function(id){var o=$(id).value;$(id).innerHTML=options(o);});
+    $("#srt-headend").innerHTML=options(nodeById(oldH)?oldH:topo.nodes[0].id);
+    $("#srt-endpoint").innerHTML=options(nodeById(oldE)?oldE:(nodeById("PE2")?"PE2":topo.nodes[topo.nodes.length-1].id));
+    $("#srt-flex-src").innerHTML=options(nodeById(oldF)?oldF:topo.nodes[0].id);
+    var oldL=$("#srt-tilfa-link").value;
+    $("#srt-tilfa-link").innerHTML=topo.links.map(function(l){return '<option value="'+esc(l.id)+'"'+(l.id===oldL?' selected':'')+'>'+esc(l.id)+' ('+esc(l.a)+'–'+esc(l.b)+')</option>';}).join("");
+    syncDirection();
+  }
+  function syncDirection(){
+    var l=linkById($("#srt-tilfa-link").value)||topo.links[0];
+    $("#srt-tilfa-direction").innerHTML=l?'<option value="'+esc(l.a)+'|'+esc(l.b)+'">'+esc(l.a)+' → '+esc(l.b)+'</option><option value="'+esc(l.b)+'|'+esc(l.a)+'">'+esc(l.b)+' → '+esc(l.a)+'</option>':'';
+  }
+  $("#srt-tilfa-link").addEventListener("change",syncDirection);
+
+  function renderTopo(){
+    var svg=$("#srt-topo"), out='';
+    topo.links.forEach(function(l){
+      var a=nodeById(l.a),b=nodeById(l.b),sel=selected&&selected.type==="link"&&selected.id===l.id;
+      var cls='srt-link'+(sel?' srt-selected':'')+(topoDecor.failed===l.id?' srt-failed':'');
+      out+='<line class="'+cls+'" data-link="'+esc(l.id)+'" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"></line>';
+      out+='<text class="srt-link-label" x="'+((a.x+b.x)/2)+'" y="'+((a.y+b.y)/2-1)+'">'+esc(l.igp+'/'+l.te)+'</text>';
+    });
+    if(topoDecor.primary&&topoDecor.primary.length>1) out+='<polyline class="srt-primary-path" points="'+pathPoints(topoDecor.primary)+'"></polyline>';
+    if(topoDecor.winner&&topoDecor.winner.length>1) out+='<polyline class="srt-active-path" points="'+pathPoints(topoDecor.winner)+'"></polyline>';
+    if(topoDecor.repair&&topoDecor.repair.length>1) out+='<polyline class="srt-repair-path" points="'+pathPoints(topoDecor.repair)+'"></polyline>';
+    topo.nodes.forEach(function(n,i){var sel=selected&&selected.type==="node"&&selected.id===n.id;out+='<g class="srt-node'+(sel?' srt-selected':'')+'" data-node="'+esc(n.id)+'" transform="translate('+n.x+' '+n.y+')"><circle r="3.2"></circle><text y="-4.4">'+esc(n.id)+'</text><text class="srt-sid-label" y="5.2">SID '+SrTe.nodeSid(topo,i)+'</text></g>';});
+    svg.innerHTML=out;
+    $$('[data-link]',svg).forEach(function(el){el.addEventListener("click",function(e){e.stopPropagation();selected={type:"link",id:el.getAttribute("data-link")};renderTopo();renderSelection();});});
+    $$('[data-node]',svg).forEach(function(el){
+      el.addEventListener("click",function(e){e.stopPropagation();selected={type:"node",id:el.getAttribute("data-node")};renderTopo();renderSelection();});
+      el.addEventListener("pointerdown",startDrag);
+    });
+  }
+  var drag=null;
+  function svgPoint(e){var r=$("#srt-topo").getBoundingClientRect();return{x:(e.clientX-r.left)*100/r.width,y:(e.clientY-r.top)*62/r.height};}
+  function startDrag(e){
+    e.preventDefault();var id=e.currentTarget.getAttribute("data-node");drag={id:id,pointer:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId);selected={type:"node",id:id};renderSelection();
+  }
+  $("#srt-topo").addEventListener("pointermove",function(e){if(!drag)return;var p=svgPoint(e),n=nodeById(drag.id);n.x=Math.max(4,Math.min(96,p.x));n.y=Math.max(6,Math.min(56,p.y));renderTopo();});
+  $("#srt-topo").addEventListener("pointerup",function(){drag=null;});
+  $("#srt-topo").addEventListener("pointercancel",function(){drag=null;});
+
+  function renderSelection(){
+    var box=$("#srt-selection");
+    if(!selected){box.innerHTML='<h3>Selection</h3><p class="srt-empty">Select a node or link to inspect it. Drag nodes to rearrange the topology.</p>';return;}
+    if(selected.type==="node"){
+      var n=nodeById(selected.id),i=topo.nodes.indexOf(n);if(!n){selected=null;renderSelection();return;}
+      box.innerHTML='<h3>'+esc(n.id)+'</h3><dl class="kv"><dt>Node SID</dt><dd>'+SrTe.nodeSid(topo,i)+'</dd><dt>Coordinates</dt><dd>'+n.x.toFixed(1)+', '+n.y.toFixed(1)+'</dd></dl><button class="btn btn-ghost btn-sm" id="srt-remove-node" type="button">Remove node</button>';
+      $("#srt-remove-node").addEventListener("click",removeSelected);
+    }else{
+      var l=linkById(selected.id),li=SrTe.linkIndex(topo,selected.id);if(!l){selected=null;renderSelection();return;}var s=SrTe.adjSids(li);
+      box.innerHTML='<h3>'+esc(l.id)+'</h3><p class="srt-note">'+esc(l.a)+' ↔ '+esc(l.b)+' · adjacency SIDs '+s[0]+' ('+esc(l.a)+'→'+esc(l.b)+'), '+s[1]+' ('+esc(l.b)+'→'+esc(l.a)+')</p><div class="srt-form-grid">'
+        +'<div class="srt-field"><label>IGP metric</label><input data-edit="igp" type="number" value="'+l.igp+'"></div><div class="srt-field"><label>TE metric</label><input data-edit="te" type="number" value="'+l.te+'"></div><div class="srt-field"><label>Delay (µs)</label><input data-edit="delayUs" type="number" value="'+l.delayUs+'"></div><div class="srt-field"><label>Available BW (Mbps)</label><input data-edit="bwMbps" type="number" value="'+l.bwMbps+'"></div><div class="srt-field"><label>Affinity colors</label><input data-edit-list="aff" value="'+esc((l.aff||[]).join(', '))+'"></div><div class="srt-field"><label>SRLG groups</label><input data-edit-list="srlg" value="'+esc((l.srlg||[]).join(', '))+'"></div></div><button class="btn btn-ghost btn-sm" id="srt-remove-link" type="button">Remove link</button>';
+      $$('[data-edit]',box).forEach(function(inp){inp.addEventListener("change",function(){l[inp.getAttribute('data-edit')]=Math.max(0,Number(inp.value)||0);renderTopo();});});
+      $$('[data-edit-list]',box).forEach(function(inp){inp.addEventListener("change",function(){l[inp.getAttribute('data-edit-list')]=list(inp.value);});});
+      $("#srt-remove-link").addEventListener("click",removeSelected);
+    }
+  }
+  function removeSelected(){
+    if(!selected)return;
+    if(selected.type==="node"){topo.nodes=topo.nodes.filter(function(n){return n.id!==selected.id;});topo.links=topo.links.filter(function(l){return l.a!==selected.id&&l.b!==selected.id;});}
+    else topo.links=topo.links.filter(function(l){return l.id!==selected.id;});
+    selected=null;policyResult=null;tilfaResult=null;topoDecor={winner:null,failed:null,primary:null,repair:null};syncSelects();renderTopo();renderSelection();
+  }
+  $("#srt-remove-selected").addEventListener("click",removeSelected);
+  $("#srt-load").addEventListener("click",function(){topo=JSON.parse(JSON.stringify(SrTe.PRESETS[Number($("#srt-preset").value)].topo));selected=null;candidates=[];policyResult=null;tilfaResult=null;topoDecor={winner:null,failed:null,primary:null,repair:null};syncSelects();renderTopo();renderSelection();renderCandidates();$("#srt-policy-results").innerHTML='';$("#srt-tilfa-results").innerHTML='';});
+  $("#srt-add-node").addEventListener("click",function(){
+    var id=$("#srt-new-node").value.trim(),err=$("#srt-topology-error");err.textContent='';
+    if(!/^[A-Za-z0-9_-]{1,16}$/.test(id)){err.textContent='Use 1–16 letters, numbers, hyphens, or underscores for the node ID.';return;}
+    if(nodeById(id)){err.textContent='That node ID already exists.';return;}
+    topo.nodes.push({id:id,x:50,y:31});$("#srt-new-node").value='';syncSelects();renderTopo();
+  });
+  $("#srt-add-link").addEventListener("click",function(){
+    var a=$("#srt-link-a").value,b=$("#srt-link-b").value,err=$("#srt-topology-error");err.textContent='';
+    if(!a||!b||a===b){err.textContent='Choose two different nodes.';return;}
+    var duplicate=topo.links.some(function(l){return(l.a===a&&l.b===b)||(l.a===b&&l.b===a);});if(duplicate){err.textContent='A link already connects those nodes.';return;}
+    var id=uniqueName('l-'+a.toLowerCase()+'-'+b.toLowerCase(),function(x){return !!linkById(x);});topo.links.push({id:id,a:a,b:b,igp:10,te:10,delayUs:100,bwMbps:10000,aff:[],srlg:[]});syncSelects();renderTopo();
+  });
+
+  function renderCandidates(){
+    var box=$("#srt-candidates");
+    if(!candidates.length){box.innerHTML='<p class="srt-empty">No candidate paths yet. Add a dynamic or explicit path above.</p>';return;}
+    box.innerHTML=candidates.map(function(c,i){
+      var detail=c.type==='dynamic'?'objective '+esc((c.dynamic||{}).objective||'igp'):'SIDs '+esc((c.explicitSids||[]).join(', '));
+      return '<div class="srt-candidate"><div><strong>'+esc(c.name)+'</strong> <span class="srt-pill">'+esc(c.type)+'</span><p class="srt-note">Preference '+SrTe.prefOf(c)+' · '+detail+'</p></div><button class="btn btn-ghost btn-sm" type="button" data-remove-candidate="'+i+'">Remove</button></div>';
+    }).join('');
+    $$('[data-remove-candidate]',box).forEach(function(b){b.addEventListener('click',function(){candidates.splice(Number(b.getAttribute('data-remove-candidate')),1);renderCandidates();});});
+  }
+  $("#srt-add-dynamic").addEventListener("click",function(){
+    candidates.push({name:safeName($("#srt-d-name").value,'Dynamic '+(candidates.length+1)),type:'dynamic',preference:$("#srt-d-pref").value,dynamic:{objective:$("#srt-d-obj").value,minBw:num($("#srt-d-bw").value),maxDelayUs:num($("#srt-d-delay").value),maxHops:num($("#srt-d-hops").value),excludeColors:list($("#srt-d-colors").value),excludeSrlgs:list($("#srt-d-srlgs").value),excludeNodes:list($("#srt-d-nodes").value),excludeLinkIds:list($("#srt-d-links").value)}});renderCandidates();
+  });
+  $("#srt-add-explicit").addEventListener("click",function(){
+    var bad=false,sids=list($("#srt-e-sids").value).map(function(x){if(!/^\d+$/.test(x))bad=true;return Number(x);});var err=$("#srt-policy-error");err.textContent='';if(bad||!sids.length){err.textContent='Enter a comma-separated list of numeric SIDs.';return;}
+    candidates.push({name:safeName($("#srt-e-name").value,'Explicit '+(candidates.length+1)),type:'explicit',preference:$("#srt-e-pref").value,explicitSids:sids});renderCandidates();
+  });
+  function sidText(s){
+    var r=SrTe.resolveSid(topo,s.label);if(!r)return s.label+' ('+s.kind+'-SID)';
+    if(r.kind==='node')return s.label+' (node-SID '+topo.nodes[r.node].id+')';
+    return s.label+' (adj-SID '+topo.nodes[r.from].id+'→'+topo.nodes[r.to].id+')';
+  }
+  function sidChips(sids){return '<div class="srt-sids">'+(sids||[]).map(function(s){return '<span class="srt-sid">'+esc(sidText(s))+'</span>';}).join('')+'</div>';}
+  function renderPolicyResults(r){
+    var box=$("#srt-policy-results");
+    if(!r.winner){box.innerHTML='<div class="srt-status srt-bad"><strong>No valid candidate path</strong></div><div class="card srt-card"><h3>Why did each path lose?</h3>'+decisionHtml(r)+'</div>';topoDecor.winner=null;renderTopo();return;}
+    var p=r.winner.result.nodeIds||[];topoDecor.winner=p;renderTopo();
+    var h='<div class="srt-status srt-ok"><strong>Active path: '+esc(r.winner.name)+' — '+esc(p.join(' > '))+'</strong></div><div class="card srt-card"><h3>Winning SID list</h3>'+sidChips(r.winningSids)+'<p class="'+(r.msdOk?'srt-note':'err')+'">'+(r.msdOk?'MSD check: '+r.winningSids.length+' label(s) fits within MSD '+r.msd+'.':esc(r.msdNote))+'</p></div><div class="card srt-card"><h3>Why did this path win?</h3>'+decisionHtml(r)+'</div>';
+    box.innerHTML=h;
+  }
+  function decisionHtml(r){
+    return '<div class="srt-decision">'+r.candidates.map(function(c){
+      var log=r.log.filter(function(x){return x.name===c.name;})[0]||{verdict:'lost',reason:''};
+      var extra=c.detail?'<p class="srt-note">'+esc(c.detail)+'</p>':'<p class="srt-note">Failed constraint: '+esc(c.failWhy||'unknown')+'</p>';
+      if(c.type==='explicit'&&c.result&&c.result.trace&&c.result.trace.length) extra+='<details><summary>Hop-by-hop SID trace</summary><ol class="srt-list">'+c.result.trace.map(function(t){return '<li><code class="inline">'+t.sid+'</code> — '+esc(t.detail)+'</li>';}).join('')+'</ol></details>';
+      return '<div class="srt-decision-row"><div><strong>'+esc(c.name)+'</strong> <span class="srt-pill">'+esc(c.type)+'</span><p class="srt-note">Preference '+c.preference+'</p>'+extra+'<p>'+esc(log.reason)+'</p></div><span class="srt-pill '+(log.verdict==='won'?'srt-won':'')+'">'+log.verdict.toUpperCase()+'</span></div>';
+    }).join('')+'</div>';
+  }
+  $("#srt-compute-policy").addEventListener("click",function(){
+    var err=$("#srt-policy-error");err.textContent='';if(!candidates.length){err.textContent='Add at least one candidate path first.';return;}
+    var msd=Math.max(1,Number($("#srt-msd").value)||10);policyResult=SrTe.computePolicy(topo,{headend:$("#srt-headend").value,color:Number($("#srt-color").value)||0,endpoint:$("#srt-endpoint").value,candidatePaths:candidates},msd);renderPolicyResults(policyResult);
+  });
+
+  function computePrimary(from,to){
+    var fi=SrTe.nodeIndex(topo,from),ti=SrTe.nodeIndex(topo,to),r=SrTe.dijkstra(topo,fi,function(l){return l.igp;},-1,[]),p=SrTe.pathFromPrev(r.prev,fi,ti);return p?p.map(function(i){return topo.nodes[i].id;}):[from,to];
+  }
+  $("#srt-compute-tilfa").addEventListener("click",function(){
+    var bits=$("#srt-tilfa-direction").value.split('|'),linkId=$("#srt-tilfa-link").value;tilfaResult=SrTe.tilfa(topo,linkId,bits[0],bits[1]);topoDecor.failed=linkId;topoDecor.primary=computePrimary(bits[0],bits[1]);topoDecor.repair=tilfaResult.possible?tilfaResult.repairPath:null;renderTopo();
+    var h='<div class="srt-two"><div><h4>P-space</h4><p>'+esc(tilfaResult.p.join(', ')||'none')+'</p></div><div><h4>Q-space</h4><p>'+esc(tilfaResult.q.join(', ')||'none')+'</p></div></div>';
+    if(tilfaResult.possible)h+='<div class="srt-status srt-ok"><strong>Repair node: '+esc(tilfaResult.repairNode)+'</strong><p>Repair path: '+esc(tilfaResult.repairPath.join(' > '))+'</p>'+sidChips(tilfaResult.repairSids.map(function(x){return{label:x};}))+'<p>'+esc(tilfaResult.reason)+'</p></div>';
+    else h+='<div class="srt-status srt-bad"><strong>No backup available</strong><p>'+esc(tilfaResult.reason)+'</p></div>';
+    $("#srt-tilfa-results").innerHTML=h;$("#srt-animate-tilfa").disabled=!tilfaResult.possible;
+  });
+  $("#srt-animate-tilfa").addEventListener("click",function(){
+    if(!tilfaResult||!tilfaResult.possible)return;animTimers.forEach(clearTimeout);animTimers=[];showTab('topology');topoDecor.failed=null;topoDecor.repair=null;renderTopo();var cap=$("#srt-anim-caption");
+    var steps=['1. Link '+tilfaResult.from+'→'+tilfaResult.to+' fails','2. '+tilfaResult.from+' pushes repair labels ['+tilfaResult.repairSids.join(', ')+']','3. Traffic flows '+tilfaResult.repairPath.join(' > ')];
+    function step(i){cap.textContent=steps[i];if(i===0)topoDecor.failed=tilfaResult.link;if(i===1)topoDecor.repair=tilfaResult.repairPath;if(i===2)topoDecor.primary=null;renderTopo();}
+    step(0);animTimers.push(setTimeout(function(){step(1);},900));animTimers.push(setTimeout(function(){step(2);},1800));
+  });
+
+  $("#srt-compute-flex").addEventListener("click",function(){
+    var id=Math.max(128,Math.min(255,Number($("#srt-flex-id").value)||128));$("#srt-flex-id").value=id;var r=SrTe.flexAlgo(topo,$("#srt-flex-src").value,{id:id,metric:$("#srt-flex-metric").value,excludeColors:list($("#srt-flex-colors").value)}),keys=Object.keys(r.perDst);
+    var h='<div class="srt-status"><strong>'+r.changed.length+' of '+keys.length+' destinations take a different path.</strong></div><table class="srt-table"><thead><tr><th>Destination</th><th>Algo 0 path</th><th>Flex-Algo path</th><th>Metric cost</th></tr></thead><tbody>'+keys.map(function(k){var x=r.perDst[k];return '<tr class="'+(x.changed?'srt-changed':'')+'"><td data-label="Destination">'+esc(k)+(x.changed?' <span class="srt-pill">changed</span>':'')+'</td><td data-label="Algo 0 path">'+esc(x.algo0Path?x.algo0Path.join(' > '):'unreachable')+'</td><td data-label="Flex-Algo path">'+esc(x.path?x.path.join(' > '):'unreachable')+'</td><td data-label="Metric cost">'+(x.cost==null?'—':x.cost)+'</td></tr>';}).join('')+'</tbody></table>';
+    $("#srt-flex-results").innerHTML=h;
+  });
+
+  syncSelects();renderTopo();renderSelection();renderCandidates();bindCopyButtons($("#app"));
+}
+function plainIntro(id){ return TOOL_INTROS[id]||""; }
+</script>
+
+<script>
+CURRENT_TOOL="sr-te-path-lab";
+pageSrTeLab();
+(function(){
+  function fix(root){
+    var as=root.querySelectorAll('a[href^="#/"]');
+    for(var i=0;i<as.length;i++){
+      var a=as[i], href=a.getAttribute('href'), m;
+      m=href.match(/^#\/tools\/([a-z0-9-]+)\/?$/);
+      if(m){ a.setAttribute('href','/tools/'+m[1]+'/'); continue; }
+      m=href.match(/^#\/article\/([a-z0-9-]+)\/?$/);
+      if(m){ a.setAttribute('href','/articles/'+m[1]+'/'); continue; }
+      if(href==='#/'||href==='#'){ a.setAttribute('href','/'); }
+    }
+  }
+  fix(document.getElementById('app'));
+})();
+</script>
+
+</body>
+</html>
