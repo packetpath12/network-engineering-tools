@@ -43,3 +43,13 @@ avalanche for the same reason.
 - 20,000 flows / 8×8 fabric, varied seeds → polarization ratio **< 1.5**
 - Same setup, identical seeds → polarization ratio **> 2.0** (traffic on the diagonal)
 - Total flows assigned **= 20,000** in both modes
+
+## UCMP weight planner (added Oct 17, 2026)
+
+A third lab on the same page plans unequal-cost multipath for mixed-speed
+links: enter 2–8 path bandwidths and a bucket count (16/64/128/256) and get
+ideal vs realized traffic shares via largest-remainder bucket allocation
+(always sums exactly to N), an IOS XR exact panel reproducing Cisco's
+documented weight derivation (bytes/sec ÷ 125, GCD reduction, floor rescale —
+including Cisco's own worked example summing to 63 of 64), FRR-style 1–100
+weights, and an amber flag when a path's share rounds to zero buckets.
