@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ECMP Hash Polarization Visualizer — Free Network Engineering Tool | Packet Path</title>
-<meta name="description" content="Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.">
+<meta name="description" content="Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.">
 <link rel="canonical" href="https://allaboutitinfrastructure.com/tools/ecmp-hash/">
 <meta property="og:title" content="ECMP Hash Polarization Visualizer — Free Network Engineering Tool | Packet Path">
-<meta property="og:description" content="Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.">
+<meta property="og:description" content="Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.">
 <meta property="og:url" content="https://allaboutitinfrastructure.com/tools/ecmp-hash/">
 <meta property="og:type" content="website">
 <style>
@@ -193,7 +193,56 @@ table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);
 .read-next .rn:hover{border-color:var(--accent)}
 .read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
 .read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+/* ---------- RPKI article lab ---------- */
+.rpki-figure{margin:1.5rem 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;overflow:hidden}
+.rpki-figure svg{display:block;min-width:0}
+.rpki-figure figcaption{margin-top:.65rem;color:var(--muted);font-size:.9rem;text-align:center}
+.rpki-lab{padding:1.2rem;margin:1.25rem 0}
+.rpki-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.rpki-presets button{font:inherit;font-size:.86rem;font-weight:700;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.45rem .72rem;cursor:pointer}
+.rpki-presets button:hover,.rpki-presets button:focus-visible{border-color:var(--accent);outline:none}
+.rpki-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rpki-fields label{display:grid;gap:.25rem;color:var(--muted);font-size:.82rem;font-weight:700}
+.rpki-fields input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .65rem}
+.rpki-fields input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.rpki-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:1rem 0}
+.rpki-checks div{display:grid;grid-template-columns:auto 1fr;gap:.15rem .55rem;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem}
+.rpki-checks span{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface3);font-weight:700}
+.rpki-checks b{font-size:.86rem}.rpki-checks em{font-style:normal;font-size:.82rem;color:var(--muted)}
+.rpki-checks .pass em{color:var(--accent);font-weight:700}.rpki-checks .fail em{color:#b3261e;font-weight:700}
+.rpki-result{display:flex;align-items:baseline;gap:.65rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:.9rem}
+.rpki-result>span{color:var(--muted);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rpki-result strong{font-family:var(--font-mono);font-size:1.35rem}
+.rpki-result.valid strong{color:var(--accent)}.rpki-result.invalid strong{color:#b3261e}.rpki-result.notfound strong{color:var(--amber)}
+.rpki-result p{width:100%;margin:0;color:var(--muted);font-size:.92rem}
+.rpki-honesty{margin-bottom:0}
+.rpki-timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:relative;margin:1.4rem 0 1.6rem;gap:0}
+.rpki-timeline:before{content:"";position:absolute;left:7%;right:7%;top:36px;border-top:3px solid var(--line)}
+.rpki-timeline div{position:relative;padding:0 .55rem;text-align:center}
+.rpki-timeline div:before{content:"";display:block;width:13px;height:13px;margin:30px auto .65rem;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent)}
+.rpki-timeline time{display:block;min-height:2.7rem;color:var(--accent);font-weight:700;font-size:.82rem;line-height:1.35}
+.rpki-timeline p{font-size:.84rem;line-height:1.4;margin:0;color:var(--muted)}
+.rpki-fixes{counter-reset:rpki-fix;list-style:none;padding:0;display:grid;gap:1rem}
+.rpki-fixes li{counter-increment:rpki-fix;position:relative;padding-left:3rem}
+.rpki-fixes li:before{content:counter(rpki-fix);position:absolute;left:0;top:.08rem;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:700}
+.rpki-related{padding:1.1rem 1.25rem;margin-top:1.5rem}.rpki-related h3{margin-top:0}.rpki-tool-link a{display:flex;flex-direction:column;gap:.1rem;padding:.75rem;background:var(--accent-soft);border-radius:8px;text-decoration:none}.rpki-tool-link span{color:var(--muted);font-size:.9rem}
+.announcement-card{margin:1.25rem 0;border:1px solid var(--code-line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);color:var(--code-ink);font-family:var(--font-mono);font-size:.88rem}
+.announcement-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:.8rem 1rem;background:#07110e;border-bottom:1px solid var(--code-line);font-size:.78rem;letter-spacing:.04em}
+.announcement-card details{border-bottom:1px solid var(--code-line)}.announcement-card details:last-child{border-bottom:0}
+.announcement-card summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:.82rem 1rem;cursor:pointer;list-style-position:inside}
+.announcement-card summary:hover{background:rgba(255,255,255,.04)}.announcement-card summary span{font-weight:700}.announcement-card summary code{font:inherit;color:#9cd9c0;text-align:right;overflow-wrap:anywhere}
+.announcement-card details p{margin:0;padding:0 1rem 1rem 2.15rem;color:#b7c9c1;font-family:var(--font-body);font-size:.94rem}.announcement-card mark{background:rgba(240,177,62,.22);color:#ffd27a;padding:.05em .3em;border-radius:3px}
+.rov-valid{color:#76e2ae}
+@media(max-width:620px){.announcement-card summary{grid-template-columns:1fr}.announcement-card summary code{text-align:left;padding-left:1.35rem}.announcement-head{align-items:flex-start;flex-direction:column}.rpki-related .read-next{grid-template-columns:1fr}}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .rpki-checks .fail em,:root:not(.lightm) .rpki-result.invalid strong{color:#ff8a80}}
+html.darkm .rpki-checks .fail em,html.darkm .rpki-result.invalid strong{color:#ff8a80}
+@media (prefers-reduced-motion:reduce){.rpki-anim{display:none}}
+@media(max-width:680px){.rpki-fields,.rpki-checks{grid-template-columns:1fr}.rpki-timeline{grid-template-columns:1fr;gap:.8rem}.rpki-timeline:before{left:20px;right:auto;top:12px;bottom:12px;border-top:0;border-left:3px solid var(--line)}.rpki-timeline div{text-align:left;padding-left:3.3rem}.rpki-timeline div:before{position:absolute;left:14px;top:7px;margin:0}.rpki-timeline time{min-height:0}.rpki-figure{padding:.5rem}.rpki-figure svg{font-size:90%}}
+
 /* ---------- tracks ---------- */
+.tracks-fresh{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:70ch}
+.tracks-fresh a{color:var(--accent);font-weight:600}
 .track-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;padding:1.4rem 1.5rem;margin:0 0 14px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
 .track-banner:hover{border-color:var(--accent)}
 .track-banner h3{margin:.3rem 0 .4rem;font-size:1.3rem}
@@ -529,16 +578,22 @@ html.lightm{color-scheme:light}
 .cv-devices{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; margin-bottom:1rem; }
 .cv-pane{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); overflow:hidden; }
 .cv-pane-head{
-  display:flex; align-items:center; gap:.6rem;
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:.45rem .6rem;
   padding:.6rem .9rem; background:var(--cv-surface2); border-bottom:1px solid var(--cv-line);
 }
-.cv-pane-name{ font-size:1rem; }
-.cv-pane-meta{ flex:1; font-size:.8rem; color:var(--cv-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cv-pane-name{ font-size:1rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cv-pane-meta{ grid-column:1/-1; grid-row:2; min-width:0; font-size:.8rem; color:var(--cv-muted); white-space:normal; overflow-wrap:anywhere; }
 .cv-mini-btn{
   background:transparent; border:1px solid var(--cv-line); color:var(--cv-muted);
   border-radius:6px; font-size:.78rem; padding:.25rem .6rem; cursor:pointer;
 }
 .cv-mini-btn:hover{ border-color:var(--cv-err); color:var(--cv-err); }
+.cv-vendor-seg{ display:inline-flex; border:1px solid var(--cv-line); border-radius:7px; overflow:hidden; flex:none; }
+.cv-vendor-btn{ border:0; border-right:1px solid var(--cv-line); background:var(--cv-surface); color:var(--cv-muted); padding:.22rem .42rem; font-size:.7rem; font-weight:700; cursor:pointer; }
+.cv-vendor-btn:last-child{ border-right:0; }
+.cv-vendor-btn.on{ background:var(--cv-accent); color:var(--cv-on-accent); }
+.cv-vendor-btn:focus-visible{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+@media (max-width:640px){ .cv-pane-head{ grid-template-columns:minmax(0,1fr) auto; } .cv-vendor-seg{ grid-row:2; grid-column:1; justify-self:start; } .cv-pane-meta{ grid-row:3; } }
 .cv-ta{
   width:100%; display:block; border:0; resize:vertical; min-height:220px;
   font-family:var(--cv-mono); font-size:.82rem; line-height:1.5;
@@ -641,10 +696,10 @@ html.lightm{color-scheme:light}
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"ECMP Hash Polarization Visualizer","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0"}}</script>
 </head>
 <body>
-<header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a></nav></header>
+<header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a><a href="/contact/">Contact</a></nav></header>
 <main id="app" class="pp-main"></main>
-<section class="pp-about"><h2>About this tool</h2><p>Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
-<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a></p></footer>
+<section class="pp-about"><h2>About this tool</h2><p>Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> · <a href="/tools/sr-te-path-lab/">Segment Routing Policy Lab</a> · <a href="/tools/clos-fabric-designer/">Data Center Fabric Designer</a> · <a href="/tools/rocev2-planner/">RoCEv2 Lossless Ethernet Planner</a> · <a href="/tools/dwdm-reach-planner/">Coherent DWDM / 400ZR Reach Planner</a> · <a href="/tools/multicast-design-studio/">Multicast Design Studio</a> · <a href="/tools/bgp-rr-planner/">BGP Route Reflector Design Planner</a> — all free, all run entirely in your browser.</p></div></section>
+<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a> · <a href="/contact/">Contact</a></p></footer>
 <script>
 
 function markNav(){}
@@ -658,10 +713,14 @@ function toolRows(){
   }).join('') + '</ul>';
 }
 
-var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous permit ip any any holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL rules. v1 Cisco IOS only.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"}];
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"},{id:"sr-te-path-lab",slug:"sr-te-path-lab",title:"Segment Routing Policy Lab",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",chip:"Hyperscaler"},{id:"clos-fabric-designer",slug:"clos-fabric-designer",title:"Data Center Fabric Designer",desc:"Turn server count and switch choices into a complete Clos fabric design: leaf/spine counts, a full cabling matrix, BGP ASN and IP addressing plan, EVPN/VNI overlay plan, failure analysis, and copy-ready switch config.",chip:"Hyperscaler"},{id:"rocev2-planner",slug:"rocev2-planner",title:"RoCEv2 Lossless Ethernet Planner",desc:"Tune a lossless RoCEv2 fabric in one flow: validate the ECN threshold ladder (Kmin/Kmax/Pmax) against your real per-port buffer, compute PFC XOFF headroom from link speed and cable length, simulate incast queue build-up, and catch PFC deadlock and pause-storm risk flags.",chip:"Hyperscaler"},{id:"dwdm-reach-planner",slug:"dwdm-reach-planner",title:"Coherent DWDM / 400ZR Reach Planner",desc:"Plan a coherent DWDM route end to end: per-span OSNR cascade combined in linear units, a margin waterfall with ROADM and nonlinear penalties, CD/PMD budgets checked against module tolerances, and a straight verdict — 400ZR works, step up to OpenZR+, or redesign the route.",chip:"Hyperscaler"},{id:"multicast-design-studio",slug:"multicast-design-studio",title:"Multicast Design Studio",desc:"Design a PIM multicast network in one flow: shared (RPT) and source (SPT) trees drawn on a live topology with per-receiver stretch, RP placement scored for every candidate, the exact RFC 7761 BSR hash, an ASM-vs-SSM decision helper, anycast-RP failover, and a starter config.",chip:"HFT"},{id:"bgp-rr-planner",slug:"bgp-rr-planner",title:"BGP Route Reflector Design Planner",desc:"Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout, per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.",chip:"Enterprise"}];
 </script>
 <script>
 function $(sel, el){ return (el||document).querySelector(sel); }
+function $$(sel, el){ return Array.prototype.slice.call((el||document).querySelectorAll(sel)); }
+var ECMP_FLOW_SEED_A = 0x1F123BB5;
+var ECMP_RING_SEED = 0x51AB3F1D;
+var ECMP_RING_VNODES = 128;
 var TOOL_INTROS = {
 "subnet": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Every device on a network has an address like 192.168.1.50, and the "/26" after it says how many addresses belong to the same local neighborhood. This calculator splits any address into its network: the network address, the broadcast address, how many devices fit, and the usable range — instantly, with the binary math shown.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home lab, studying for a CCNA, or carving up an office network. If you have ever wondered "how many IPs do I actually get?", this is the tool.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are already filled in — 192.168.7.129/26. The tool answers: network <code class="inline">192.168.7.128</code>, broadcast <code class="inline">192.168.7.191</code>, 62 usable addresses (<code class="inline">.129</code>–<code class="inline">.190</code>). Why 62? A /26 leaves 6 host bits: 2^6 = 64 addresses, minus the network and broadcast addresses.</div><p class="pi-gloss"><b>CIDR</b> (/24): shorthand for "the first 24 bits are the network part". <b>Broadcast</b>: the special address that reaches every device on the subnet at once.</p></div>',
 "bdp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A fast link can still feel slow if data spends most of its time waiting for acknowledgments. The bandwidth-delay product is how much data must be "in flight" at all times to keep the pipe full — like making sure there are always enough cars on the highway, not just a high speed limit. This tool computes it from your bandwidth and round-trip time, and shows what packet loss really costs.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone troubleshooting "the link is 1 Gbps but transfers crawl" — especially over long-distance or satellite links. Also the clearest possible lesson in why TCP window size matters.</p><div class="pi-try"><strong>Try this example:</strong> leave the defaults — 1000 Mbps, 50 ms round-trip. The bandwidth-delay product is 1 Gbps × 0.05 s = 50 million bits = <b>6.25 MB</b>: that is the TCP window your machines need. The tool also shows the trap: a classic 64 KB window would throttle this path to about 10 Mbps, roughly 1% of the line.</div><p class="pi-gloss"><b>RTT</b> (round-trip time): how long a packet takes to go there and back. <b>TCP window</b>: how much data a sender may transmit before waiting for an "I got it".</p></div>',
@@ -671,22 +730,75 @@ var TOOL_INTROS = {
 "ttt": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> In high-frequency trading, money is made in microseconds: a price tick arrives, software decides, an order goes out. This tool adds up every stage — light traveling through fiber, switch hops, the trading software itself — into a waterfall chart showing exactly where each microsecond goes.</p><p class="pi-plain"><strong>Who is this for?</strong> Built for people working on low-latency trading systems. For everyone else, it is a fascinating look at how much happens in a blink: light itself needs about 5 microseconds for every kilometer of fiber.</p><div class="pi-try"><strong>Try this example:</strong> leave the default 1200 km fiber route. Propagation alone is 1200 × 5 µs = 6,000 µs (6 ms) — physics takes its cut before a single switch or line of code runs. Now add 2 switch hops at 1 µs each and watch the waterfall grow: on long routes, distance dwarfs everything else.</div><p class="pi-gloss"><b>Tick</b>: one price update from an exchange. <b>Serialization</b>: the time to push bits onto the wire — bigger message or slower link means longer.</p></div>',
 "optic": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Fiber links run on light, and light fades with distance and at every connector it passes. A "link budget" is the accounting: the transmitter\'s power, minus every loss, must still leave enough light for the receiver to see clearly. This tool does the ledger and gives a pass/fail verdict with a safety margin.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone running fiber between buildings or across a campus — and students learning why "it lights up" is not the same as "it is reliable".</p><div class="pi-try"><strong>Try this example:</strong> 10 km of single-mode fiber at 0.4 dB/km (4.0 dB of fiber loss), 4 connector pairs (2.0 dB), 2 splices (0.2 dB): total loss 6.2 dB. With a transmitter at 0 dBm and a receiver that needs −14 dBm, the budget is 14 dB and the margin is <b>7.8 dB</b> — a comfortable pass with room for aging and dirty connectors.</div><p class="pi-gloss"><b>dB</b> (decibel): the unit of light loss — every 3 dB is half the power gone. <b>dBm</b>: power measured against 1 milliwatt; 0 dBm = 1 mW.</p></div>',
 "ptp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some systems need every clock to agree on the time — 5G cell towers, stock-exchange timestamps, power grids. PTP (Precision Time Protocol) syncs clocks over the network, but each device in the chain adds a little error. This calculator adds up the error across a chain of clocks and checks the total against real-world limits.</p><p class="pi-plain"><strong>Who is this for?</strong> Timing engineers and telecom folks. For the curious: it answers "how wrong can the time be after passing through five devices?"</p><div class="pi-try"><strong>Try this example:</strong> 5 boundary clocks, 50 ns of time error each, 8 ns timestamp granularity, 20 ns of link asymmetry per hop. Each hop contributes 50 + 8 + 20 = 78 ns, so the worst case over 5 hops is <b>390 ns</b>. Against a 1000 ns (1 microsecond) budget, that passes with room to spare — now try 20 clocks and watch it fail.</div><p class="pi-gloss"><b>PTP</b>: a protocol that synchronizes clocks over a network to within nanoseconds. <b>Boundary clock</b>: a switch that participates in timing instead of just passing it through.</p></div>',
-"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
-"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco firewall list here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
-"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
+"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice. Then scroll to the link-failure lab: kill leaf link 1 and compare how many healthy flows classic rehashing moves for no reason versus resilient hashing.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
+"acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco IOS extended ACL or a Juniper firewall filter here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
+"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco or Juniper router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
 "timing-sim": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A full simulation of a timing network over time. A grandmaster clock feeds boundary clocks down a chain, and this models how each clock\'s servo wanders, how noise and asymmetry creep in hop by hop, and whether every clock stays within its ITU-T class (A through D) — second by second, on a live chart.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for timing engineers — here is what it does, and what you would ask your timing team for: "simulate the chain before we buy the clocks."</p><div class="pi-try"><strong>Try this example:</strong> run the default chain and watch the wander plot: each clock\'s time error breathing around zero as its servo steers it back. Now crank up the per-hop asymmetry and watch the Class D check (max time error within 5 ns) flip to fail — that is the cost of unequal path delays, visualized.</div><p class="pi-gloss"><b>PTP / SyncE</b>: the two technologies that distribute precise time and frequency over a network. <b>Servo</b>: the control loop inside each clock that continuously steers it toward its master.</p></div>',
 "wireshark-filter-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Wireshark can capture every packet on a network, but finding the ones you care about means writing "display filters" in a picky syntax. This tool builds them for you: pick fields from a menu, combine them with AND / OR / NOT, and get valid filter text plus a plain-English readout of what it matches.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever opened Wireshark and felt lost — students, sysadmins, the curious. You do not need to memorize a single field name.</p><div class="pi-try"><strong>Try this example:</strong> build "all HTTPS traffic to or from 10.0.0.5": add <code class="inline">ip.addr == 10.0.0.5</code>, AND, <code class="inline">tcp.port == 443</code>. The tool outputs <code class="inline">ip.addr == 10.0.0.5 && tcp.port == 443</code> — paste it straight into Wireshark\'s filter bar and only those packets remain.</div><p class="pi-gloss"><b>Display filter</b>: Wireshark\'s search language for packets you already captured (different from a capture filter, which decides what gets recorded in the first place).</p></div>',
 "wifi-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Your Wi-Fi shares invisible airspace with every neighbor\'s router. In the 2.4 GHz band only channels 1, 6, and 11 avoid overlapping — pick anything else and you are shouting over someone. Enter the access points your phone\'s Wi-Fi scanner can hear and this tool maps the spectral overlap and recommends the quietest channels.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home or office router — the most "normal person" tool on this site. If your video calls stutter, start here.</p><div class="pi-try"><strong>Try this example:</strong> add your neighbor\'s router on channel 6, 2.4 GHz, 20 MHz wide. The spectral graph shows it sprawling across channels 4–8, and the tool recommends channel <b>1</b> or <b>11</b> — the non-overlapping escapes. Move your own AP there and the interference is gone.</div><p class="pi-gloss"><b>RSSI</b>: signal strength as your device hears it, in dBm — closer to 0 means stronger. <b>Channel width</b>: how much airspace one Wi-Fi signal occupies (20, 40, 80, or 160 MHz).</p></div>',
 "qos-simulator": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Networks handle congestion with "token buckets": picture a bucket that fills with tokens at your contracted rate. Each packet spends tokens as it passes; when the bucket runs dry, extra packets get marked down or dropped. This simulator sets the bucket up the way a Cisco router would and lets you watch traffic get colored green, yellow, and red.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers learning QoS and certification students. The bucket analogy is the whole lesson — everything else is details.</p><div class="pi-try"><strong>Try this example:</strong> pick the 1R2C policer, CIR 1,000,000 bps, Bc 8000 bits. Fire one 1000-byte packet (8000 bits): it <b>conforms</b> (green) and the bucket hits exactly zero. Fire a second one instantly: it <b>exceeds</b> (yellow) — no tokens have had time to refill yet. That is the entire token-bucket idea in two packets.</div><p class="pi-gloss"><b>CIR</b>: the committed rate you are paying for. <b>Conform / exceed / violate</b>: the three colors — within contract, over but tolerated, over the hard limit.</p></div>',
-"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block.</p></div>',
-"iperf3-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> iPerf3 is the standard tool for measuring real network speed: run it on two machines and it reports the actual throughput between them. But its command flags are cryptic. This builder constructs correct client and server commands with plain-English explanations, ready-made presets, and a linter that catches classic mistakes — like UDP tests with no bandwidth limit.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever argued "the network is slow" — run this on both ends and get a number instead of an argument.</p><div class="pi-try"><strong>Try this example:</strong> server <code class="inline">192.0.2.10</code>, 8 parallel streams, 30 seconds. The tool builds <code class="inline">iperf3 -c 192.0.2.10 -P 8 -t 30</code> — eight streams at once defeat per-connection limits and reveal the true capacity. Copy, paste, run.</div><p class="pi-gloss"><b>Throughput</b>: the data rate you actually get — always less than the sticker speed. <b>Parallel streams (-P)</b>: multiple simultaneous connections, which work around per-connection bottlenecks.</p></div>'
+"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, a D-PATH (RFC 10039) attribute decoder with loop checker, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block. <b>D-PATH</b>: a new BGP attribute (RFC 10039) that stamps every domain a route crosses, so gateway routers can refuse routing loops between EVPN and IPVPN domains.</p></div>',
+"iperf3-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> iPerf3 is the standard tool for measuring real network speed: run it on two machines and it reports the actual throughput between them. But its command flags are cryptic. This builder constructs correct client and server commands with plain-English explanations, ready-made presets, and a linter that catches classic mistakes — like UDP tests with no bandwidth limit.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever argued "the network is slow" — run this on both ends and get a number instead of an argument.</p><div class="pi-try"><strong>Try this example:</strong> server <code class="inline">192.0.2.10</code>, 8 parallel streams, 30 seconds. The tool builds <code class="inline">iperf3 -c 192.0.2.10 -P 8 -t 30</code> — eight streams at once defeat per-connection limits and reveal the true capacity. Copy, paste, run.</div><p class="pi-gloss"><b>Throughput</b>: the data rate you actually get — always less than the sticker speed. <b>Parallel streams (-P)</b>: multiple simultaneous connections, which work around per-connection bottlenecks.</p></div>',
+"sr-te-path-lab": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Segment Routing lets a router steer traffic down an exact path by stamping a stack of labels — called SIDs — onto each packet, instead of letting every router make its own hop-by-hop decision. This lab is a sandbox for that idea: draw a network, define an SR policy (a head-end router, a color, and a destination), then add candidate paths two ways — <em>dynamic</em>, where the lab computes the best path under constraints you set (bandwidth, delay, colors to avoid), and <em>explicit</em>, where you type the SID list yourself. The lab picks the winner, builds the label stack, checks it against the router\'s label-depth limit, and can even animate TI-LFA backup paths and Flex-Algo routing.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and service-provider WAN engineers learning Segment Routing traffic engineering — and anyone studying for CCNP/CCIE Service Provider who wants to <em>see</em> CSPF, candidate-path selection, and TI-LFA instead of just reading about them.</p><p class="pi-plain"><strong>Try this example.</strong> Load the "SP backbone" preset. Head-end <code class="inline">PE1</code>, color <code class="inline">100</code>, endpoint <code class="inline">PE2</code>. Add candidate <code class="inline">CP1-dynamic</code> (dynamic, minimize IGP metric, preference 100) and <code class="inline">CP2-explicit</code> (SID list <code class="inline">15000, 16004, 16005</code> — the PE1&rarr;P1 adjacency, then the node-SIDs of P4 and PE2 — preference 150). Press Compute. Expect: CP1 computes <code class="inline">PE1 &gt; P1 &gt; P3 &gt; PE2</code> (cost 30, 300&micro;s, 3 hops, compressed to the single label 16005). CP2 validates to <code class="inline">PE1 &gt; P1 &gt; P3 &gt; P4 &gt; PE2</code> (4 hops, IGP cost 35). CP2 wins — preference 150 beats 100, because on IOS XR the <em>highest</em> preference wins.</p><p class="pi-gloss"><b>SID</b>: segment identifier — a label that tells a router "go to this node" (node-SID) or "use this exact link" (adjacency-SID). <b>SRGB</b>: the block of labels a network reserves for node-SIDs (16000&ndash;23999 by default). <b>CSPF</b>: constrained shortest path first — prune links that break your constraints, then run Dijkstra on what\'s left. <b>Candidate path</b>: one option inside an SR policy; the highest-preference valid one carries traffic. <b>TI-LFA</b>: pre-computed backup path that kicks in within ~50ms of a link failure. <b>Flex-Algo</b>: alternate routing calculation (algorithm 128+) with its own metric and constraints. <b>MSD</b>: maximum SID depth — how many labels a router\'s hardware can push.</p></div>',
+"clos-fabric-designer": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> It designs a data-center fabric the way a hyperscaler engineer would sketch one on a whiteboard — then does all the tedious follow-through for you. Give it a server count and the switches you want to use, and it produces the full build plan: how many leaf and spine switches, a cable-by-cable matrix, the BGP AS numbers and IP addresses for every link, an EVPN/VXLAN overlay plan, what breaks when a switch dies, and starter switch config you can copy.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center and cloud network engineers designing or reviewing a spine-leaf fabric — and anyone sizing up an AI cluster network who needs the real numbers, not a guess.</p><div class="pi-try"><strong>Try this example:</strong> the "Starter AI pod" preset — 384 servers with one 100 Gbps NIC each, leaf switches with 48 downlinks and 8 uplinks at 400 Gbps → <b>8 leaf switches</b>, <b>8 spine switches</b>, oversubscription <b>1.50:1</b>, <b>64 leaf↔spine cables</b>, and losing one spine raises oversubscription to <b>1.71:1</b> (4800/2800).</div><p class="pi-gloss"><b>Clos</b>: a fabric layout where every leaf switch connects to every spine switch, so any server can reach any other server in the same number of hops. <b>Leaf</b>: the switch servers plug into. <b>Spine</b>: the switch only leaves plug into — the fabric\'s backbone layer. <b>Super-spine</b>: a third switch layer added when a fabric outgrows what one set of spines can connect. <b>Oversubscription</b>: server-facing capacity divided by uplink capacity — 3:1 means servers could, in theory, demand three times what the uplinks can carry. <b>Bisection</b>: how much traffic can cross from one half of the fabric to the other at the same time. <b>ASN</b>: the BGP autonomous-system number each switch uses to identify itself to its neighbors. <b>VNI</b>: the VXLAN network identifier — the tag that keeps one tenant\'s traffic separate from another\'s. <b>EVPN</b>: the BGP-based control plane that tells the fabric which server lives behind which leaf.</p></div>',
+"rocev2-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> AI clusters and fast storage networks run RDMA over ordinary Ethernet — a trick called RoCEv2 — and it only works if the network never drops a packet. Switches fake that "never drops" promise with two tools working together: <b>PFC</b>, a pause button that tells the sender upstream to stop for a moment, and <b>ECN</b>, a "congestion ahead" stamp that makes senders slow down politely before queues get deep. This planner checks that the numbers configured on your switches can actually keep the promise: it validates the ECN thresholds against the real buffer each port gets, works out the pause headroom your link speed and cable lengths demand, and shows what happens when dozens of servers all answer one server at the same time.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center, cloud, and AI-fabric engineers bringing up RoCEv2 — and enterprise engineers meeting lossless Ethernet for the first time on storage or HPC networks.</p><div class="pi-try"><strong>Try this example:</strong> leave the defaults — 100 Gbps links, 100 m cables, 9000-byte frames — and the headroom math below works out to <b>≈ 46.5 KB</b> of PFC headroom per port. Then look at the ladder check: the common Spectrum-class ECN default profile (Kmin 1 MiB, Kmax 2 MiB) against a 1 MiB per-port buffer trips the <b>"ECN can never fire before PFC"</b> flag — the silent misconfiguration this tool exists to catch.</div><p class="pi-gloss"><b>PFC</b> (Priority Flow Control): a per-priority pause button — a switch whose queue is about to overflow tells the device directly upstream "stop sending this class of traffic for a moment." <b>ECN</b> (Explicit Congestion Notification): instead of dropping a packet, the switch stamps a congestion mark on it; the receiver echoes the mark back and the sender slows down. <b>DCQCN</b>: the congestion-control algorithm RoCEv2 network cards run — it reads those ECN marks and adjusts the sending rate. <b>CNP</b> (Congestion Notification Packet): the small feedback packet the receiving card sends back to carry the ECN news to the sender. <b>Headroom</b>: buffer space deliberately left empty above the PFC pause threshold, to absorb the frames already in flight while a pause message travels back upstream. <b>Incast</b>: the many-to-one traffic pattern — dozens of servers replying to one server at once — that fills queues faster than anything else in an AI fabric.</p></div>',
+"dwdm-reach-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Long-haul fiber links carry many wavelengths of light at once — that is <b>DWDM</b> — and modern <b>coherent</b> optics (which read the light wave itself, not just its brightness) push 400 gigabits down each wavelength. The catch: every amplifier on the route adds a hiss of noise, every kilometre of glass smears the signal in time, and at some distance the receiver can no longer read it — no matter how strong the light is. This planner adds up all three limits for your route — amplifier noise span by span, dispersion over the whole distance, and receiver power — and gives a straight verdict: plain 400ZR optics survive it, you need the tougher OpenZR+ kind, or the route needs redesigning.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center interconnect, cloud, and enterprise WAN engineers speccing 400ZR / OpenZR+ pluggables for metro and long-haul links — and anyone who has been handed a route and asked "will ZR work, or do we need ZR+?"</p><div class="pi-try"><strong>Try this example:</strong> set launch power to <b>−0.4 dBm</b> and spans to <b>10</b> on the default G.652 80 km spans. Each span then contributes exactly <b>35 dB</b> of OSNR, and the cascade lands at exactly <b>25 dB</b> — 1 dB short of the 26 dB plain 400ZR needs, before any other penalty. The verdict shows the fail rather than rounding it into a pass.</div><p class="pi-gloss"><b>OSNR</b> (Optical Signal-to-Noise Ratio): how far the signal stands above the noise, in decibels — the single number coherent receivers live or die by. <b>ASE</b> (Amplified Spontaneous Emission): the hiss every optical amplifier adds; it is the noise in OSNR. <b>DWDM</b> (Dense Wavelength-Division Multiplexing): many colours of light, each an independent channel, sharing one fibre. <b>Coherent</b>: optics that read the phase and polarisation of the light, not just its brightness — that is how 400G fits in one wavelength, and why these receivers quote an OSNR requirement. <b>CD</b> (Chromatic Dispersion): different colours inside one channel travel at slightly different speeds, smearing pulses over distance — measured in ps/nm. <b>PMD</b> (Polarisation Mode Dispersion): the two polarisations of the light drift apart in time as fibre imperfections accumulate. <b>ROADM</b> (Reconfigurable Optical Add-Drop Multiplexer): the node that switches wavelengths onto and off the route; each one slightly narrows the channel. <b>FEC</b> (Forward Error Correction): the error-correcting code the receiver runs — stronger FEC (OpenZR+ uses oFEC) is a large part of why ZR+ tolerates worse OSNR and more dispersion.</p></div>',
+"multicast-design-studio": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some traffic has one sender and many listeners — a stock-exchange price feed is the classic case. Sending a separate copy to every listener would swamp the network, so multicast sends <i>one</i> copy and the routers themselves make copies only where the path branches, like a river splitting into streams. This studio designs that splitting tree for you: it draws the shared tree and the source tree on a real topology, measures how much longer the shared tree makes each listener wait, scores every candidate meeting point, works out the exact election math routers use to pick that meeting point automatically, and helps you choose between the two flavours of multicast — then writes you a starter config.</p><p class="pi-plain"><strong>Who is this for?</strong> First, HFT market-data engineers — exchange feeds are source-specific multicast, and microseconds of tree stretch are real money. Second, enterprise media and IPTV engineers running PIM on a campus or venue network. If you have ever been asked "where should the RP live?" or "ASM or SSM for this feed?", this is the tool.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a 4 Gb/s feed at R1 for group <code class="inline">239.1.1.1</code>, receivers at R3, R5 and R6, default RP R3. The scoring table says the best RP is actually <b>R2, with 19 ms of total shared-tree latency</b> (R3 costs 21 ms, R4 costs 22 ms) — and with R2 every receiver\'s stretch is exactly 1.00, because R2 sits on every shortest path. Scroll to the BSR hash lab: for group 239.1.1.1 with hash-mask length 30, the winner is <b>10.0.0.3</b> (R3) with a hash value of 1,738,919,403 — the election and the scoreboard are allowed to disagree, and real networks live with that.</div><p class="pi-gloss"><b>PIM</b> (Protocol Independent Multicast): the routing protocol that builds the copying trees; "protocol independent" because it borrows the unicast routing table instead of keeping its own. <b>RP</b> (Rendezvous Point): the meeting point receivers and sources both head for when a group starts up — the shared tree is rooted there. <b>RPT / shared tree</b>: the tree rooted at the RP, written (*,G) — "any source, this group". <b>SPT</b> (Shortest Path Tree): a tree rooted at the source itself, written (S,G) — always the fastest route, one per source. <b>SSM</b> (Source-Specific Multicast, RFC 4607): receivers name the exact source they want, so no RP is needed at all; its home is 232.0.0.0/8. <b>ASM</b> (Any-Source Multicast): the original model — receivers join a group and any source may send to it, which is why it needs an RP. <b>BSR</b> (Bootstrap Router): the mechanism that hands every router the same candidate-RP list and lets a standard hash (RFC 7761 §4.7.2) elect one RP per group, identically everywhere. <b>RPF</b> (Reverse Path Forwarding): the loop-safety check — a multicast packet is only accepted on the interface that unicast routing would use to go <i>back</i> toward the source or RP. <b>(S,G) / (*,G)</b>: the state entries routers keep — one per source-and-group pair, or one wildcard entry per group.</p></div>'
+,
+"bgp-rr-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Routers inside one network share routes over <b>iBGP</b> — BGP spoken inside your own network rather than between networks. By default every router must talk to every other router (a "full mesh"), and the conversation count explodes as you add routers: 40 routers need 780 separate sessions. A <b>route reflector</b> breaks that rule on purpose: ordinary routers (its <b>clients</b>) report their routes to the reflector, and the reflector passes them on — so each client only needs a session or two. This planner designs that setup: say how many clusters you have and how many reflectors and clients each one holds, and it works out the session math, writes every router\'s peer list, checks your cluster-IDs, shows what breaks when a reflector dies, and walks one route through the reflection rules step by step.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and data-center network engineers scaling iBGP past the point where a full mesh is sane — campus cores, multi-site networks, and anyone who has inherited a reflector design and wants to know exactly what it depends on.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a four-site campus, one <b>cluster</b> per site (a cluster is one reflector group plus the clients it serves), each with 2 reflectors and 8 clients: 40 routers, ASN 65000. The full mesh would need <b>780</b> sessions; the reflected design needs <b>92</b> — an 88.2% cut. Then use the failure panel: kill one reflector and nothing is orphaned; kill both in a site and that site\'s 8 clients are cut off. That difference is the whole reason reflectors come in pairs.</div><p class="pi-gloss"><b>iBGP</b> (internal BGP): BGP sessions between routers in the same autonomous system — your own network talking to itself. <b>Route reflector</b>: a router allowed to pass iBGP routes on to other iBGP routers, which plain iBGP forbids; the behaviour is defined in RFC 4456. <b>Cluster</b>: one reflector group and the clients it serves; the reflectors in a cluster share one cluster-ID. <b>Cluster-ID</b>: the label a reflector stamps on routes it reflects, so a route that comes back around can be recognised and dropped. <b>Client / non-client</b>: a client is a router the reflector serves; every other iBGP speaker is a non-client — in this planner, any non-client is itself a reflector. <b>ORIGINATOR_ID</b>: a stamp naming the router that first put a route into iBGP, so that router can refuse its own route if it ever comes back. <b>CLUSTER_LIST</b>: the running list of cluster-IDs a route has passed through — the loop-prevention trail a reflector checks before accepting a route. <b>Add-paths</b>: a BGP extension (RFC 7911) that lets a reflector send more than its single best path, so clients can see alternates.</p></div>'
 };
 function comma(n){ return Number(n).toLocaleString("en-US"); }
+function ecmpFailover(N,L,failLink,flowSeed,vnodes){
+  vnodes=vnodes||ECMP_RING_VNODES;
+  if(!(L>=2)) throw new Error("L must be >= 2");
+  if(!(failLink>=0&&failLink<L)) throw new Error("failLink out of range");
+  var R=L*vnodes,owners=ecmpRingOwners(L,vnodes);
+  var nextOwn=new Array(R),s,lastSeen=-1;
+  for(s=2*R-1;s>=0;s--){
+    var ss=s%R,o=owners[ss];
+    if(o!==failLink) lastSeen=o;
+    if(s<R) nextOwn[ss]=(lastSeen===-1)?failLink:lastSeen;
+  }
+  var cB=[],cA=[],rB=[],rA=[],i;
+  for(i=0;i<L;i++){ cB.push(0); cA.push(0); rB.push(0); rA.push(0); }
+  var cForced=0,cChurn=0,rForced=0,rChurn=0;
+  var rng=mulberry32(flowSeed);
+  var b=new Uint8Array(13);
+  for(var f=0;f<N;f++){
+    var src=(rng()*4294967296)>>>0,dst=(rng()*4294967296)>>>0;
+    var sp=Math.floor(rng()*65536),dp=Math.floor(rng()*65536);
+    var proto=rng()<0.5?6:17;
+    b[0]=(src>>>24)&255; b[1]=(src>>>16)&255; b[2]=(src>>>8)&255; b[3]=src&255;
+    b[4]=(dst>>>24)&255; b[5]=(dst>>>16)&255; b[6]=(dst>>>8)&255; b[7]=dst&255;
+    b[8]=(sp>>>8)&255; b[9]=sp&255; b[10]=(dp>>>8)&255; b[11]=dp&255; b[12]=proto;
+    var h=ecmpHash(b,ECMP_FLOW_SEED_A);
+    var cb=h%L; cB[cb]++;
+    var idx=h%(L-1);
+    var ca=idx<failLink?idx:idx+1; cA[ca]++;
+    if(cb===failLink) cForced++; else if(ca!==cb) cChurn++;
+    var slot=h%R;
+    var rb=owners[slot]; rB[rb]++;
+    var ra=(rb===failLink)?nextOwn[slot]:rb; rA[ra]++;
+    if(rb===failLink) rForced++; else if(ra!==rb) rChurn++;
+  }
+  return {N:N,L:L,failLink:failLink,vnodes:vnodes,
+    classic:{before:cB,after:cA,forced:cForced,churned:cChurn},
+    resilient:{before:rB,after:rA,forced:rForced,churned:rChurn}};
+}
 function ecmpHash(bytes,seed){
   var h=(2166136261^seed)>>>0;
   for(var i=0;i<bytes.length;i++){ h^=bytes[i]; h=Math.imul(h,16777619); }
   h^=h>>>16; h=Math.imul(h,0x85ebca6b); h^=h>>>13; h=Math.imul(h,0xc2b2ae35); h^=h>>>16;
   return h>>>0;
+}
+function ecmpRingOwners(L,vnodes){
+  var R=L*vnodes,owners=new Array(R),s;
+  var b=new Uint8Array(4);
+  for(s=0;s<R;s++){
+    b[0]=(s>>>24)&255; b[1]=(s>>>16)&255; b[2]=(s>>>8)&255; b[3]=s&255;
+    owners[s]=ecmpHash(b,ECMP_RING_SEED)%L;
+  }
+  return owners;
 }
 function ecmpSim(S,L,N,varied,flowSeed){
   var SEED_A=0x1F123BB5, SEED_B=0x5BD1E995;
@@ -712,6 +824,7 @@ function ecmpSim(S,L,N,varied,flowSeed){
   for(i=0;i<Math.min(S,L);i++) diag+=matrix[i][i];
   return {matrix:matrix,stage2:stage2,ratio:max/mean,maxCell:max,meanCell:mean,total:total,hotI:hi,hotJ:hj,diagShare:100*diag/N};
 }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function initECMP(){
   var varied=false, runNo=0;
   function v(id){ return parseFloat($("#"+id).value); }
@@ -770,7 +883,220 @@ function initECMP(){
   $("#ec-varied").addEventListener("click",function(){ setMode(true); run(); });
   $("#ec-run").addEventListener("click",run);
   ["ec-s","ec-l","ec-n"].forEach(function(id){ $("#"+id).addEventListener("input",run); });
+  function syncFailLinks(){
+    var L=parseInt($("#ec-l").value,10),sel=$("#ecf-link"),cur=sel.value,o="";
+    if(!(L>=2&&L<=32)) L=8;
+    for(var i=0;i<L;i++) o+='<option value="'+i+'"'+(String(i)===cur?" selected":"")+'>Leaf link '+(i+1)+'</option>';
+    sel.innerHTML=o;
+  }
+  function failBars(id,before,after,dead){
+    var max=0,i;
+    for(i=0;i<before.length;i++){ if(before[i]>max)max=before[i]; if(after[i]>max)max=after[i]; }
+    var h="";
+    for(i=0;i<before.length;i++){
+      var bw=max?(100*before[i]/max):0,aw=max?(100*after[i]/max):0;
+      h+='<div class="ec-bar"><span class="lab">Link '+(i+1)+(i===dead?" (killed)":"")+'</span><span class="tr"><span class="fl" style="width:'+aw.toFixed(1)+'%;'+(aw>0?"":"display:none")+'"></span><span class="exp" style="left:'+bw.toFixed(1)+'%"></span></span><span class="n">'+comma(before[i])+" \u2192 "+comma(after[i])+'</span></div>';
+    }
+    $("#"+id).innerHTML=h;
+  }
+  function runFail(){
+    $("#ecf-err").textContent=""; $("#ecf-verdict").innerHTML="";
+    var L=parseFloat($("#ec-l").value),N=parseFloat($("#ecf-n").value);
+    var f=parseInt($("#ecf-link").value,10);
+    if(isNaN(L)||L%1!==0||L<2||L>32){ $("#ecf-err").textContent="Set the stage-2 link count (L) in Your fabric above - a whole number from 2 to 32."; return; }
+    if(isNaN(N)||N%1!==0||N<1000||N>100000){ $("#ecf-err").textContent="Flows must be a whole number from 1,000 to 100,000."; return; }
+    if(isNaN(f)||f<0||f>=L){ $("#ecf-err").textContent="Pick a leaf link to kill."; return; }
+    var r=ecmpFailover(N,L,f,0xFA112);
+    var cM=r.classic.forced+r.classic.churned,rM=r.resilient.forced+r.resilient.churned;
+    var cc=$("#ecf-c-churn"),cp=$("#ecf-c-pct"),rc=$("#ecf-r-churn"),rp=$("#ecf-r-pct");
+    cc.textContent=comma(r.classic.churned); cc.className="v ec-bad";
+    cp.textContent=(100*cM/N).toFixed(1)+"%"; cp.className="v ec-bad";
+    rc.textContent=comma(r.resilient.churned); rc.className="v ec-good";
+    rp.textContent=(100*rM/N).toFixed(1)+"%"; rp.className="v ec-good";
+    var verdict='<div class="callout key" style="margin:0"><strong class="t">The failure\'s blast radius</strong>'
+      +'Classic modulo hashing moved <b>'+comma(cM)+' of '+comma(N)+' flows ('+(100*cM/N).toFixed(1)+'%)</b> — including <b>'+comma(r.classic.churned)+' healthy flows</b> whose link never died. Every surviving flow was rehashed against the new link count, so most landed somewhere arbitrary: TCP sessions see reordering, ECMP member caches go cold, and a one-link failure disturbs the whole fabric.<br>'
+      +'Resilient hashing moved <b>only the dead link\'s '+comma(r.resilient.forced)+' flows ('+(100*rM/N).toFixed(1)+'%)</b>. Zero healthy flows were rehomed — the ring remapped exactly the killed link\'s slots and nothing else.</div>';
+    $("#ecf-verdict").innerHTML=verdict;
+    var rows=[];
+    rows.push(["Killed link","Leaf link "+(f+1)+" of "+L]);
+    rows.push(["Classic: forced moves (dead link's flows)",comma(r.classic.forced)]);
+    rows.push(["Classic: needless churn (healthy flows)",comma(r.classic.churned)]);
+    rows.push(["Resilient: forced moves (dead link's flows)",comma(r.resilient.forced)]);
+    rows.push(["Resilient: needless churn (healthy flows)",comma(r.resilient.churned)]);
+    $("#ecf-out").innerHTML=rows.map(function(x){return "<dt>"+x[0]+"</dt><dd>"+x[1]+"</dd>";}).join("");
+    failBars("ecf-bars-c",r.classic.before,r.classic.after,f);
+    failBars("ecf-bars-r",r.resilient.before,r.resilient.after,f);
+  }
+  $("#ecf-run").addEventListener("click",runFail);
+  $("#ecf-n").addEventListener("input",runFail);
+  $("#ecf-link").addEventListener("change",runFail);
+  $("#ec-l").addEventListener("input",syncFailLinks);
   run();
+  syncFailLinks(); runFail();
+}
+function initUCMP(){
+  var SPEEDS=[1,10,25,40,100,200,400];
+  var paths=[
+    {label:"Uplink A 100G",val:100,unit:"Gbps"},
+    {label:"Uplink B 40G",val:40,unit:"Gbps"},
+    {label:"Uplink C 10G",val:10,unit:"Gbps"},
+    {label:"Uplink D 10G",val:10,unit:"Gbps"}
+  ];
+  var N=64, xrDirty={}, xrVals={};
+  function gbps(p){ return p.unit==="Mbps" ? p.val/1000 : p.val; }
+  function fmtBw(p){ return String(p.val)+" "+p.unit; }
+  function fmtG(g){ if(g>=100) return g.toFixed(1); if(g>=1) return g.toFixed(2); return g.toFixed(3); }
+  function lab(p,i){ return p.label||("Path "+(i+1)); }
+
+  function renderRows(){
+    var h="";
+    paths.forEach(function(p,i){
+      h+='<div class="uc-path" id="uc-row-'+i+'">'
+        +'<div class="field"><label for="uc-lab-'+i+'">Path label</label><input id="uc-lab-'+i+'" type="text" value="'+esc(p.label)+'"></div>'
+        +'<div class="field"><label for="uc-bw-'+i+'">Bandwidth</label><input id="uc-bw-'+i+'" type="number" min="0" step="any" value="'+p.val+'"></div>'
+        +'<div class="field"><label for="uc-unit-'+i+'">Unit</label><select id="uc-unit-'+i+'"><option value="Gbps"'+(p.unit==="Gbps"?" selected":"")+'>Gbps</option><option value="Mbps"'+(p.unit==="Mbps"?" selected":"")+'>Mbps</option></select></div>'
+        +'<button type="button" class="uc-rm" data-i="'+i+'"'+(paths.length<=2?" disabled":"")+'>Remove</button>'
+        +'<div class="uc-chips" style="grid-column:1/-1">'+SPEEDS.map(function(s){ return '<button type="button" data-i="'+i+'" data-g="'+s+'">'+s+'G</button>'; }).join("")+'</div>'
+        +'</div>';
+    });
+    $("#uc-paths").innerHTML=h;
+    $("#uc-add").disabled=paths.length>=8;
+    $$("#uc-paths input[type=text], #uc-paths input[type=number]").forEach(function(inp){ inp.addEventListener("input",compute); });
+    $$("#uc-paths select").forEach(function(sel){ sel.addEventListener("change",compute); });
+    $$("#uc-paths .uc-rm").forEach(function(btn){ btn.addEventListener("click",function(){
+      paths.splice(+btn.getAttribute("data-i"),1); xrDirty={}; xrVals={}; renderRows(); compute();
+    }); });
+    $$("#uc-paths .uc-chips button").forEach(function(ch){ ch.addEventListener("click",function(){
+      var i=ch.getAttribute("data-i");
+      $("#uc-bw-"+i).value=ch.getAttribute("data-g"); $("#uc-unit-"+i).value="Gbps"; compute();
+    }); });
+    renderXRrows();
+  }
+
+  function renderXRrows(){
+    var h="";
+    paths.forEach(function(p,i){
+      var comm=xrDirty[i]?xrVals[i]:Math.round(gbps(p)*125000000);
+      h+='<div class="uc-xrrow"><div class="field"><label id="uc-xrlab-'+i+'" for="uc-comm-'+i+'">'+esc(lab(p,i))+' — link-bandwidth community (bytes/sec)</label><input id="uc-comm-'+i+'" type="number" min="0" step="any" value="'+comm+'"></div>'
+        +'<div class="uc-xreq" id="uc-xreq-'+i+'"></div></div>'
+        +'<div class="uc-stats" id="uc-xrstats-'+i+'" style="margin-top:.35rem"></div>';
+    });
+    $("#uc-xr-rows").innerHTML=h;
+    $$("#uc-xr-rows input").forEach(function(inp){ inp.addEventListener("input",function(){
+      var i=+inp.id.replace("uc-comm-","");
+      xrDirty[i]=true; xrVals[i]=parseFloat(inp.value);
+      computeXR(false);
+    }); });
+  }
+
+  function syncFromDOM(){
+    paths.forEach(function(p,i){
+      var l=$("#uc-lab-"+i), b=$("#uc-bw-"+i), u=$("#uc-unit-"+i);
+      if(l) p.label=l.value;
+      if(b) p.val=parseFloat(b.value);
+      if(u) p.unit=u.value;
+    });
+  }
+
+  function compute(){
+    syncFromDOM();
+    var missing=$("#uc-missing").checked;
+    var err="";
+    paths.forEach(function(p){ if(!(p.val>0)||!isFinite(p.val)) err="Every path needs a bandwidth above zero — check the bandwidth fields."; });
+    $("#uc-err").textContent=err;
+    $$("#uc-paths .uc-path").forEach(function(row,i){ row.classList.toggle("uc-dim",missing&&i===paths.length-1); });
+    if(err){ $("#uc-results").innerHTML=""; $("#uc-sumline").textContent=""; $("#uc-fallback").innerHTML=""; computeXR(true); return; }
+    $("#uc-fallback").innerHTML=missing
+      ? '<div class="callout warn" style="margin:0"><strong class="t">Mixed set — bandwidth ignored, plain ECMP fallback</strong>The last path ('+esc(lab(paths[paths.length-1],paths.length-1))+') is simulated with no link-bandwidth value. Real implementations (per the BGP link-bandwidth draft and the FRR design) do not weight just the paths that have one: if any path in the set lacks a value, bandwidth is ignored for the <b>whole set</b> and traffic falls back to plain equal-cost ECMP. The split below is that equal split. In production, make sure every path in the set carries the community — or none of them gets weighted.</div>'
+      : "";
+    var eff=paths.map(function(p){ return missing?1:gbps(p); });
+    var totEff=eff.reduce(function(a,b){ return a+b; },0);
+    var buckets=ucmpLR(eff,N), frr=ucmpLR(eff,100);
+    var rh="";
+    paths.forEach(function(p,i){
+      var ideal=100*eff[i]/totEff, realized=100*buckets[i]/N, e=realized-ideal;
+      rh+='<div class="uc-res"><div class="uc-res-head"><b>'+esc(lab(p,i))+'</b><span style="color:var(--muted)">'+esc(fmtBw(p))+(missing&&i===paths.length-1?' · no link-bandwidth value (simulated)':'')+'</span><span class="bk">'+buckets[i]+(buckets[i]===1?' bucket':' buckets')+'</span></div>'
+        +'<div class="uc-bar"><span style="width:'+realized.toFixed(2)+'%"></span></div>'
+        +'<div class="uc-stats"><span>Ideal <b>'+ideal.toFixed(2)+'%</b></span><span>Realized <b>'+realized.toFixed(2)+'%</b></span><span>Error <b>'+(e>=0?"+":"")+e.toFixed(2)+' pts</b></span><span>FRR-style (1–100) <b>'+frr[i]+'</b></span></div>'
+        +(ideal>0&&buckets[i]===0?'<div class="uc-flag"><b>'+esc(lab(p,i))+'</b> — this path gets NO traffic at '+N+' buckets — raise the bucket count or accept it as standby.</div>':'')
+        +'</div>';
+    });
+    $("#uc-results").innerHTML=rh;
+    var totG=paths.reduce(function(a,p){ return a+gbps(p); },0);
+    var sumB=buckets.reduce(function(a,b){ return a+b; },0);
+    $("#uc-sumline").textContent="Buckets assigned: "+sumB+" of "+N+" · total bandwidth "+fmtG(totG)+" Gbps across "+paths.length+" paths"+(missing?" · bandwidth ignored (fallback)":"");
+    computeXR(false);
+  }
+
+  function computeXR(skip){
+    var out=$("#uc-xr-out"), note=$("#uc-xr-note");
+    function clearStats(){ paths.forEach(function(p,i){ var s=$("#uc-xrstats-"+i); if(s) s.textContent=""; }); }
+    if(skip){ out.innerHTML=""; note.innerHTML=""; clearStats(); return; }
+    if($("#uc-missing").checked){
+      out.innerHTML="<dt>Normalized weights</dt><dd>— (fallback: plain ECMP)</dd>";
+      note.innerHTML='<div class="callout warn" style="margin:0"><strong class="t">No XR weights under a mixed set</strong>With one path missing its link-bandwidth value, IOS XR — like the other implementations — ignores bandwidth for the whole set. There are no UCMP weights to derive until every path carries the community.</div>';
+      clearStats();
+      paths.forEach(function(p,i){ var q=$("#uc-xreq-"+i); if(q) q.textContent=""; });
+      return;
+    }
+    note.innerHTML="";
+    var comms=[], bad=false;
+    paths.forEach(function(p,i){
+      var inp=$("#uc-comm-"+i), c;
+      if(xrDirty[i]){ c=xrVals[i]; }
+      else { c=Math.round(gbps(p)*125000000); if(inp) inp.value=c; }
+      comms.push(c);
+      if(!(c>=0)||!isFinite(c)) bad=true;
+      var l=$("#uc-xrlab-"+i); if(l) l.textContent=lab(p,i)+" — link-bandwidth community (bytes/sec)";
+      var q=$("#uc-xreq-"+i); if(q) q.textContent=isFinite(c)&&c>=0?("= "+fmtG(c*8/1e9)+" Gbps"):"";
+    });
+    if(bad){ out.innerHTML="<dt>Community values</dt><dd>Enter a bytes/sec value (0 or more) for every path.</dd>"; clearStats(); return; }
+    var weights=comms.map(function(c){ return c/125; });
+    var intOK=weights.every(function(w){ return Math.abs(w-Math.round(w))<1e-9; });
+    if(!intOK){
+      out.innerHTML="<dt>XR weights (bytes/sec ÷ 125)</dt><dd>"+weights.map(function(w){ return String(Math.round(w*1000)/1000); }).join(" · ")+"</dd>"
+        +"<dt>GCD steps</dt><dd>Skipped — weights are whole numbers only when every community value is a multiple of 125, and real advertisements always are. Round the bytes/sec values to a multiple of 125 to see the GCD normalization.</dd>";
+      clearStats(); return;
+    }
+    var iw=weights.map(function(w){ return Math.round(w); });
+    var g=iw.reduce(function(a,w){ return ucmpGCD(a,w); },0);
+    var red=iw.map(function(w){ return w/g; });
+    var rsum=red.reduce(function(a,b){ return a+b; },0);
+    var totW=iw.reduce(function(a,b){ return a+b; },0);
+    if(totW<=0){ out.innerHTML="<dt>XR weights</dt><dd>All zero — nothing to normalize.</dd>"; clearStats(); return; }
+    var norm, rescaled=false;
+    if(rsum<=64){ norm=red.slice(); }
+    else { rescaled=true; norm=iw.map(function(w){ return Math.floor(w/totW*64); }); }
+    var nsum=norm.reduce(function(a,b){ return a+b; },0);
+    paths.forEach(function(p,i){
+      var s=$("#uc-xrstats-"+i);
+      if(s) s.innerHTML="<span>XR weight <b>"+comma(iw[i])+"</b></span><span>Reduced <b>"+red[i]+"</b></span><span>Normalized <b>"+norm[i]+"</b></span>";
+    });
+    out.innerHTML="<dt>XR weights (bytes/sec ÷ 125)</dt><dd>"+iw.map(function(w){ return comma(w); }).join(" · ")+"</dd>"
+      +"<dt>GCD of the weights</dt><dd>"+comma(g)+"</dd>"
+      +"<dt>Reduced weights</dt><dd>"+red.join(" · ")+" (sum "+rsum+")</dd>"
+      +"<dt>Normalized weights</dt><dd>"+norm.join(" · ")+" (sum "+nsum+" of 64)</dd>";
+    if(rescaled){
+      note.innerHTML='<div class="callout warn" style="margin:0"><strong class="t">Buckets dropped — exactly as Cisco documents it</strong>The reduced weights sum to '+rsum+', over the 64-bucket limit, so XR rescales with floor(). The results sum to '+nsum+' of 64: the floor step drops the remainder and '+(64-nsum)+' bucket'+(64-nsum===1?" is":"s are")+' left unassigned. Cisco\'s documented example sums to 63 of 64 for this reason — this panel reproduces that faithfully rather than silently fixing it. The Planner above is where exact-sum allocation lives: it hands the leftover buckets to the largest remainders instead of dropping them.</div>';
+    } else {
+      note.innerHTML='<div class="callout key" style="margin:0"><strong class="t">Reduced weights fit — no rescaling</strong>The reduced weights sum to '+rsum+', within the 64-bucket limit, so they are the normalized weights as-is. Nothing is floored and no bucket is dropped.</div>';
+    }
+  }
+
+  $$("#uc-nseg button").forEach(function(b){ b.addEventListener("click",function(){
+    N=+b.getAttribute("data-n");
+    $$("#uc-nseg button").forEach(function(x){ x.setAttribute("aria-pressed",String(x===b)); });
+    compute();
+  }); });
+  $("#uc-add").addEventListener("click",function(){
+    if(paths.length>=8) return;
+    paths.push({label:"Path "+(paths.length+1),val:25,unit:"Gbps"});
+    xrDirty={}; xrVals={};
+    renderRows(); compute();
+  });
+  $("#uc-missing").addEventListener("change",compute);
+  renderRows();
+  compute();
 }
 function mulberry32(seed){
   var a=seed>>>0;
@@ -782,7 +1108,7 @@ function mulberry32(seed){
   };
 }
 function pageECMP(){
-  var h='<div class="page-head"><h1>ECMP hash polarization visualizer</h1><p class="lede">ECMP spreads flows across equal-cost paths by hashing each packet\'s 5-tuple — but when every switch in a Clos fabric runs the same hash with the same seed, the choices stop being independent and traffic polarizes onto a few hot paths. Run the simulation and watch it happen, then flip the seed mode and watch it heal.</p></div>'
+  var h='<div class="page-head"><h1>ECMP hash polarization visualizer</h1><p class="lede">ECMP spreads flows across equal-cost paths by hashing each packet\'s 5-tuple — but when every switch in a Clos fabric runs the same hash with the same seed, the choices stop being independent and traffic polarizes onto a few hot paths. Run the simulation and watch it happen, then flip the seed mode and watch it heal. Scroll down to the link-failure lab to see what a dead link does under classic rehashing versus resilient hashing.</p></div>'
   +plainIntro("ecmp")
   +'<div class="tool-shell">'
   +'<div class="card panel"><h3>Your fabric</h3>'
@@ -807,10 +1133,80 @@ function pageECMP(){
   +'<div class="ec-heat" id="ec-heat"></div>'
   +'</div>'
   +'</div>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Link-failure lab: who moves when a link dies</h3>'
+  +'<p style="color:var(--muted);font-size:.95rem">Classic ECMP assigns each flow with <i>hash&nbsp;%&nbsp;link-count</i>. Kill one link and the link count changes — so <b>every</b> flow is rehashed, and most flows land on a different link even though their old link never died. Resilient (consistent) hashing instead maps flows onto a ring of virtual nodes: only the dead link\'s ring slots are remapped, and every healthy flow keeps its link. Pick a leaf link to kill and compare the churn.</p>'
+  +'<div class="grid-2"><div class="field"><label for="ecf-link">Kill this stage-2 leaf link</label><select id="ecf-link"></select></div>'
+  +'<div class="field"><label for="ecf-n">Flows (N)</label><input id="ecf-n" type="number" min="1000" max="100000" step="100" value="20000"></div></div>'
+  +'<p style="color:var(--muted);font-size:.9rem;margin:.6rem 0 0">Uses the stage-2 link count (L) from "Your fabric" above. The demo hashes a single stage — the spine&rarr;leaf choice — with the same 5-tuple hash as the main simulation. Simplified model: 128 virtual nodes per link on the ring; real resilient-hashing implementations (Broadcom, Cisco, Juniper) differ in detail, but the churn contrast is the point.</p>'
+  +'<div style="margin-top:1rem"><button type="button" class="btn" id="ecf-run">Simulate link failure</button></div>'
+  +'<div id="ecf-err" class="err" role="alert" style="margin-top:.6rem"></div>'
+  +'<div class="stat-strip" style="margin-top:1.2rem"><div class="stat"><span class="v" id="ecf-c-churn">—</span><span class="l">Classic: healthy flows needlessly moved</span></div>'
+  +'<div class="stat"><span class="v" id="ecf-c-pct">—</span><span class="l">Classic: share of all flows moved</span></div>'
+  +'<div class="stat"><span class="v" id="ecf-r-churn">—</span><span class="l">Resilient: healthy flows needlessly moved</span></div>'
+  +'<div class="stat"><span class="v" id="ecf-r-pct">—</span><span class="l">Resilient: share of all flows moved</span></div></div>'
+  +'<div id="ecf-verdict" aria-live="polite" style="margin-top:1rem"></div>'
+  +'<dl class="kv" id="ecf-out" aria-live="polite"></dl>'
+  +'<h3 style="margin-top:1.4rem">Per-link load: before vs after the failure</h3>'
+  +'<p style="color:var(--muted);font-size:.9rem;margin:.2rem 0 0">Teal bar: load after the failure. Amber tick: load before. The killed link\'s bar drops to zero — the question is how much everything else moved.</p>'
+  +'<h4 style="margin:1.1rem 0 .3rem">Classic modulo hashing</h4>'
+  +'<div class="ec-bars" id="ecf-bars-c"></div>'
+  +'<h4 style="margin:1.1rem 0 .3rem">Resilient hashing</h4>'
+  +'<div class="ec-bars" id="ecf-bars-r"></div>'
+  +'</div>'
+  +'<style>'
+  +'.uc-path{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.7fr) auto;gap:8px;align-items:end;margin-top:.8rem}'
+  +'.uc-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:.5rem}'
+  +'.uc-chips button{font:inherit;font-size:.75rem;font-weight:700;color:var(--muted);background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:.18rem .6rem;cursor:pointer}'
+  +'.uc-chips button:hover{color:var(--ink);border-color:var(--accent)}'
+  +'.uc-rm{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:.55rem .7rem;cursor:pointer;font:inherit;font-size:.85rem}'
+  +'.uc-rm:hover{color:#b3261e;border-color:#b3261e}'
+  +'.uc-rm:disabled{opacity:.35;cursor:default}'
+  +'.uc-rm:disabled:hover{color:var(--muted);border-color:var(--line)}'
+  +'.uc-res{border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.7rem .9rem;margin-top:.6rem;background:var(--surface2)}'
+  +'.uc-res-head{display:flex;flex-wrap:wrap;gap:.3rem .9rem;align-items:baseline}'
+  +'.uc-res-head .bk{margin-left:auto;font-family:var(--font-mono);font-weight:700;color:var(--accent)}'
+  +'.uc-bar{height:14px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:5px;margin:.5rem 0 .45rem;overflow:hidden}'
+  +'.uc-bar span{display:block;height:100%;background:var(--teal)}'
+  +'.uc-stats{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.86rem;color:var(--muted);font-family:var(--font-mono)}'
+  +'.uc-stats b{color:var(--ink)}'
+  +'.uc-flag{margin-top:.55rem;border:1px solid var(--warn-line);background:var(--warn-bg);border-radius:var(--radius-sm);padding:.55rem .8rem;font-size:.9rem}'
+  +'.uc-xrrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.4rem 1rem;align-items:end;margin-top:.8rem}'
+  +'.uc-xreq{font-family:var(--font-mono);font-size:.9rem;color:var(--muted);padding-bottom:.6rem;white-space:nowrap}'
+  +'.uc-dim{opacity:.5}'
+  +'@media (max-width:640px){.uc-path{grid-template-columns:1fr 1fr}.uc-res-head .bk{margin-left:0}.uc-xrrow{grid-template-columns:1fr}.uc-xreq{padding-bottom:0}}'
+  +'</style>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">UCMP weight planner: when the paths aren\'t equal</h3>'
+  +'<p style="color:var(--muted);font-size:.95rem">Everything above assumes every path costs the same. Real fabrics aren\'t built that way: a leaf might uplink at 100G to two spines and 10G to two older ones, and plain ECMP still splits flows evenly — the 10G links saturate while the 100G links idle. <b>UCMP</b> (unequal-cost multipath, driven by the BGP link-bandwidth extended community) fixes that by giving each path a number of hash buckets in proportion to its bandwidth. This planner shows the weights and buckets your router will program <b>before</b> you commit the config — no free web tool computes this.</p>'
+  +'<div class="field" style="margin-top:1rem"><label>Hash buckets (N)</label><div class="seg" id="uc-nseg" role="group" aria-label="Bucket count"><button type="button" data-n="16" aria-pressed="false">16</button><button type="button" data-n="64" aria-pressed="true">64 · IOS XR style</button><button type="button" data-n="128" aria-pressed="false">128</button><button type="button" data-n="256" aria-pressed="false">256</button></div>'
+  +'<p style="color:var(--muted);font-size:.85rem;margin:.45rem 0 0">The bucket count is the hash-table size the weights are quantized into. More buckets = a split closer to ideal.</p></div>'
+  +'<div id="uc-paths"></div>'
+  +'<div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center"><button type="button" class="btn btn-ghost btn-sm" id="uc-add">+ Add path</button>'
+  +'<label style="font-size:.9rem;display:inline-flex;gap:.45rem;align-items:center;cursor:pointer"><input type="checkbox" id="uc-missing" style="width:auto;margin:0"> Simulate a path missing its bandwidth</label></div>'
+  +'<div id="uc-err" class="err" role="alert" style="margin-top:.6rem"></div>'
+  +'<div id="uc-fallback" style="margin-top:.8rem"></div>'
+  +'<h3 style="margin-top:1.5rem">Planner: proportional buckets, exact sum</h3>'
+  +'<p style="color:var(--muted);font-size:.92rem">How the buckets are handed out: each path first gets the whole-number part of its ideal share of the N buckets. The leftover buckets then go one each to the paths with the largest leftover fractions — ties go to the path with more bandwidth, then to the earlier path. The allocations always add up to exactly N. The error column is the price of quantization: how far the finite bucket table pushes the real split away from the ideal one. The <b>FRR-style (1–100)</b> column maps the same bandwidth proportions into the 1–100 weight range FRRouting uses, with the same largest-remainder rule, so it also sums exactly — to 100.</p>'
+  +'<div id="uc-results" aria-live="polite"></div>'
+  +'<p id="uc-sumline" style="font-family:var(--font-mono);font-size:.9rem;margin-top:.7rem"></p>'
+  +'</div>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">IOS XR exact mode: how Cisco derives the weights</h3>'
+  +'<p style="color:var(--muted);font-size:.95rem">IOS XR does not use the planner rule above. Following Cisco\'s documented UCMP steps: <b>(1)</b> the link-bandwidth extended community carries each path\'s bandwidth in <b>bytes per second</b>, and the XR weight is that value divided by 125; <b>(2)</b> all weights are divided by their greatest common divisor to get reduced weights — if the reduced weights sum to 64 or less, they are the normalized weights; <b>(3)</b> if they sum to more than 64, XR rescales with normalized = floor(weight ÷ total weight × 64).</p>'
+  +'<p style="color:var(--muted);font-size:.92rem"><b>Bits vs bytes:</b> the community carries <b>bytes</b>/sec, not bits. 10 Gbps is 1,250,000,000 bytes/sec. Type a bits-per-second number into a field below and every weight comes out 8× too big — the Gbps readout beside each field shows what your number actually means.</p>'
+  +'<div id="uc-xr-rows"></div>'
+  +'<dl class="kv" id="uc-xr-out" aria-live="polite" style="margin-top:1rem"></dl>'
+  +'<div id="uc-xr-note" style="margin-top:.8rem"></div>'
+  +'<p style="color:var(--muted);font-size:.88rem;margin-top:.9rem">Worked check, from Cisco\'s own published example: delete two of the paths above, then type community values <b>45,750,000</b> and <b>47,250,000</b> bytes/sec into the two fields. You should see weights 366,000 and 378,000, a GCD of 6,000, reduced weights 61 and 63, and a rescale to 31 and 32. Engineering sources: Cisco IOS XR <a href="https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r7-7/configuration/guide/b-routing-cg-asr9000-77x/implementing-ucmp.html" target="_blank" rel="noopener">Implementing UCMP</a> and the FRRouting <a href="https://github.com/frrouting/frr/blob/HEAD/doc/user/wecmp_linkbw.rst" target="_blank" rel="noopener">WECMP / link-bandwidth design doc</a>.</p>'
+  +'</div>'
+  +'<div class="card panel pi-intro" style="margin-top:1.4rem"><h3>Plain English — the UCMP planner</h3>'
+  +'<p class="pi-plain"><strong>What does this do?</strong> ECMP splits traffic evenly — 50/50 across two paths even when one path is ten times faster than the other, so the slow path drowns while the fast one coasts. UCMP splits traffic <i>unequally, on purpose</i>: each path gets hash buckets in proportion to its bandwidth, so a 100G path carries roughly ten times the flows of a 10G path leaving the same router. This planner shows the exact weights and bucket counts before the config is committed.</p>'
+  +'<p class="pi-plain"><strong>Who is this for?</strong> Data-center and service-provider engineers running mixed-speed fabrics — 400G and 100G spines side by side, or a leaf with two 100G uplinks and two legacy 10G ones — who need the share math before touching BGP policy.</p>'
+  +'<div class="pi-try"><strong>Try this example:</strong> the default preset is one leaf with uplinks of 100G, 40G, 10G and 10G (160G in total) at 64 buckets. The planner hands out 40 / 16 / 4 / 4 buckets — exactly the ideal 62.50% / 25.00% / 6.25% / 6.25% split, with zero quantization error. Now drop the bucket count to 16 and watch the split coarsen, then set the paths to 1000G and 1G at 16 buckets and watch the amber warning when the slow path is quantized out of the table entirely.</div>'
+  +'<p class="pi-plain"><strong>One thing UCMP does not do:</strong> it does not change best-path selection. BGP still installs the same multipath set it always installed — UCMP only weights the paths inside that set.</p>'
+  +'<p class="pi-gloss"><b>UCMP</b> (unequal-cost multipath): weighted load sharing across paths of different bandwidths. <b>Link-bandwidth community</b>: the BGP extended community that advertises a path\'s bandwidth, in bytes per second. <b>Quantization error</b>: the gap between the ideal bandwidth-proportional split and what a finite bucket table can actually express.</p></div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">What polarization is, and how fabrics avoid it</h3>'
   +'<ul><li><b>ECMP picks a path by hashing the 5-tuple.</b> Source and destination IP, source and destination port, and protocol go into a hash; the result modulo the link count chooses the next hop. Same flow, same hash, same path — that stability is the point, because it keeps a flow\'s packets in order.</li>'
   +'<li><b>Identical seeds make the stages agree — and that is the bug.</b> In a two-stage Clos, a flow is hashed once at the leaf (choosing a spine) and again at the spine (choosing a leaf). If both switches hash the same 5-tuple with the same seed, the second hash returns the same number as the first. Stage-1 link <i>i</i> then pairs almost exclusively with stage-2 link <i>i</i>: traffic collapses onto the diagonal of the matrix above, a handful of path pairs carry everything, and the rest of the fabric idles while those links congest. Switch the seed mode above and compare the two heatmaps — same flows, same fabric, completely different outcome.</li>'
-  +'<li><b>The standard fixes all attack the correlation.</b> Per-switch (or per-stage) hash seed variation is the baseline: a different seed per device makes each stage\'s choice independent, which is the varied-seed mode simulated here. Resilient (consistent) hashing keeps flow-to-link assignments stable when a link fails, so a failure remaps only the dead link\'s flows instead of reshuffling the whole fabric. Flowlets re-balance at natural gaps in a flow, spraying bursts across paths without reordering packets. Symmetric hashing makes both directions of a conversation follow the same path, which stateful middleboxes and latency-sensitive fabrics care about.</li>'
+  +'<li><b>The standard fixes all attack the correlation.</b> Per-switch (or per-stage) hash seed variation is the baseline: a different seed per device makes each stage\'s choice independent, which is the varied-seed mode simulated here. Resilient (consistent) hashing keeps flow-to-link assignments stable when a link fails, so a failure remaps only the dead link\'s flows instead of reshuffling the whole fabric. Flowlets re-balance at natural gaps in a flow, spraying bursts across paths without reordering packets. Symmetric hashing makes both directions of a conversation follow the same path, which stateful middleboxes and latency-sensitive fabrics care about. Try it in the link-failure lab below: kill a leaf link and watch classic rehashing pointlessly rehome healthy flows while resilient hashing moves only the dead link\'s.</li>'
   +'<li><b>An honest note on the hash itself.</b> A seed only helps if changing it actually decorrelates the output. This tool hashes with FNV-1a, whose low bits — the bits the modulo reads — barely respond to a change in the initial seed, so raw FNV-1a would leave the two stages correlated even with different seeds. The hash here is therefore finished with the MurmurHash3 fmix32 avalanche, which mixes every input bit into every output bit; that is what lets the varied-seed mode spread. Real switch ASICs use CRC- or Toeplitz-family hashes with proper avalanche for the same reason — when you evaluate a platform, "configurable seed" is only half the question; the hash has to mix.</li></ul>'
   +'<p style="color:var(--muted);font-size:.92rem">Size the fabric itself in the <a href="/tools/dcap/">data-center capacity planner</a>, read the <a href="/articles/hyperscaler-career-path/">Hyperscaler career guide</a> for where Clos design lives on the job, then work the full <a href="/">Hyperscaler track</a>.</p></div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Related guides</h3>'
@@ -820,11 +1216,29 @@ function pageECMP(){
   $("#app").innerHTML=h;
   markNav("tools"); document.title="ECMP Hash Polarization Visualizer | Packet Path";
   var md=document.querySelector('meta[name="description"]');
-  if(md) md.setAttribute("content","Simulate ECMP hashing across a Clos fabric — see how identical hash seeds polarize traffic and how per-switch seed variation restores uniform spreading.");
+  if(md) md.setAttribute("content","Simulate ECMP hashing across a Clos fabric — see how identical hash seeds polarize traffic, how per-switch seeds restore spreading, and how resilient hashing survives a link failure with zero needless churn.");
   setLD({"@context":"https://schema.org","@type":"WebApplication","name":"ECMP hash polarization visualizer","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
   initECMP();
+  initUCMP();
 }
 function plainIntro(id){ return TOOL_INTROS[id]||""; }
+function ucmpGCD(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a||1; }
+function ucmpLR(bws,N){
+  var total=0,i;
+  for(i=0;i<bws.length;i++) total+=bws[i];
+  var raw=[],fl=[],sumFl=0;
+  for(i=0;i<bws.length;i++){ raw.push(bws[i]/total*N); var f=Math.floor(raw[i]); fl.push(f); sumFl+=f; }
+  var left=N-sumFl;
+  var order=bws.map(function(_,k){return k;}).sort(function(a,b){
+    var ra=raw[a]-fl[a], rb=raw[b]-fl[b];
+    if(Math.abs(rb-ra)>1e-9) return rb-ra;
+    if(bws[b]!==bws[a]) return bws[b]-bws[a];
+    return a-b;
+  });
+  var out=fl.slice();
+  for(i=0;i<left;i++) out[order[i%order.length]]++;
+  return out;
+}
 </script>
 
 <script>
