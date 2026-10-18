@@ -1,13 +1,18 @@
 # MTU/MSS Tunnel Overhead Calculator
 
-Stack up GRE, IPsec, VXLAN, GENEVE, MPLS, PPPoE, L2TPv3 or WireGuard headers and
+Stack up GRE, IPsec, VXLAN, GENEVE, MPLS, PPPoE, L2TPv3, WireGuard or MACsec
+headers and
 see exactly what they cost: per-layer byte overhead with a running total, the
 effective inner MTU, the TCP MSS to configure (with a paste-ready
 `ip tcp adjust-mss` command), and a plain-English fragmentation verdict for
 your test packet size — including the fragment sizes when it will fragment.
 One-click presets cover the jobs people actually run: IPsec site-to-site,
 DMVPN with and without IPsec (mGRE + IPsec transport mode), VXLAN overlays,
-PPPoE DSL + IPsec, MPLS L3VPN (2 labels), and WireGuard tunnels. IPsec ESP
+PPPoE DSL + IPsec, MPLS L3VPN (2 labels), WireGuard tunnels, and three MACsec
+presets (WAN/DCI link, under a VXLAN fabric link, with MPLS L3VPN). The MACsec
+layer settles the 24-vs-32-byte argument: the total depends on whether the
+SecTAG carries the optional 8-byte SCI and which ICV length the cipher suite
+uses (32 / 24 / 24 / 16 bytes), and the tool shows which combination you picked. IPsec ESP
 padding is recomputed live per packet size, because unlike every other header
 here it isn't fixed. A plain-English primer at the top explains MTU vs MSS
 with packet diagrams, and gotcha cards cover DMVPN's NHRP (control-plane only
@@ -30,6 +35,8 @@ outer IPv4 header), VXLAN 50 (RFC 7348), GENEVE 50 + your option bytes
 (RFC 8926), MPLS 4 per label (RFC 3032), PPPoE 8 (RFC 2516), L2TPv3-over-IP
 4-byte session ID + optional cookie (RFC 3931 — UDP-based deployments are
 explicitly not counted), WireGuard 32-byte data message (excludes outer
-IP/UDP, added as separate layers). MSS assumes IPv4/TCP inside (minus 40);
+IP/UDP, added as separate layers), MACsec (IEEE 802.1AE: SecTAG 8 base + 8
+with explicit SCI, plus ICV 16 for standard GCM-AES suites or 8 for truncated
+suites). MSS assumes IPv4/TCP inside (minus 40);
 IPv6 inside needs minus 60, which the page states. Fragment sizes assume
 standard 8-byte-aligned IPv4 fragmentation.
