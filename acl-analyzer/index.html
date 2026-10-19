@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Firewall ACL Rule Analyzer — Free Network Engineering Tool | Packet Path</title>
-<meta name="description" content="Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.">
+<meta name="description" content="Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.">
 <link rel="canonical" href="https://allaboutitinfrastructure.com/tools/acl-analyzer/">
 <meta property="og:title" content="Firewall ACL Rule Analyzer — Free Network Engineering Tool | Packet Path">
-<meta property="og:description" content="Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.">
+<meta property="og:description" content="Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.">
 <meta property="og:url" content="https://allaboutitinfrastructure.com/tools/acl-analyzer/">
 <meta property="og:type" content="website">
 <style>
@@ -375,8 +375,12 @@ html.darkm .ec-mid{color:#f0b13e}
 .acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
 .acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
 .acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+.acl-badge.ps{background:#fbe9e7;border-color:#e0a49e;color:#b3261e;border-style:dashed}
+.acl-badge.pr{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);border-style:dashed}
 @media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
 html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.ps{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
+html.darkm .acl-badge.ps{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
 /* ---------- manual theme overrides ---------- */
 html.darkm{--bg:#0a1210;--surface:#101816;--surface2:#141e1b;--surface3:#1a2522;--ink:#e9f2ee;--muted:#a5b9b0;--faint:#7c938a;--line:#223029;--line-soft:#1a2421;--accent:#3cd79a;--accent-strong:#2fbe85;--on-accent:#05231a;--accent-soft:rgba(60,215,154,.12);--teal:#5fc4e6;--teal-soft:rgba(95,196,230,.10);--amber:#f0b13e;--amber-soft:rgba(240,177,62,.10);--warn-bg:rgba(240,177,62,.07);--warn-line:#8a6a24;--code-bg:#050b09;--code-ink:#dcf2e7;--code-line:#22302b;--link:#5fc4e6;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.55);color-scheme:dark}
 html.lightm{color-scheme:light}
@@ -578,16 +582,22 @@ html.lightm{color-scheme:light}
 .cv-devices{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; margin-bottom:1rem; }
 .cv-pane{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); overflow:hidden; }
 .cv-pane-head{
-  display:flex; align-items:center; gap:.6rem;
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:.45rem .6rem;
   padding:.6rem .9rem; background:var(--cv-surface2); border-bottom:1px solid var(--cv-line);
 }
-.cv-pane-name{ font-size:1rem; }
-.cv-pane-meta{ flex:1; font-size:.8rem; color:var(--cv-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cv-pane-name{ font-size:1rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cv-pane-meta{ grid-column:1/-1; grid-row:2; min-width:0; font-size:.8rem; color:var(--cv-muted); white-space:normal; overflow-wrap:anywhere; }
 .cv-mini-btn{
   background:transparent; border:1px solid var(--cv-line); color:var(--cv-muted);
   border-radius:6px; font-size:.78rem; padding:.25rem .6rem; cursor:pointer;
 }
 .cv-mini-btn:hover{ border-color:var(--cv-err); color:var(--cv-err); }
+.cv-vendor-seg{ display:inline-flex; border:1px solid var(--cv-line); border-radius:7px; overflow:hidden; flex:none; }
+.cv-vendor-btn{ border:0; border-right:1px solid var(--cv-line); background:var(--cv-surface); color:var(--cv-muted); padding:.22rem .42rem; font-size:.7rem; font-weight:700; cursor:pointer; }
+.cv-vendor-btn:last-child{ border-right:0; }
+.cv-vendor-btn.on{ background:var(--cv-accent); color:var(--cv-on-accent); }
+.cv-vendor-btn:focus-visible{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+@media (max-width:640px){ .cv-pane-head{ grid-template-columns:minmax(0,1fr) auto; } .cv-vendor-seg{ grid-row:2; grid-column:1; justify-self:start; } .cv-pane-meta{ grid-row:3; } }
 .cv-ta{
   width:100%; display:block; border:0; resize:vertical; min-height:220px;
   font-family:var(--cv-mono); font-size:.82rem; line-height:1.5;
@@ -690,10 +700,10 @@ html.lightm{color-scheme:light}
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Firewall ACL Rule Analyzer","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0"}}</script>
 </head>
 <body>
-<header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a></nav></header>
+<header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a><a href="/contact/">Contact</a></nav></header>
 <main id="app" class="pp-main"></main>
-<section class="pp-about"><h2>About this tool</h2><p>Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> — all free, all run entirely in your browser.</p></div></section>
-<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a></p></footer>
+<section class="pp-about"><h2>About this tool</h2><p>Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> · <a href="/tools/sr-te-path-lab/">Segment Routing Policy Lab</a> · <a href="/tools/clos-fabric-designer/">Data Center Fabric Designer</a> · <a href="/tools/rocev2-planner/">RoCEv2 Lossless Ethernet Planner</a> · <a href="/tools/dwdm-reach-planner/">Coherent DWDM / 400ZR Reach Planner</a> · <a href="/tools/multicast-design-studio/">Multicast Design Studio</a> · <a href="/tools/bgp-rr-planner/">BGP Route Reflector Design Planner</a> — all free, all run entirely in your browser.</p></div></section>
+<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a> · <a href="/contact/">Contact</a></p></footer>
 <script>
 
 function markNav(){}
@@ -707,7 +717,7 @@ function toolRows(){
   }).join('') + '</ul>';
 }
 
-var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — watch identical hash seeds collapse traffic onto diagonal paths, and per-switch seeds spread it evenly again.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL rules. v1 Cisco IOS only.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"}];
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE, WireGuard or MACsec headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"},{id:"sr-te-path-lab",slug:"sr-te-path-lab",title:"Segment Routing Policy Lab",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",chip:"Hyperscaler"},{id:"clos-fabric-designer",slug:"clos-fabric-designer",title:"Data Center Fabric Designer",desc:"Turn server count and switch choices into a complete Clos fabric design: leaf/spine counts, a full cabling matrix, BGP ASN and IP addressing plan, EVPN/VNI overlay plan, failure analysis, and copy-ready switch config.",chip:"Hyperscaler"},{id:"rocev2-planner",slug:"rocev2-planner",title:"RoCEv2 Lossless Ethernet Planner",desc:"Tune a lossless RoCEv2 fabric in one flow: validate the ECN threshold ladder (Kmin/Kmax/Pmax) against your real per-port buffer, compute PFC XOFF headroom from link speed and cable length, simulate incast queue build-up, and catch PFC deadlock and pause-storm risk flags.",chip:"Hyperscaler"},{id:"dwdm-reach-planner",slug:"dwdm-reach-planner",title:"Coherent DWDM / 400ZR Reach Planner",desc:"Plan a coherent DWDM route end to end: per-span OSNR cascade combined in linear units, a margin waterfall with ROADM and nonlinear penalties, CD/PMD budgets checked against module tolerances, and a straight verdict — 400ZR works, step up to OpenZR+, or redesign the route.",chip:"Hyperscaler"},{id:"multicast-design-studio",slug:"multicast-design-studio",title:"Multicast Design Studio",desc:"Design a PIM multicast network in one flow: shared (RPT) and source (SPT) trees drawn on a live topology with per-receiver stretch, RP placement scored for every candidate, the exact RFC 7761 BSR hash, an ASM-vs-SSM decision helper, anycast-RP failover, and a starter config.",chip:"HFT"},{id:"bgp-rr-planner",slug:"bgp-rr-planner",title:"BGP Route Reflector Design Planner",desc:"Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout, per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.",chip:"Enterprise"}];
 </script>
 <script>
 function $(sel, el){ return (el||document).querySelector(sel); }
@@ -752,18 +762,26 @@ var TOOL_INTROS = {
 "ttt": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> In high-frequency trading, money is made in microseconds: a price tick arrives, software decides, an order goes out. This tool adds up every stage — light traveling through fiber, switch hops, the trading software itself — into a waterfall chart showing exactly where each microsecond goes.</p><p class="pi-plain"><strong>Who is this for?</strong> Built for people working on low-latency trading systems. For everyone else, it is a fascinating look at how much happens in a blink: light itself needs about 5 microseconds for every kilometer of fiber.</p><div class="pi-try"><strong>Try this example:</strong> leave the default 1200 km fiber route. Propagation alone is 1200 × 5 µs = 6,000 µs (6 ms) — physics takes its cut before a single switch or line of code runs. Now add 2 switch hops at 1 µs each and watch the waterfall grow: on long routes, distance dwarfs everything else.</div><p class="pi-gloss"><b>Tick</b>: one price update from an exchange. <b>Serialization</b>: the time to push bits onto the wire — bigger message or slower link means longer.</p></div>',
 "optic": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Fiber links run on light, and light fades with distance and at every connector it passes. A "link budget" is the accounting: the transmitter\'s power, minus every loss, must still leave enough light for the receiver to see clearly. This tool does the ledger and gives a pass/fail verdict with a safety margin.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone running fiber between buildings or across a campus — and students learning why "it lights up" is not the same as "it is reliable".</p><div class="pi-try"><strong>Try this example:</strong> 10 km of single-mode fiber at 0.4 dB/km (4.0 dB of fiber loss), 4 connector pairs (2.0 dB), 2 splices (0.2 dB): total loss 6.2 dB. With a transmitter at 0 dBm and a receiver that needs −14 dBm, the budget is 14 dB and the margin is <b>7.8 dB</b> — a comfortable pass with room for aging and dirty connectors.</div><p class="pi-gloss"><b>dB</b> (decibel): the unit of light loss — every 3 dB is half the power gone. <b>dBm</b>: power measured against 1 milliwatt; 0 dBm = 1 mW.</p></div>',
 "ptp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some systems need every clock to agree on the time — 5G cell towers, stock-exchange timestamps, power grids. PTP (Precision Time Protocol) syncs clocks over the network, but each device in the chain adds a little error. This calculator adds up the error across a chain of clocks and checks the total against real-world limits.</p><p class="pi-plain"><strong>Who is this for?</strong> Timing engineers and telecom folks. For the curious: it answers "how wrong can the time be after passing through five devices?"</p><div class="pi-try"><strong>Try this example:</strong> 5 boundary clocks, 50 ns of time error each, 8 ns timestamp granularity, 20 ns of link asymmetry per hop. Each hop contributes 50 + 8 + 20 = 78 ns, so the worst case over 5 hops is <b>390 ns</b>. Against a 1000 ns (1 microsecond) budget, that passes with room to spare — now try 20 clocks and watch it fail.</div><p class="pi-gloss"><b>PTP</b>: a protocol that synchronizes clocks over a network to within nanoseconds. <b>Boundary clock</b>: a switch that participates in timing instead of just passing it through.</p></div>',
-"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
+"ecmp": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Data centers spread traffic across many parallel paths. Each packet\'s "5-tuple" (source, destination, ports, protocol) is hashed to pick a path — and hashing is supposed to spread load evenly. The catch this tool demonstrates: if every switch uses the <i>same</i> hash seed, the "random" choices correlate and traffic piles onto a few hot paths. Flip to per-switch seeds and watch it heal.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center network engineers and students. The takeaway is universal though: "random" is not random if everyone rolls the same dice.</p><div class="pi-try"><strong>Try this example:</strong> run the default 8-spine × 8-leaf simulation with identical seeds and watch the heatmap collapse onto diagonal stripes — that is polarization, most of the fabric sitting idle while a few paths burn. Switch the seed mode to per-switch, re-run, and the load spreads flat. Same traffic, different dice. Then scroll to the link-failure lab: kill leaf link 1 and compare how many healthy flows classic rehashing moves for no reason versus resilient hashing.</div><p class="pi-gloss"><b>ECMP</b> (equal-cost multipath): using all parallel paths instead of one. <b>5-tuple</b>: the five packet fields the hash is computed from.</p></div>',
 "acl": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A firewall rule list is checked top to bottom, first match wins. Over years of edits, dead rules pile up: rules that can never trigger because an earlier rule already covers them. Paste a Cisco IOS extended ACL or a Juniper firewall filter here and it finds the dead weight — shadowed rules, redundant duplicates, and dangerously broad "allow everything" lines.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers auditing firewall configs. The core idea — first match wins, so order is everything — is worth anyone\'s two minutes.</p><div class="pi-try"><strong>Try this example:</strong> paste the sample list. The tool flags <code class="inline">deny tcp 10.0.0.0 0.255.255.255 any eq 80</code> as <b>shadowed</b>: the earlier <code class="inline">permit tcp any any eq 80</code> already allows all web traffic, so the deny can never fire — its hit counter would sit at zero forever. It also flags the final <code class="inline">permit ip any any</code> as dangerously wide open.</div><p class="pi-gloss"><b>ACL</b> (access control list): the firewall\'s ordered rule list. <b>Shadowed</b>: a rule an earlier rule makes unreachable. <b>eq 80</b>: "destination port 80", i.e. web traffic.</p></div>',
-"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
+"config-verify": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Paste in Cisco or Juniper router and switch configs and get an instant consistency check: the network topology your subnets imply, which devices can reach which, and the misconfigurations that break it — duplicate IP addresses, routers disagreeing on their routing-protocol settings, dead firewall rules.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "can you run our configs through a consistency check before the maintenance window?"</p><div class="pi-try"><strong>Try this example:</strong> paste two tiny configs where both routers claim 10.0.0.1 on their facing interfaces. The tool flags the duplicate IP immediately — the single most common "the network is down and nobody knows why" cause. Fix one side to 10.0.0.2 and the flag clears.</div><p class="pi-gloss"><b>OSPF / BGP</b>: the protocols routers use to learn routes from each other — if neighbors disagree on settings, they never become adjacent and routes never flow.</p></div>',
 "timing-sim": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> A full simulation of a timing network over time. A grandmaster clock feeds boundary clocks down a chain, and this models how each clock\'s servo wanders, how noise and asymmetry creep in hop by hop, and whether every clock stays within its ITU-T class (A through D) — second by second, on a live chart.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for timing engineers — here is what it does, and what you would ask your timing team for: "simulate the chain before we buy the clocks."</p><div class="pi-try"><strong>Try this example:</strong> run the default chain and watch the wander plot: each clock\'s time error breathing around zero as its servo steers it back. Now crank up the per-hop asymmetry and watch the Class D check (max time error within 5 ns) flip to fail — that is the cost of unequal path delays, visualized.</div><p class="pi-gloss"><b>PTP / SyncE</b>: the two technologies that distribute precise time and frequency over a network. <b>Servo</b>: the control loop inside each clock that continuously steers it toward its master.</p></div>',
 "wireshark-filter-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Wireshark can capture every packet on a network, but finding the ones you care about means writing "display filters" in a picky syntax. This tool builds them for you: pick fields from a menu, combine them with AND / OR / NOT, and get valid filter text plus a plain-English readout of what it matches.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever opened Wireshark and felt lost — students, sysadmins, the curious. You do not need to memorize a single field name.</p><div class="pi-try"><strong>Try this example:</strong> build "all HTTPS traffic to or from 10.0.0.5": add <code class="inline">ip.addr == 10.0.0.5</code>, AND, <code class="inline">tcp.port == 443</code>. The tool outputs <code class="inline">ip.addr == 10.0.0.5 && tcp.port == 443</code> — paste it straight into Wireshark\'s filter bar and only those packets remain.</div><p class="pi-gloss"><b>Display filter</b>: Wireshark\'s search language for packets you already captured (different from a capture filter, which decides what gets recorded in the first place).</p></div>',
 "wifi-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Your Wi-Fi shares invisible airspace with every neighbor\'s router. In the 2.4 GHz band only channels 1, 6, and 11 avoid overlapping — pick anything else and you are shouting over someone. Enter the access points your phone\'s Wi-Fi scanner can hear and this tool maps the spectral overlap and recommends the quietest channels.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone setting up a home or office router — the most "normal person" tool on this site. If your video calls stutter, start here.</p><div class="pi-try"><strong>Try this example:</strong> add your neighbor\'s router on channel 6, 2.4 GHz, 20 MHz wide. The spectral graph shows it sprawling across channels 4–8, and the tool recommends channel <b>1</b> or <b>11</b> — the non-overlapping escapes. Move your own AP there and the interference is gone.</div><p class="pi-gloss"><b>RSSI</b>: signal strength as your device hears it, in dBm — closer to 0 means stronger. <b>Channel width</b>: how much airspace one Wi-Fi signal occupies (20, 40, 80, or 160 MHz).</p></div>',
 "qos-simulator": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Networks handle congestion with "token buckets": picture a bucket that fills with tokens at your contracted rate. Each packet spends tokens as it passes; when the bucket runs dry, extra packets get marked down or dropped. This simulator sets the bucket up the way a Cisco router would and lets you watch traffic get colored green, yellow, and red.</p><p class="pi-plain"><strong>Who is this for?</strong> Network engineers learning QoS and certification students. The bucket analogy is the whole lesson — everything else is details.</p><div class="pi-try"><strong>Try this example:</strong> pick the 1R2C policer, CIR 1,000,000 bps, Bc 8000 bits. Fire one 1000-byte packet (8000 bits): it <b>conforms</b> (green) and the bucket hits exactly zero. Fire a second one instantly: it <b>exceeds</b> (yellow) — no tokens have had time to refill yet. That is the entire token-bucket idea in two packets.</div><p class="pi-gloss"><b>CIR</b>: the committed rate you are paying for. <b>Conform / exceed / violate</b>: the three colors — within contract, over but tolerated, over the hard limit.</p></div>',
-"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block.</p></div>',
-"iperf3-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> iPerf3 is the standard tool for measuring real network speed: run it on two machines and it reports the actual throughput between them. But its command flags are cryptic. This builder constructs correct client and server commands with plain-English explanations, ready-made presets, and a linter that catches classic mistakes — like UDP tests with no bandwidth limit.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever argued "the network is slow" — run this on both ends and get a number instead of an argument.</p><div class="pi-try"><strong>Try this example:</strong> server <code class="inline">192.0.2.10</code>, 8 parallel streams, 30 seconds. The tool builds <code class="inline">iperf3 -c 192.0.2.10 -P 8 -t 30</code> — eight streams at once defeat per-connection limits and reveal the true capacity. Copy, paste, run.</div><p class="pi-gloss"><b>Throughput</b>: the data rate you actually get — always less than the sticker speed. <b>Parallel streams (-P)</b>: multiple simultaneous connections, which work around per-connection bottlenecks.</p></div>'
+"bgp-toolkit": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> BGP is the system networks use to tell each other which addresses live where — it is how your packets find their way across the internet. This toolkit watches it live: the headline act is a one-click "am I being hijacked?" verdict for any address block, plus RPKI validation, bogon checks, a community decoder, a D-PATH (RFC 10039) attribute decoder with loop checker, and a propagation tracker.</p><p class="pi-plain"><strong>Who is this for?</strong> This one is built for network engineers — here is what it does, and what you would ask your network team for: "are our address blocks being hijacked anywhere right now?"</p><div class="pi-try"><strong>Try this example:</strong> type <code class="inline">192.168.1.0/24</code> into the bogon checker. It is private address space, so the tool flags it as a <b>bogon</b> — an address block that should never appear in the global routing table. No live data needed; some answers are timeless.</div><p class="pi-gloss"><b>BGP</b>: the postal system of the internet — networks announcing "send these addresses to me". <b>Hijack</b>: someone falsely announcing your addresses and stealing the traffic. <b>RPKI</b>: cryptographic proof of who rightfully owns an address block. <b>D-PATH</b>: a new BGP attribute (RFC 10039) that stamps every domain a route crosses, so gateway routers can refuse routing loops between EVPN and IPVPN domains.</p></div>',
+"iperf3-builder": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> iPerf3 is the standard tool for measuring real network speed: run it on two machines and it reports the actual throughput between them. But its command flags are cryptic. This builder constructs correct client and server commands with plain-English explanations, ready-made presets, and a linter that catches classic mistakes — like UDP tests with no bandwidth limit.</p><p class="pi-plain"><strong>Who is this for?</strong> Anyone who has ever argued "the network is slow" — run this on both ends and get a number instead of an argument.</p><div class="pi-try"><strong>Try this example:</strong> server <code class="inline">192.0.2.10</code>, 8 parallel streams, 30 seconds. The tool builds <code class="inline">iperf3 -c 192.0.2.10 -P 8 -t 30</code> — eight streams at once defeat per-connection limits and reveal the true capacity. Copy, paste, run.</div><p class="pi-gloss"><b>Throughput</b>: the data rate you actually get — always less than the sticker speed. <b>Parallel streams (-P)</b>: multiple simultaneous connections, which work around per-connection bottlenecks.</p></div>',
+"sr-te-path-lab": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Segment Routing lets a router steer traffic down an exact path by stamping a stack of labels — called SIDs — onto each packet, instead of letting every router make its own hop-by-hop decision. This lab is a sandbox for that idea: draw a network, define an SR policy (a head-end router, a color, and a destination), then add candidate paths two ways — <em>dynamic</em>, where the lab computes the best path under constraints you set (bandwidth, delay, colors to avoid), and <em>explicit</em>, where you type the SID list yourself. The lab picks the winner, builds the label stack, checks it against the router\'s label-depth limit, and can even animate TI-LFA backup paths and Flex-Algo routing.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and service-provider WAN engineers learning Segment Routing traffic engineering — and anyone studying for CCNP/CCIE Service Provider who wants to <em>see</em> CSPF, candidate-path selection, and TI-LFA instead of just reading about them.</p><p class="pi-plain"><strong>Try this example.</strong> Load the "SP backbone" preset. Head-end <code class="inline">PE1</code>, color <code class="inline">100</code>, endpoint <code class="inline">PE2</code>. Add candidate <code class="inline">CP1-dynamic</code> (dynamic, minimize IGP metric, preference 100) and <code class="inline">CP2-explicit</code> (SID list <code class="inline">15000, 16004, 16005</code> — the PE1&rarr;P1 adjacency, then the node-SIDs of P4 and PE2 — preference 150). Press Compute. Expect: CP1 computes <code class="inline">PE1 &gt; P1 &gt; P3 &gt; PE2</code> (cost 30, 300&micro;s, 3 hops, compressed to the single label 16005). CP2 validates to <code class="inline">PE1 &gt; P1 &gt; P3 &gt; P4 &gt; PE2</code> (4 hops, IGP cost 35). CP2 wins — preference 150 beats 100, because on IOS XR the <em>highest</em> preference wins.</p><p class="pi-gloss"><b>SID</b>: segment identifier — a label that tells a router "go to this node" (node-SID) or "use this exact link" (adjacency-SID). <b>SRGB</b>: the block of labels a network reserves for node-SIDs (16000&ndash;23999 by default). <b>CSPF</b>: constrained shortest path first — prune links that break your constraints, then run Dijkstra on what\'s left. <b>Candidate path</b>: one option inside an SR policy; the highest-preference valid one carries traffic. <b>TI-LFA</b>: pre-computed backup path that kicks in within ~50ms of a link failure. <b>Flex-Algo</b>: alternate routing calculation (algorithm 128+) with its own metric and constraints. <b>MSD</b>: maximum SID depth — how many labels a router\'s hardware can push.</p></div>',
+"clos-fabric-designer": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> It designs a data-center fabric the way a hyperscaler engineer would sketch one on a whiteboard — then does all the tedious follow-through for you. Give it a server count and the switches you want to use, and it produces the full build plan: how many leaf and spine switches, a cable-by-cable matrix, the BGP AS numbers and IP addresses for every link, an EVPN/VXLAN overlay plan, what breaks when a switch dies, and starter switch config you can copy.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center and cloud network engineers designing or reviewing a spine-leaf fabric — and anyone sizing up an AI cluster network who needs the real numbers, not a guess.</p><div class="pi-try"><strong>Try this example:</strong> the "Starter AI pod" preset — 384 servers with one 100 Gbps NIC each, leaf switches with 48 downlinks and 8 uplinks at 400 Gbps → <b>8 leaf switches</b>, <b>8 spine switches</b>, oversubscription <b>1.50:1</b>, <b>64 leaf↔spine cables</b>, and losing one spine raises oversubscription to <b>1.71:1</b> (4800/2800).</div><p class="pi-gloss"><b>Clos</b>: a fabric layout where every leaf switch connects to every spine switch, so any server can reach any other server in the same number of hops. <b>Leaf</b>: the switch servers plug into. <b>Spine</b>: the switch only leaves plug into — the fabric\'s backbone layer. <b>Super-spine</b>: a third switch layer added when a fabric outgrows what one set of spines can connect. <b>Oversubscription</b>: server-facing capacity divided by uplink capacity — 3:1 means servers could, in theory, demand three times what the uplinks can carry. <b>Bisection</b>: how much traffic can cross from one half of the fabric to the other at the same time. <b>ASN</b>: the BGP autonomous-system number each switch uses to identify itself to its neighbors. <b>VNI</b>: the VXLAN network identifier — the tag that keeps one tenant\'s traffic separate from another\'s. <b>EVPN</b>: the BGP-based control plane that tells the fabric which server lives behind which leaf.</p></div>',
+"rocev2-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> AI clusters and fast storage networks run RDMA over ordinary Ethernet — a trick called RoCEv2 — and it only works if the network never drops a packet. Switches fake that "never drops" promise with two tools working together: <b>PFC</b>, a pause button that tells the sender upstream to stop for a moment, and <b>ECN</b>, a "congestion ahead" stamp that makes senders slow down politely before queues get deep. This planner checks that the numbers configured on your switches can actually keep the promise: it validates the ECN thresholds against the real buffer each port gets, works out the pause headroom your link speed and cable lengths demand, and shows what happens when dozens of servers all answer one server at the same time.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center, cloud, and AI-fabric engineers bringing up RoCEv2 — and enterprise engineers meeting lossless Ethernet for the first time on storage or HPC networks.</p><div class="pi-try"><strong>Try this example:</strong> leave the defaults — 100 Gbps links, 100 m cables, 9000-byte frames — and the headroom math below works out to <b>≈ 46.5 KB</b> of PFC headroom per port. Then look at the ladder check: the common Spectrum-class ECN default profile (Kmin 1 MiB, Kmax 2 MiB) against a 1 MiB per-port buffer trips the <b>"ECN can never fire before PFC"</b> flag — the silent misconfiguration this tool exists to catch.</div><p class="pi-gloss"><b>PFC</b> (Priority Flow Control): a per-priority pause button — a switch whose queue is about to overflow tells the device directly upstream "stop sending this class of traffic for a moment." <b>ECN</b> (Explicit Congestion Notification): instead of dropping a packet, the switch stamps a congestion mark on it; the receiver echoes the mark back and the sender slows down. <b>DCQCN</b>: the congestion-control algorithm RoCEv2 network cards run — it reads those ECN marks and adjusts the sending rate. <b>CNP</b> (Congestion Notification Packet): the small feedback packet the receiving card sends back to carry the ECN news to the sender. <b>Headroom</b>: buffer space deliberately left empty above the PFC pause threshold, to absorb the frames already in flight while a pause message travels back upstream. <b>Incast</b>: the many-to-one traffic pattern — dozens of servers replying to one server at once — that fills queues faster than anything else in an AI fabric.</p></div>',
+"dwdm-reach-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Long-haul fiber links carry many wavelengths of light at once — that is <b>DWDM</b> — and modern <b>coherent</b> optics (which read the light wave itself, not just its brightness) push 400 gigabits down each wavelength. The catch: every amplifier on the route adds a hiss of noise, every kilometre of glass smears the signal in time, and at some distance the receiver can no longer read it — no matter how strong the light is. This planner adds up all three limits for your route — amplifier noise span by span, dispersion over the whole distance, and receiver power — and gives a straight verdict: plain 400ZR optics survive it, you need the tougher OpenZR+ kind, or the route needs redesigning.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center interconnect, cloud, and enterprise WAN engineers speccing 400ZR / OpenZR+ pluggables for metro and long-haul links — and anyone who has been handed a route and asked "will ZR work, or do we need ZR+?"</p><div class="pi-try"><strong>Try this example:</strong> set launch power to <b>−0.4 dBm</b> and spans to <b>10</b> on the default G.652 80 km spans. Each span then contributes exactly <b>35 dB</b> of OSNR, and the cascade lands at exactly <b>25 dB</b> — 1 dB short of the 26 dB plain 400ZR needs, before any other penalty. The verdict shows the fail rather than rounding it into a pass.</div><p class="pi-gloss"><b>OSNR</b> (Optical Signal-to-Noise Ratio): how far the signal stands above the noise, in decibels — the single number coherent receivers live or die by. <b>ASE</b> (Amplified Spontaneous Emission): the hiss every optical amplifier adds; it is the noise in OSNR. <b>DWDM</b> (Dense Wavelength-Division Multiplexing): many colours of light, each an independent channel, sharing one fibre. <b>Coherent</b>: optics that read the phase and polarisation of the light, not just its brightness — that is how 400G fits in one wavelength, and why these receivers quote an OSNR requirement. <b>CD</b> (Chromatic Dispersion): different colours inside one channel travel at slightly different speeds, smearing pulses over distance — measured in ps/nm. <b>PMD</b> (Polarisation Mode Dispersion): the two polarisations of the light drift apart in time as fibre imperfections accumulate. <b>ROADM</b> (Reconfigurable Optical Add-Drop Multiplexer): the node that switches wavelengths onto and off the route; each one slightly narrows the channel. <b>FEC</b> (Forward Error Correction): the error-correcting code the receiver runs — stronger FEC (OpenZR+ uses oFEC) is a large part of why ZR+ tolerates worse OSNR and more dispersion.</p></div>',
+"multicast-design-studio": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some traffic has one sender and many listeners — a stock-exchange price feed is the classic case. Sending a separate copy to every listener would swamp the network, so multicast sends <i>one</i> copy and the routers themselves make copies only where the path branches, like a river splitting into streams. This studio designs that splitting tree for you: it draws the shared tree and the source tree on a real topology, measures how much longer the shared tree makes each listener wait, scores every candidate meeting point, works out the exact election math routers use to pick that meeting point automatically, and helps you choose between the two flavours of multicast — then writes you a starter config.</p><p class="pi-plain"><strong>Who is this for?</strong> First, HFT market-data engineers — exchange feeds are source-specific multicast, and microseconds of tree stretch are real money. Second, enterprise media and IPTV engineers running PIM on a campus or venue network. If you have ever been asked "where should the RP live?" or "ASM or SSM for this feed?", this is the tool.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a 4 Gb/s feed at R1 for group <code class="inline">239.1.1.1</code>, receivers at R3, R5 and R6, default RP R3. The scoring table says the best RP is actually <b>R2, with 19 ms of total shared-tree latency</b> (R3 costs 21 ms, R4 costs 22 ms) — and with R2 every receiver\'s stretch is exactly 1.00, because R2 sits on every shortest path. Scroll to the BSR hash lab: for group 239.1.1.1 with hash-mask length 30, the winner is <b>10.0.0.3</b> (R3) with a hash value of 1,738,919,403 — the election and the scoreboard are allowed to disagree, and real networks live with that.</div><p class="pi-gloss"><b>PIM</b> (Protocol Independent Multicast): the routing protocol that builds the copying trees; "protocol independent" because it borrows the unicast routing table instead of keeping its own. <b>RP</b> (Rendezvous Point): the meeting point receivers and sources both head for when a group starts up — the shared tree is rooted there. <b>RPT / shared tree</b>: the tree rooted at the RP, written (*,G) — "any source, this group". <b>SPT</b> (Shortest Path Tree): a tree rooted at the source itself, written (S,G) — always the fastest route, one per source. <b>SSM</b> (Source-Specific Multicast, RFC 4607): receivers name the exact source they want, so no RP is needed at all; its home is 232.0.0.0/8. <b>ASM</b> (Any-Source Multicast): the original model — receivers join a group and any source may send to it, which is why it needs an RP. <b>BSR</b> (Bootstrap Router): the mechanism that hands every router the same candidate-RP list and lets a standard hash (RFC 7761 §4.7.2) elect one RP per group, identically everywhere. <b>RPF</b> (Reverse Path Forwarding): the loop-safety check — a multicast packet is only accepted on the interface that unicast routing would use to go <i>back</i> toward the source or RP. <b>(S,G) / (*,G)</b>: the state entries routers keep — one per source-and-group pair, or one wildcard entry per group.</p></div>'
+,
+"bgp-rr-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Routers inside one network share routes over <b>iBGP</b> — BGP spoken inside your own network rather than between networks. By default every router must talk to every other router (a "full mesh"), and the conversation count explodes as you add routers: 40 routers need 780 separate sessions. A <b>route reflector</b> breaks that rule on purpose: ordinary routers (its <b>clients</b>) report their routes to the reflector, and the reflector passes them on — so each client only needs a session or two. This planner designs that setup: say how many clusters you have and how many reflectors and clients each one holds, and it works out the session math, writes every router\'s peer list, checks your cluster-IDs, shows what breaks when a reflector dies, and walks one route through the reflection rules step by step.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and data-center network engineers scaling iBGP past the point where a full mesh is sane — campus cores, multi-site networks, and anyone who has inherited a reflector design and wants to know exactly what it depends on.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a four-site campus, one <b>cluster</b> per site (a cluster is one reflector group plus the clients it serves), each with 2 reflectors and 8 clients: 40 routers, ASN 65000. The full mesh would need <b>780</b> sessions; the reflected design needs <b>92</b> — an 88.2% cut. Then use the failure panel: kill one reflector and nothing is orphaned; kill both in a site and that site\'s 8 clients are cut off. That difference is the whole reason reflectors come in pairs.</div><p class="pi-gloss"><b>iBGP</b> (internal BGP): BGP sessions between routers in the same autonomous system — your own network talking to itself. <b>Route reflector</b>: a router allowed to pass iBGP routes on to other iBGP routers, which plain iBGP forbids; the behaviour is defined in RFC 4456. <b>Cluster</b>: one reflector group and the clients it serves; the reflectors in a cluster share one cluster-ID. <b>Cluster-ID</b>: the label a reflector stamps on routes it reflects, so a route that comes back around can be recognised and dropped. <b>Client / non-client</b>: a client is a router the reflector serves; every other iBGP speaker is a non-client — in this planner, any non-client is itself a reflector. <b>ORIGINATOR_ID</b>: a stamp naming the router that first put a route into iBGP, so that router can refuse its own route if it ever comes back. <b>CLUSTER_LIST</b>: the running list of cluster-IDs a route has passed through — the loop-prevention trail a reflector checks before accepting a route. <b>Add-paths</b>: a BGP extension (RFC 7911) that lets a reflector send more than its single best path, so clients can see alternates.</p></div>'
 };
 function aclAnalyze(rules){
-  var out=[], counts={shadowed:0,redundant:0,broad:0,clean:0};
+  var out=[], counts={shadowed:0,redundant:0,broad:0,clean:0,partial:0};
+  var atoms=aclAtoms(rules);
   rules.forEach(function(r,i){
     if(r.nextTerm){ out.push({status:"nextterm",by:[],decider:-1}); counts.clean++; return; }
     var decider=-1, j;
@@ -783,14 +801,66 @@ function aclAnalyze(rules){
         if((rules[j].action===r.action)===same) res.by.push(j+1);
       }
       res.status=same?"redundant":"shadowed";
-    } else if(r.action==="permit"&&r.proto==="ip"&&r.src[0]===0&&r.src[1]===4294967295&&r.dst[0]===0&&r.dst[1]===4294967295){
-      res.status="broad";
+      res.via="single";
+    } else {
+      var ua=aclUnionAnalyze(rules,out,i,atoms);
+      var broadShape=(r.action==="permit"&&r.proto==="ip"&&r.src[0]===0&&r.src[1]===4294967295&&r.dst[0]===0&&r.dst[1]===4294967295);
+      if(ua.overflow){
+        res.note="covered jointly by too many earlier rules to map exactly — pairwise result shown";
+        if(broadShape) res.status="broad";
+      } else if(!ua.uncovered.length){
+        var hasSame=false, hasOpp=false, uby=[];
+        ua.deciders.forEach(function(dc){ uby.push(dc.idx+1); if(dc.rel==="same") hasSame=true; else hasOpp=true; });
+        res.by=uby; res.via="union"; res.decider=uby.length?uby[0]:-1;
+        res.coverDesc=ua.deciders.map(function(dc){ return aclDeciderClause(dc,true); }).join("; ")+".";
+        if(hasSame&&hasOpp){
+          res.status="shadowed"; res.mixed=true;
+          res.mixedText="This rule can never fire — it is dead either way — but which action wins depends on which part of it you look at: "+ua.deciders.map(function(dc){ return aclDeciderClause(dc,false); }).join("; ")+".";
+        } else {
+          res.status=hasOpp?"shadowed":"redundant";
+        }
+      } else {
+        if(broadShape) res.status="broad";
+        if(ua.intersected) res.partial=aclPartialInfo(r,ua);
+      }
     }
+    if(res.partial) counts.partial++;
     counts[res.status]++;
     out.push(res);
   });
   return {results:out,counts:counts};
 }
+function aclAtomCoveredBy(jp,atom){
+  if(jp==="ip") return true;
+  if(atom==="other") return false;
+  return jp===atom;
+}
+function aclAtoms(rules){
+  var seen={}, atoms=[];
+  rules.forEach(function(r){ if(r.proto!=="ip"&&!seen[r.proto]){ seen[r.proto]=1; atoms.push(r.proto); } });
+  atoms.push("other"); /* residual atom: `ip` also matches protocols no rule names */
+  return atoms;
+}
+function aclBoxInter(a,b){
+  var s=[Math.max(a.s[0],b.s[0]),Math.min(a.s[1],b.s[1])];
+  var d=[Math.max(a.d[0],b.d[0]),Math.min(a.d[1],b.d[1])];
+  var pt=[Math.max(a.pt[0],b.pt[0]),Math.min(a.pt[1],b.pt[1])];
+  if(s[0]>s[1]||d[0]>d[1]||pt[0]>pt[1]) return null;
+  return {p:a.p,s:s,d:d,pt:pt};
+}
+function aclBoxSub(b,c){
+  var inter=aclBoxInter(b,c);
+  if(!inter) return [b];
+  var out=[], dims=["s","d","pt"];
+  var t={p:b.p,s:b.s.slice(),d:b.d.slice(),pt:b.pt.slice()};
+  dims.forEach(function(dm){
+    if(t[dm][0]<inter[dm][0]){ var p1={p:b.p,s:t.s.slice(),d:t.d.slice(),pt:t.pt.slice()}; p1[dm]=[t[dm][0],inter[dm][0]-1]; out.push(p1); }
+    if(t[dm][1]>inter[dm][1]){ var p2={p:b.p,s:t.s.slice(),d:t.d.slice(),pt:t.pt.slice()}; p2[dm]=[inter[dm][1]+1,t[dm][1]]; out.push(p2); }
+    t[dm]=[inter[dm][0],inter[dm][1]];
+  });
+  return out;
+}
+function aclBoxVol(b){ return (b.s[1]-b.s[0]+1)*(b.d[1]-b.d[0]+1)*(b.pt[1]-b.pt[0]+1); }
 function aclCidrRange(s){
   var p=String(s||"").split("/");
   if(p.length!==2) return null;
@@ -799,11 +869,49 @@ function aclCidrRange(s){
   var m=IP.mask(n);
   return [((a.val&m)>>>0),((a.val|(~m>>>0))>>>0)];
 }
+function aclCleanedCisco(text,deadIdx){
+  var dead={}; deadIdx.forEach(function(i){ dead[i]=1; });
+  var outLines=[], ruleNo=-1;
+  String(text||"").split(/\r?\n/).forEach(function(line){
+    var raw=line.trim();
+    if(!raw){ outLines.push(line); return; }
+    var low=raw.toLowerCase();
+    if(low.indexOf("remark")===0){ outLines.push(line); return; }
+    if(/^ip\s+access-list\b/.test(low)){ outLines.push(line); return; }
+    var r=aclParseLine(raw);
+    if(r.skip||r.unparsed){ outLines.push(line); return; }
+    ruleNo++;
+    if(!dead[ruleNo]) outLines.push(line);
+  });
+  return outLines.join("\n");
+}
+function aclCleanedJunSet(text,deadIdx,rules){
+  var deadKeys={};
+  deadIdx.forEach(function(i){ var t=aclJunTermOf(rules[i]); if(t) deadKeys[t.filter+"\u0000"+t.term]=1; });
+  var out=[];
+  String(text||"").split(/\r?\n/).forEach(function(line){
+    var m=/^set\s+firewall\s+family\s+(inet6?)\s+filter\s+(\S+)\s+term\s+(\S+)\s+(from|then)\b/i.exec(line.trim());
+    if(m&&m[1].toLowerCase()==="inet"&&deadKeys[m[2]+"\u0000"+m[3]]) return;
+    out.push(line);
+  });
+  return out.join("\n");
+}
 function aclCovers(j,r){
   return aclProtoCovers(j.proto,r.proto)
     && j.src[0]<=r.src[0] && j.src[1]>=r.src[1]
     && j.dst[0]<=r.dst[0] && j.dst[1]>=r.dst[1]
     && j.ports[0]<=r.ports[0] && j.ports[1]>=r.ports[1];
+}
+function aclDeciderClause(dc,cap){
+  var parts=dc.parts.join(", ");
+  var s="rule "+(dc.idx+1)+" already "+(dc.action==="permit"?"permits":"denies")+" "+parts;
+  return cap?("R"+s.slice(1)):s;
+}
+function aclFmtPct(p){
+  if(p>=99.95) return "99.9";
+  if(p<0.095) return String(Math.round(p*100)/100);
+  if(p<9.95) return String(Math.round(p*10)/10);
+  return String(Math.round(p));
 }
 function aclJunFinalize(t){
   if(!t.action&&!t.nextTerm){ t.nextTerm=true; aclJunNote(t,"No terminating action: evaluation continues to the next term."); }
@@ -899,6 +1007,10 @@ function aclJunProto(tok){
   if(t==="17") return "udp";
   if(t==="1") return "icmp";
   return t;
+}
+function aclJunTermOf(r){
+  var m=/^term (\S+) \(filter (.*)\)$/.exec(r&&r.raw||"");
+  return m?{term:m[1],filter:m[2]}:null;
 }
 function aclJunThenToks(t,toks){
   var i=0;
@@ -1053,6 +1165,38 @@ function aclParsePortOp(toks,i){
   if(op==="neq") return {ports:[0,65535],next:i+2,note:true};
   return null;
 }
+function aclPartText(r,cjProto,atom,b){
+  var quals=[];
+  if(b.s[0]>r.src[0]||b.s[1]<r.src[1]) quals.push("from sources "+IP.fmt(b.s[0])+"–"+IP.fmt(b.s[1]));
+  if(b.d[0]>r.dst[0]||b.d[1]<r.dst[1]) quals.push("to destinations "+IP.fmt(b.d[0])+"–"+IP.fmt(b.d[1]));
+  if(b.pt[0]>r.ports[0]||b.pt[1]<r.ports[1]) quals.push(b.pt[0]===b.pt[1]?("on port "+b.pt[0]):("on ports "+b.pt[0]+"–"+b.pt[1]));
+  var restricted=(r.proto==="ip"&&cjProto!=="ip");
+  var head=restricted?(atom+" traffic"):"traffic";
+  if(!quals.length) return restricted?("all "+atom+" traffic"):"the whole rule";
+  return head+" "+quals.join(" ");
+}
+function aclPartialInfo(r,ua){
+  var by=[], hasSame=false, hasOpp=false;
+  ua.deciders.forEach(function(dc){ by.push(dc.idx+1); if(dc.rel==="same") hasSame=true; else hasOpp=true; });
+  var kind=(hasSame&&hasOpp)?"mixed":(hasOpp?"shadow":"redundant");
+  var coveredVol=0;
+  ua.targetAtoms.forEach(function(a){ coveredVol+=ua.atomCovered[a]; });
+  var pct=null, decidedProtos=[], liveProtos=[], otherLive=false;
+  if(r.proto==="ip"){
+    var f0=null, differs=false;
+    ua.targetAtoms.forEach(function(a){
+      var f=ua.atomTotal[a]?(ua.atomCovered[a]/ua.atomTotal[a]):0;
+      if(f0===null) f0=f; else if(Math.abs(f-f0)>1e-9) differs=true;
+      if(f>=1-1e-12){ if(a!=="other") decidedProtos.push(a); }
+      else if(f<=1e-12){ if(a==="other") otherLive=true; else liveProtos.push(a); }
+    });
+    if(!differs&&ua.totalVol) pct=coveredVol/ua.totalVol*100;
+  } else if(ua.totalVol){
+    pct=coveredVol/ua.totalVol*100;
+  }
+  var desc=ua.deciders.map(function(dc){ return aclDeciderClause(dc,true); }).join("; ");
+  return {by:by,kind:kind,pct:pct,desc:desc,decidedProtos:decidedProtos,liveProtos:liveProtos,otherLive:otherLive};
+}
 function aclPortVal(tok){
   if(tok===undefined||tok===null) return null;
   if(/^\d+$/.test(tok)){ var v=parseInt(tok,10); return (v>=0&&v<=65535)?v:null; }
@@ -1063,6 +1207,42 @@ function aclProtoCovers(jp,ip){
   if(jp===ip) return true;
   if(jp==="ip") return true;
   return false;
+}
+function aclUnionAnalyze(rules,out,i,atoms){
+  var r=rules[i];
+  var targetAtoms=(r.proto==="ip")?atoms:[r.proto];
+  var uncovered=[], totalVol=0, atomTotal={}, atomCovered={};
+  targetAtoms.forEach(function(a){
+    var b={p:a,s:r.src.slice(),d:r.dst.slice(),pt:r.ports.slice()};
+    uncovered.push(b);
+    var v=aclBoxVol(b); totalVol+=v; atomTotal[a]=v; atomCovered[a]=0;
+  });
+  var deciders=[], decMap={}, intersected=false, overflow=false;
+  for(var j=0;j<i;j++){
+    if(!uncovered.length) break;
+    var cj=rules[j];
+    if(cj.nextTerm) continue;
+    if(out[j].status==="shadowed") continue; /* a dead rule never covers */
+    var cbox={s:cj.src,d:cj.dst,pt:cj.ports};
+    var newUnc=[];
+    for(var k=0;k<uncovered.length;k++){
+      var b=uncovered[k];
+      if(!aclAtomCoveredBy(cj.proto,b.p)){ newUnc.push(b); continue; }
+      var inter=aclBoxInter(b,cbox);
+      if(!inter){ newUnc.push(b); continue; }
+      intersected=true;
+      atomCovered[b.p]+=aclBoxVol(inter);
+      var dc=decMap[j];
+      if(!dc){ dc={idx:j,action:cj.action,rel:(cj.action===r.action)?"same":"opp",parts:[]}; decMap[j]=dc; deciders.push(dc); }
+      var ptxt=aclPartText(r,cj.proto,b.p,inter);
+      if(dc.parts.indexOf(ptxt)<0) dc.parts.push(ptxt);
+      var rem=aclBoxSub(b,cbox);
+      for(var m=0;m<rem.length;m++) newUnc.push(rem[m]);
+    }
+    uncovered=newUnc;
+    if(uncovered.length>512){ overflow=true; break; } /* safety valve */
+  }
+  return {uncovered:uncovered,deciders:deciders,intersected:intersected,overflow:overflow,totalVol:totalVol,atomTotal:atomTotal,atomCovered:atomCovered,targetAtoms:targetAtoms};
 }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function initACL(){
@@ -1076,6 +1256,30 @@ function initACL(){
     if(st==="nextterm") return '<span class="acl-badge ok">Next term</span>';
     return '<span class="acl-badge ok">Clean</span>';
   }
+  function partialBadge(res){
+    if(!res.partial) return "";
+    return res.partial.kind==="redundant"
+      ? '<span class="acl-badge pr">Partially redundant</span>'
+      : '<span class="acl-badge ps">Partially shadowed</span>';
+  }
+  function joinList(a){
+    if(a.length<=1) return a.join("");
+    if(a.length===2) return a[0]+" and "+a[1];
+    return a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+  }
+  function aclCopyText(t){
+    function done(){ var s=document.getElementById("acl-copied"); if(s) s.textContent="Copied to clipboard."; }
+    function fallback(){
+      var ta=document.createElement("textarea");
+      ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); }catch(e){}
+      document.body.removeChild(ta);
+      done();
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done,fallback);
+    else fallback();
+  }
   function run(){
     $("#acl-err").textContent="";
     var parsed=vendor==="juniper"?aclParseJuniper($("#acl-in").value):aclParse($("#acl-in").value);
@@ -1085,6 +1289,7 @@ function initACL(){
     $("#acl-rd").textContent=String(a.counts.redundant);
     $("#acl-br").textContent=String(a.counts.broad);
     $("#acl-cl").textContent=String(a.counts.clean);
+    $("#acl-pt").textContent=String(a.counts.partial||0);
     var html="";
     if(!rules.length){
       html='<p style="color:var(--muted)">No firewall rules found yet. Paste Cisco lines like <code class="inline">access-list 101 permit tcp any any eq 443</code> or Juniper lines like <code class="inline">set firewall family inet filter web-acl term allow-web then accept</code> and the findings land here.</p>';
@@ -1096,16 +1301,87 @@ function initACL(){
         else if(res.status==="broad") why='This permits every protocol, from any source, to any destination. Anything not explicitly denied above it is open — see the explainer below.';
         else if(res.status==="nextterm") why='This term uses <code class="inline">then next term</code>: it matches traffic but evaluation continues to the next term, so shadow/redundant order analysis does not apply to it.';
         else why='Reachable, and doing work no earlier rule already does for it.';
+        if(res.mixed) why=esc(res.mixedText);
+        else if(res.via==="union"&&res.status==="shadowed") why='Shadowed by rule '+res.by.join(", rule ")+' together: no single earlier rule covers this '+r.action+' rule, but between them they match every packet it could ever see with the opposite action, so this line can never fire — the intent it documents is not what the firewall enforces.';
+        else if(res.via==="union"&&res.status==="redundant") why='Fully covered by rule '+res.by.join(", rule ")+' together, with the same action — no single earlier rule covers it on its own. Delete it and the firewall behaves identically — it only adds lookup cost and audit noise.';
         var note=r.note?'<p class="why" style="color:var(--muted)">Note: this line uses <code class="inline">neq</code> or an unrecognized port operator, which this analyzer treats as the full port range — findings involving this rule are approximate.</p>':"";
         (r.notes||[]).forEach(function(n){ note+='<p class="why" style="color:var(--muted)">'+esc(n)+'</p>'; });
-        return '<div class="acl-row"><div class="acl-head"><span class="rn">Rule '+(i+1)+'</span>'+badge(res.status)+'</div><code>'+esc(r.raw)+'</code><p class="why">'+why+'</p>'+note+'</div>';
+        var extra="";
+        if(res.coverDesc&&res.via==="union"&&!res.mixed) extra+='<p class="why">'+esc(res.coverDesc)+'</p>';
+        if(res.note) extra+='<p class="why" style="color:var(--muted)">Note: '+esc(res.note.charAt(0).toUpperCase()+res.note.slice(1))+'.</p>';
+        if(res.partial){
+          var p=res.partial;
+          var ptxt='<b>'+(p.kind==="redundant"?"Partially redundant":"Partially shadowed")+'.</b> '+esc(p.desc)+'.';
+          if(p.pct!==null&&p.pct!==undefined){
+            ptxt+=' About '+aclFmtPct(p.pct)+'% of this rule\u2019s match space is already decided.';
+          } else {
+            var bits=[];
+            if(p.decidedProtos&&p.decidedProtos.length) bits.push(joinList(p.decidedProtos)+' already fully decided');
+            var live=(p.liveProtos||[]).slice();
+            if(p.otherLive) live.push('every other protocol (icmp included)');
+            if(live.length) bits.push('still reaching this rule: '+joinList(live));
+            if(bits.length) ptxt+=' Protocols — '+bits.join('; ')+'.';
+          }
+          ptxt+=(p.kind==="redundant")
+            ? ' That part is dead weight — the rest of the rule still works.'
+            : ' That part of this rule can never fire — check it is not the part you cared about.';
+          extra+='<p class="why">'+ptxt+'</p>';
+        }
+        return '<div class="acl-row"><div class="acl-head"><span class="rn">Rule '+(i+1)+'</span>'+badge(res.status)+partialBadge(res)+'</div><code>'+esc(r.raw)+'</code><p class="why">'+why+'</p>'+note+extra+'</div>';
       }).join("")+'</div>';
     }
     if(parsed.skipped.length){
       html+='<p style="color:var(--muted);font-size:.88rem;margin-top:.9rem">'+parsed.skipped.length+' line'+(parsed.skipped.length===1?"":"s")+' could not be parsed and '+(parsed.skipped.length===1?"was":"were")+' skipped:</p><pre class="code"><code>'+esc(parsed.skipped.join("\n"))+'</code></pre>';
     }
     $("#acl-findings").innerHTML=html;
+    renderDeletePanel(parsed,rules,a);
     if(parsed.errors&&parsed.errors.length) $("#acl-err").textContent=parsed.errors.join(" ");
+  }
+  function renderDeletePanel(parsed,rules,a){
+    var panel=$("#acl-delpanel");
+    var deadIdx=[];
+    a.results.forEach(function(res,i){ if(res.status==="shadowed"||res.status==="redundant") deadIdx.push(i); });
+    if(!deadIdx.length){ panel.style.display="none"; panel.innerHTML=""; return; }
+    var rawText=$("#acl-in").value;
+    var isJun=(vendor==="juniper");
+    var hasSet=isJun&&/^set\s+firewall\b/mi.test(rawText);
+    var hasBrace=isJun&&rawText.indexOf("{")>=0;
+    var braceOnly=isJun&&hasBrace&&!hasSet;
+    function lbl(i){
+      var t=isJun?aclJunTermOf(rules[i]):null;
+      return t?("term "+t.term+" (filter "+t.filter+")"):("Rule "+(i+1));
+    }
+    function decLbl(n){
+      var t=isJun?aclJunTermOf(rules[n-1]):null;
+      return t?("term "+t.term):("rule "+n);
+    }
+    var items=deadIdx.map(function(i){
+      var res=a.results[i];
+      var how=(res.via==="union"?"covered jointly by ":"covered by ")+res.by.map(decLbl).join(", ");
+      if(res.mixed) how+=" — dead either way, though which action wins varies by part";
+      return '<li style="margin:.45rem 0"><b>'+esc(lbl(i))+'</b> — '+res.status+', '+esc(how)+'.<br><code class="inline">'+esc(rules[i].raw)+'</code></li>';
+    }).join("");
+    var cleaned=null;
+    if(!isJun) cleaned=aclCleanedCisco(rawText,deadIdx);
+    else if(!braceOnly) cleaned=aclCleanedJunSet(rawText,deadIdx,rules);
+    var ch='<h3 style="margin-top:0">Safe to delete</h3>'
+      +'<p>These rules can never decide a packet: every packet they could match is already decided by an earlier rule. A rule that can never decide a packet can be removed without changing what the firewall does — and dead rules may be deleted in any order, because deleting one cannot resurrect or kill another live rule: no live rule depends on a dead one for its verdict.</p>'
+      +'<ul>'+items+'</ul>'
+      +'<div class="callout warn"><strong class="t">Two checks before you delete</strong>'
+      +'<p style="margin:.4rem 0">First, check the hit counter (<code class="inline">show access-lists</code> on IOS): a rule this page calls dead should show zero hits. If it shows hits, the pasted config is not the running config — stop and reconcile the two before deleting anything.</p>'
+      +'<p style="margin:.4rem 0">Second, on IOS work bottom-up: delete the lowest line first, so the sequence numbers of the lines below do not shift while you edit.</p></div>';
+    if(braceOnly){
+      ch+='<p style="margin-top:.9rem">No cleaned config is offered for brace-format input: rewriting brace config is out of scope for this page. Delete the dead terms named above in your editor, keeping the braces balanced.</p>';
+    } else {
+      ch+='<h4 style="margin-bottom:.4rem">Cleaned config</h4>'
+        +'<p style="color:var(--muted);font-size:.9rem;margin:.2rem 0 .6rem">The original lines in order, minus the dead rules above. Overly broad and partially covered rules stay — they still decide traffic — and lines the parser could not parse are preserved verbatim.</p>'
+        +'<pre class="code"><code>'+esc(cleaned)+'</code></pre>'
+        +'<button type="button" class="btn" id="acl-copy">Copy cleaned config</button> <span id="acl-copied" style="color:var(--muted);font-size:.88rem"></span>';
+    }
+    panel.innerHTML=ch;
+    panel.style.display="";
+    var cb=$("#acl-copy");
+    if(cb) cb.addEventListener("click",function(){ aclCopyText(cleaned); });
   }
   function setVendor(v){
     vendor=v;
@@ -1115,42 +1391,54 @@ function initACL(){
     $("#acl-in").value=window.ACL_SAMPLES[v];
     $("#acl-scope-note").innerHTML=v==="cisco"?ACL_SCOPE_CISCO:ACL_SCOPE_JUNIPER;
     $("#acl-jnote").style.display=v==="juniper"?"":"none";
+    $("#acl-demo").style.display=v==="cisco"?"":"none";
     run();
   }
   $("#acl-run").addEventListener("click",run);
   $("#acl-in").addEventListener("input",run);
   $("#acl-v-cisco").addEventListener("click",function(){ setVendor("cisco"); });
   $("#acl-v-juniper").addEventListener("click",function(){ setVendor("juniper"); });
+  $("#acl-demo").addEventListener("click",function(){
+    if(vendor!=="cisco") setVendor("cisco");
+    $("#acl-in").value=window.ACL_SAMPLES.union;
+    run();
+  });
   setVendor("cisco");
 }
 function pageACL(){
   var sampleCisco="access-list 101 permit tcp any any eq 80\naccess-list 101 deny tcp 10.0.0.0 0.255.255.255 any eq 80\naccess-list 101 permit tcp 10.1.0.0 0.0.255.255 any eq 80\naccess-list 101 permit ip any any";
   var sampleJuniper="set firewall family inet filter web-acl term allow-web from protocol tcp\nset firewall family inet filter web-acl term allow-web from destination-port 80\nset firewall family inet filter web-acl term allow-web then accept\nset firewall family inet filter web-acl term block-rfc1918-http from source-address 10.0.0.0/8\nset firewall family inet filter web-acl term block-rfc1918-http from protocol tcp\nset firewall family inet filter web-acl term block-rfc1918-http from destination-port 80\nset firewall family inet filter web-acl term block-rfc1918-http then discard\nset firewall family inet filter web-acl term dup-web from protocol tcp\nset firewall family inet filter web-acl term dup-web from destination-port 80\nset firewall family inet filter web-acl term dup-web then accept\nset firewall family inet filter web-acl term open-all then accept";
-  window.ACL_SAMPLES={cisco:sampleCisco,juniper:sampleJuniper};
+  var sampleUnion="permit tcp 10.0.0.0 0.0.0.127 any eq 80\npermit tcp 10.0.0.128 0.0.0.127 any eq 80\ndeny tcp 10.0.0.0 0.0.0.255 any eq 80\ndeny tcp 10.0.0.0 0.0.0.127 any eq 80\npermit tcp 10.0.1.0 0.0.0.127 any eq 80\ndeny tcp 10.0.1.0 0.0.0.255 any eq 80";
+  window.ACL_SAMPLES={cisco:sampleCisco,juniper:sampleJuniper,union:sampleUnion};
   var h='<div class="page-head"><h1>Firewall ACL rule analyzer</h1><p class="lede">Paste a Cisco IOS extended ACL or a Juniper firewall filter and this page reads it the way the firewall does — top-down, first match wins — and flags the rules that can never fire, the duplicates that add nothing, and the one line that quietly opens everything.</p></div>'
   +plainIntro("acl")
   +'<div class="tool-shell">'
   +'<div class="card panel"><h3>Paste your ACL</h3>'
-  +'<style>.acl-seg{display:flex;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap}.acl-seg .btn{opacity:.55}.acl-seg .btn.on{opacity:1;outline:2px solid var(--accent);outline-offset:1px}</style>'
+  +'<style>.acl-seg{display:flex;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap}.acl-seg .btn{opacity:.55}.acl-seg .btn.on{opacity:1;outline:2px solid var(--accent);outline-offset:1px}#acl-stats{grid-template-columns:repeat(5,minmax(0,1fr))}@media(max-width:1020px){#acl-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:560px){#acl-stats{grid-template-columns:1fr 1fr}}</style>'
   +'<div class="acl-seg" role="group" aria-label="Firewall vendor syntax"><button type="button" class="btn on" id="acl-v-cisco">Cisco IOS</button><button type="button" class="btn" id="acl-v-juniper">Juniper</button></div>'
+  +'<div style="margin-bottom:.7rem"><button type="button" class="btn" id="acl-demo">Load sample: Union + partial demo</button></div>'
   +'<div class="field"><label for="acl-in" id="acl-label">Cisco IOS extended ACL (IPv4)</label><textarea id="acl-in" rows="12" spellcheck="false" autocomplete="off">'+esc(sampleCisco)+'</textarea></div>'
   +'<div style="margin-top:.9rem"><button type="button" class="btn" id="acl-run">Analyze</button></div>'
   +'<p id="acl-scope-note" style="color:var(--muted);font-size:.88rem;margin:.8rem 0 0">Numbered extended ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines from a named ACL both parse. The analysis runs locally — your ACL never leaves this page.</p>'
   +'<div id="acl-err" class="err" role="alert" style="margin-top:.6rem"></div></div>'
   +'<div class="card panel"><h3>Findings</h3>'
-  +'<div class="stat-strip"><div class="stat"><span class="v" id="acl-sh">—</span><span class="l">Shadowed</span></div>'
+  +'<div class="stat-strip" id="acl-stats"><div class="stat"><span class="v" id="acl-sh">—</span><span class="l">Shadowed</span></div>'
   +'<div class="stat"><span class="v" id="acl-rd">—</span><span class="l">Redundant</span></div>'
   +'<div class="stat"><span class="v" id="acl-br">—</span><span class="l">Overly broad</span></div>'
-  +'<div class="stat"><span class="v" id="acl-cl">—</span><span class="l">Clean</span></div></div>'
+  +'<div class="stat"><span class="v" id="acl-cl">—</span><span class="l">Clean</span></div>'
+  +'<div class="stat"><span class="v" id="acl-pt">—</span><span class="l">Partial</span></div></div>'
   +'<p id="acl-jnote" style="display:none;color:var(--muted);font-size:.92rem;border-left:3px solid var(--accent);padding:.35rem .7rem;margin:0 0 .8rem">Juniper filters end with an implicit default discard. Add an explicit final term with <code class="inline">then { discard; }</code> plus logging so drops are visible.</p>'
   +'<div id="acl-findings" aria-live="polite"></div>'
   +'</div>'
   +'</div>'
+  +'<div class="card panel" id="acl-delpanel" style="display:none;margin-top:1.4rem"></div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Shadowed, redundant, and wide open — what the findings mean</h3>'
-  +'<ul><li><b>Shadowed vs redundant: both are dead rules, but only one is lying to you.</b> A rule is <b>shadowed</b> when an earlier rule with the <i>opposite</i> action already matches every packet it could ever see — the config says "deny this" while the wire says "permit," and the rule\'s hit counter will sit at zero forever. A rule is <b>redundant</b> when an earlier rule with the <i>same</i> action already covers it completely: delete it and the firewall behaves identically, so all it adds is lookup cost and audit noise. This analyzer only reports full containment — a rule half-covered by two different earlier rules is a subtler failure, and partial overlaps are deliberately not flagged as findings.</li>'
+  +'<ul><li><b>Shadowed vs redundant: both are dead rules, but only one is lying to you.</b> A rule is <b>shadowed</b> when an earlier rule with the <i>opposite</i> action already matches every packet it could ever see — the config says "deny this" while the wire says "permit," and the rule\'s hit counter will sit at zero forever. A rule is <b>redundant</b> when an earlier rule with the <i>same</i> action already covers it completely: delete it and the firewall behaves identically, so all it adds is lookup cost and audit noise.</li>'
+  +'<li><b>Partially shadowed, partially redundant: the rule that is only half dead.</b> Picture each rule as a fishing net stretched across one stretch of river. If an earlier net already covers the top half of yours, that half of your net never catches anything — but the bottom half still fishes, so the rule keeps showing hits and looks alive. When the earlier net has the <i>opposite</i> action, the covered half is <b>partially shadowed</b> — the dangerous half-dead rule, because the part you cared about may be exactly the part that never fires. When the earlier net has the <i>same</i> action, the covered half is <b>partially redundant</b>: dead weight, but harmless. The findings name the earlier rule, the part it already decides (say, \"sources 10.0.0.0–10.0.0.127\"), and roughly how much of the rule is already decided — \"about 50%\" — so you can judge whether the live remainder is the part you actually need.</li>'
+  +'<li><b>Covered by several rules together.</b> Sometimes no single earlier rule covers a rule, but two or three lines added in different years cover it between them — one permits the lower half of a network, another permits the upper half, and the deny written for the whole network can never fire. Think of a patchwork quilt: no single patch covers the bed, but together they leave nothing uncovered. This analyzer tracks the still-uncovered pieces of each rule as earlier rules are subtracted, so it can name every rule that shares the covering — no free web tool does this joint-coverage check. When the covering rules disagree (one permits a part, another denies a part), the rule is still dead, but which action wins depends on which part of it you look at, and the finding says so.</li>'
   +'<li><b>Why dead rules accumulate.</b> Rules get added under incident pressure and removed never. Subnets get re-carved, so last year\'s narrow exception ends up inside this year\'s broad permit. Firewall migrations concatenate two devices\' policies and inherit both. A "temporary" troubleshooting permit outlives the project it was opened for. Every firewall older than a few years carries rules nobody can explain — each one is either drag or a lie, and you cannot tell which without reading the policy top-down exactly the way the hardware does.</li>'
   +'<li><b><code class="inline">permit ip any any</code> turns the firewall off for everything the denies above it miss.</b> Every protocol, every port, any source to any destination — if that line sits above your cleanup deny, the only traffic still being filtered is whatever an earlier explicit deny happens to catch. It almost always arrives as a 2 a.m. troubleshooting step ("just open it up — is the firewall even the problem?") and then never leaves. If you genuinely need a broad permit, scope it: one protocol, named networks, and logging on, so at least the hole is visible in the logs.</li>'
-  +'<li><b>Parser scope, honestly stated.</b> This reads numbered extended IOS ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines, IPv4 only. Wildcard masks are applied bit-for-bit per octet (discontiguous masks included), and <code class="inline">eq</code>, <code class="inline">range</code>, <code class="inline">gt</code>, and <code class="inline">lt</code> port operators are modeled. <code class="inline">neq</code> and unrecognized port operators are treated as the full port range, and the rule is flagged with a note. Not modeled: object-groups and port groups (expand them before pasting), <code class="inline">time-range</code> schedules (a time-ranged rule is treated as always on), ICMP type/code detail, <code class="inline">established</code>, NAT and route-map interactions, and ASA/FTD syntax. Protocol <code class="inline">ip</code> is correctly treated as covering tcp, udp, and icmp when checking whether one rule contains another. Juniper firewall filters parse too — both <code class="inline">set firewall family inet filter …</code> lines and brace-format <code class="inline">show configuration</code> output, IPv4 <code class="inline">family inet</code> only (<code class="inline">family inet6</code> is not supported). <code class="inline">then accept</code> maps to permit; <code class="inline">then discard</code> and <code class="inline">then reject</code> map to deny (reject is noted: it sends an ICMP unreachable or TCP reset). Terms with <code class="inline">then next term</code> are shown but excluded from shadow/redundant verdicts, because evaluation continues to the next term. <code class="inline">source-prefix-list</code> / <code class="inline">destination-prefix-list</code> and address-book references are not expanded — they are treated as any, with a note. A term with no <code class="inline">from</code> clause matches everything, so a from-less <code class="inline">then accept</code> is flagged overly broad.</li></ul>'
+  +'<li><b>Parser scope, honestly stated.</b> This reads numbered extended IOS ACLs (<code class="inline">access-list 101 …</code>) and bare <code class="inline">permit</code>/<code class="inline">deny</code> lines, IPv4 only. Wildcard masks are applied bit-for-bit per octet (discontiguous masks included), and <code class="inline">eq</code>, <code class="inline">range</code>, <code class="inline">gt</code>, and <code class="inline">lt</code> port operators are modeled. <code class="inline">neq</code> and unrecognized port operators are treated as the full port range, and the rule is flagged with a note. When a Cisco rule carries both a source-port and a destination-port operator, only the destination port is modelled. Not modeled: object-groups and port groups (expand them before pasting), <code class="inline">time-range</code> schedules (a time-ranged rule is treated as always on), ICMP type/code detail, <code class="inline">established</code>, NAT and route-map interactions, and ASA/FTD syntax. Protocol <code class="inline">ip</code> is correctly treated as covering tcp, udp, and icmp when checking whether one rule contains another. Juniper firewall filters parse too — both <code class="inline">set firewall family inet filter …</code> lines and brace-format <code class="inline">show configuration</code> output, IPv4 <code class="inline">family inet</code> only (<code class="inline">family inet6</code> is not supported). <code class="inline">then accept</code> maps to permit; <code class="inline">then discard</code> and <code class="inline">then reject</code> map to deny (reject is noted: it sends an ICMP unreachable or TCP reset). Terms with <code class="inline">then next term</code> are shown but excluded from shadow/redundant verdicts, because evaluation continues to the next term. <code class="inline">source-prefix-list</code> / <code class="inline">destination-prefix-list</code> and address-book references are not expanded — they are treated as any, with a note. A term with no <code class="inline">from</code> clause matches everything, so a from-less <code class="inline">then accept</code> is flagged overly broad.</li></ul>'
   +'<p style="color:var(--muted);font-size:.92rem">Firewall policy is daily work on the <a href="/">Enterprise track</a>; the <a href="/articles/enterprise-career-path/">Enterprise Network Engineer career guide</a> covers where security policy sits in the role, and the <a href="/tools/sla/">SLA calculator</a> is handy for pricing the change window when you clean the dead rules out.</p></div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Related guides</h3>'
   +'<ul><li><a href="/articles/wireshark-filters/">Wireshark Display Filters</a> — the on-the-wire counterpart: filters show what traffic actually did, rule-order analysis shows what the ACL would let it do.</li>'
@@ -1159,7 +1447,7 @@ function pageACL(){
   $("#app").innerHTML=h;
   markNav("tools"); document.title="Firewall ACL Rule Analyzer | Packet Path";
   var md=document.querySelector('meta[name="description"]');
-  if(md) md.setAttribute("content","Paste a Cisco IOS extended ACL or a Juniper firewall filter and detect shadowed rules that can never fire, fully redundant duplicates, and dangerous overly-broad allow-anything lines.");
+  if(md) md.setAttribute("content","Paste a Cisco IOS extended ACL or a Juniper firewall filter and detect shadowed rules that can never fire, fully redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous overly-broad allow-anything lines.");
   setLD({"@context":"https://schema.org","@type":"WebApplication","name":"Firewall ACL rule analyzer","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
   initACL();
 }
