@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BGP Route Reflector Design Planner — Free Network Engineering Tool | Packet Path</title>
-<meta name="description" content="Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout, per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.">
+<meta name="description" content="Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout — flat or two-tier hierarchical — per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.">
 <link rel="canonical" href="https://allaboutitinfrastructure.com/tools/bgp-rr-planner/">
 <meta property="og:title" content="BGP Route Reflector Design Planner — Free Network Engineering Tool | Packet Path">
-<meta property="og:description" content="Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout, per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.">
+<meta property="og:description" content="Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout — flat or two-tier hierarchical — per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.">
 <meta property="og:url" content="https://allaboutitinfrastructure.com/tools/bgp-rr-planner/">
 <meta property="og:type" content="website">
 <style>
@@ -375,8 +375,12 @@ html.darkm .ec-mid{color:#f0b13e}
 .acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
 .acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
 .acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+.acl-badge.ps{background:#fbe9e7;border-color:#e0a49e;color:#b3261e;border-style:dashed}
+.acl-badge.pr{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);border-style:dashed}
 @media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
 html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.ps{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
+html.darkm .acl-badge.ps{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
 /* ---------- manual theme overrides ---------- */
 html.darkm{--bg:#0a1210;--surface:#101816;--surface2:#141e1b;--surface3:#1a2522;--ink:#e9f2ee;--muted:#a5b9b0;--faint:#7c938a;--line:#223029;--line-soft:#1a2421;--accent:#3cd79a;--accent-strong:#2fbe85;--on-accent:#05231a;--accent-soft:rgba(60,215,154,.12);--teal:#5fc4e6;--teal-soft:rgba(95,196,230,.10);--amber:#f0b13e;--amber-soft:rgba(240,177,62,.10);--warn-bg:rgba(240,177,62,.07);--warn-line:#8a6a24;--code-bg:#050b09;--code-ink:#dcf2e7;--code-line:#22302b;--link:#5fc4e6;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.55);color-scheme:dark}
 html.lightm{color-scheme:light}
@@ -698,7 +702,7 @@ html.lightm{color-scheme:light}
 <body>
 <header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a><a href="/contact/">Contact</a></nav></header>
 <main id="app" class="pp-main"></main>
-<section class="pp-about"><h2>About this tool</h2><p>Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout, per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> · <a href="/tools/sr-te-path-lab/">Segment Routing Policy Lab</a> · <a href="/tools/clos-fabric-designer/">Data Center Fabric Designer</a> · <a href="/tools/rocev2-planner/">RoCEv2 Lossless Ethernet Planner</a> · <a href="/tools/dwdm-reach-planner/">Coherent DWDM / 400ZR Reach Planner</a> · <a href="/tools/multicast-design-studio/">Multicast Design Studio</a> — all free, all run entirely in your browser.</p></div></section>
+<section class="pp-about"><h2>About this tool</h2><p>Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout — flat or two-tier hierarchical — per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Firewall ACL Rule Analyzer</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> · <a href="/tools/sr-te-path-lab/">Segment Routing Policy Lab</a> · <a href="/tools/clos-fabric-designer/">Data Center Fabric Designer</a> · <a href="/tools/rocev2-planner/">RoCEv2 Lossless Ethernet Planner</a> · <a href="/tools/dwdm-reach-planner/">Coherent DWDM / 400ZR Reach Planner</a> · <a href="/tools/multicast-design-studio/">Multicast Design Studio</a> — all free, all run entirely in your browser.</p></div></section>
 <footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a> · <a href="/contact/">Contact</a></p></footer>
 <script>
 
@@ -713,7 +717,7 @@ function toolRows(){
   }).join('') + '</ul>';
 }
 
-var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE or WireGuard headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"},{id:"sr-te-path-lab",slug:"sr-te-path-lab",title:"Segment Routing Policy Lab",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",chip:"Hyperscaler"},{id:"clos-fabric-designer",slug:"clos-fabric-designer",title:"Data Center Fabric Designer",desc:"Turn server count and switch choices into a complete Clos fabric design: leaf/spine counts, a full cabling matrix, BGP ASN and IP addressing plan, EVPN/VNI overlay plan, failure analysis, and copy-ready switch config.",chip:"Hyperscaler"},{id:"rocev2-planner",slug:"rocev2-planner",title:"RoCEv2 Lossless Ethernet Planner",desc:"Tune a lossless RoCEv2 fabric in one flow: validate the ECN threshold ladder (Kmin/Kmax/Pmax) against your real per-port buffer, compute PFC XOFF headroom from link speed and cable length, simulate incast queue build-up, and catch PFC deadlock and pause-storm risk flags.",chip:"Hyperscaler"},{id:"dwdm-reach-planner",slug:"dwdm-reach-planner",title:"Coherent DWDM / 400ZR Reach Planner",desc:"Plan a coherent DWDM route end to end: per-span OSNR cascade combined in linear units, a margin waterfall with ROADM and nonlinear penalties, CD/PMD budgets checked against module tolerances, and a straight verdict — 400ZR works, step up to OpenZR+, or redesign the route.",chip:"Hyperscaler"},{id:"multicast-design-studio",slug:"multicast-design-studio",title:"Multicast Design Studio",desc:"Design a PIM multicast network in one flow: shared (RPT) and source (SPT) trees drawn on a live topology with per-receiver stretch, RP placement scored for every candidate, the exact RFC 7761 BSR hash, an ASM-vs-SSM decision helper, anycast-RP failover, and a starter config.",chip:"HFT"},{id:"bgp-rr-planner",slug:"bgp-rr-planner",title:"BGP Route Reflector Design Planner",desc:"Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout, per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.",chip:"Enterprise"}];
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Firewall ACL Rule Analyzer",desc:"Paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules — shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Build valid Wireshark display filters without memorizing syntax — field picker, AND/OR/NOT grouping, a gotcha linter, plain-English readout, and shareable filter links.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE, WireGuard or MACsec headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"},{id:"sr-te-path-lab",slug:"sr-te-path-lab",title:"Segment Routing Policy Lab",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",chip:"Hyperscaler"},{id:"clos-fabric-designer",slug:"clos-fabric-designer",title:"Data Center Fabric Designer",desc:"Turn server count and switch choices into a complete Clos fabric design: leaf/spine counts, a full cabling matrix, BGP ASN and IP addressing plan, EVPN/VNI overlay plan, failure analysis, and copy-ready switch config.",chip:"Hyperscaler"},{id:"rocev2-planner",slug:"rocev2-planner",title:"RoCEv2 Lossless Ethernet Planner",desc:"Tune a lossless RoCEv2 fabric in one flow: validate the ECN threshold ladder (Kmin/Kmax/Pmax) against your real per-port buffer, compute PFC XOFF headroom from link speed and cable length, simulate incast queue build-up, and catch PFC deadlock and pause-storm risk flags.",chip:"Hyperscaler"},{id:"dwdm-reach-planner",slug:"dwdm-reach-planner",title:"Coherent DWDM / 400ZR Reach Planner",desc:"Plan a coherent DWDM route end to end: per-span OSNR cascade combined in linear units, a margin waterfall with ROADM and nonlinear penalties, CD/PMD budgets checked against module tolerances, and a straight verdict — 400ZR works, step up to OpenZR+, or redesign the route.",chip:"Hyperscaler"},{id:"multicast-design-studio",slug:"multicast-design-studio",title:"Multicast Design Studio",desc:"Design a PIM multicast network in one flow: shared (RPT) and source (SPT) trees drawn on a live topology with per-receiver stretch, RP placement scored for every candidate, the exact RFC 7761 BSR hash, an ASM-vs-SSM decision helper, anycast-RP failover, and a starter config.",chip:"HFT"},{id:"bgp-rr-planner",slug:"bgp-rr-planner",title:"BGP Route Reflector Design Planner",desc:"Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout — flat or two-tier hierarchical — per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.",chip:"Enterprise"}];
 </script>
 <script>
 function $(sel, el){ return (el||document).querySelector(sel); }
@@ -772,7 +776,7 @@ var TOOL_INTROS = {
 "dwdm-reach-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Long-haul fiber links carry many wavelengths of light at once — that is <b>DWDM</b> — and modern <b>coherent</b> optics (which read the light wave itself, not just its brightness) push 400 gigabits down each wavelength. The catch: every amplifier on the route adds a hiss of noise, every kilometre of glass smears the signal in time, and at some distance the receiver can no longer read it — no matter how strong the light is. This planner adds up all three limits for your route — amplifier noise span by span, dispersion over the whole distance, and receiver power — and gives a straight verdict: plain 400ZR optics survive it, you need the tougher OpenZR+ kind, or the route needs redesigning.</p><p class="pi-plain"><strong>Who is this for?</strong> Data-center interconnect, cloud, and enterprise WAN engineers speccing 400ZR / OpenZR+ pluggables for metro and long-haul links — and anyone who has been handed a route and asked "will ZR work, or do we need ZR+?"</p><div class="pi-try"><strong>Try this example:</strong> set launch power to <b>−0.4 dBm</b> and spans to <b>10</b> on the default G.652 80 km spans. Each span then contributes exactly <b>35 dB</b> of OSNR, and the cascade lands at exactly <b>25 dB</b> — 1 dB short of the 26 dB plain 400ZR needs, before any other penalty. The verdict shows the fail rather than rounding it into a pass.</div><p class="pi-gloss"><b>OSNR</b> (Optical Signal-to-Noise Ratio): how far the signal stands above the noise, in decibels — the single number coherent receivers live or die by. <b>ASE</b> (Amplified Spontaneous Emission): the hiss every optical amplifier adds; it is the noise in OSNR. <b>DWDM</b> (Dense Wavelength-Division Multiplexing): many colours of light, each an independent channel, sharing one fibre. <b>Coherent</b>: optics that read the phase and polarisation of the light, not just its brightness — that is how 400G fits in one wavelength, and why these receivers quote an OSNR requirement. <b>CD</b> (Chromatic Dispersion): different colours inside one channel travel at slightly different speeds, smearing pulses over distance — measured in ps/nm. <b>PMD</b> (Polarisation Mode Dispersion): the two polarisations of the light drift apart in time as fibre imperfections accumulate. <b>ROADM</b> (Reconfigurable Optical Add-Drop Multiplexer): the node that switches wavelengths onto and off the route; each one slightly narrows the channel. <b>FEC</b> (Forward Error Correction): the error-correcting code the receiver runs — stronger FEC (OpenZR+ uses oFEC) is a large part of why ZR+ tolerates worse OSNR and more dispersion.</p></div>',
 "multicast-design-studio": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Some traffic has one sender and many listeners — a stock-exchange price feed is the classic case. Sending a separate copy to every listener would swamp the network, so multicast sends <i>one</i> copy and the routers themselves make copies only where the path branches, like a river splitting into streams. This studio designs that splitting tree for you: it draws the shared tree and the source tree on a real topology, measures how much longer the shared tree makes each listener wait, scores every candidate meeting point, works out the exact election math routers use to pick that meeting point automatically, and helps you choose between the two flavours of multicast — then writes you a starter config.</p><p class="pi-plain"><strong>Who is this for?</strong> First, HFT market-data engineers — exchange feeds are source-specific multicast, and microseconds of tree stretch are real money. Second, enterprise media and IPTV engineers running PIM on a campus or venue network. If you have ever been asked "where should the RP live?" or "ASM or SSM for this feed?", this is the tool.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a 4 Gb/s feed at R1 for group <code class="inline">239.1.1.1</code>, receivers at R3, R5 and R6, default RP R3. The scoring table says the best RP is actually <b>R2, with 19 ms of total shared-tree latency</b> (R3 costs 21 ms, R4 costs 22 ms) — and with R2 every receiver\'s stretch is exactly 1.00, because R2 sits on every shortest path. Scroll to the BSR hash lab: for group 239.1.1.1 with hash-mask length 30, the winner is <b>10.0.0.3</b> (R3) with a hash value of 1,738,919,403 — the election and the scoreboard are allowed to disagree, and real networks live with that.</div><p class="pi-gloss"><b>PIM</b> (Protocol Independent Multicast): the routing protocol that builds the copying trees; "protocol independent" because it borrows the unicast routing table instead of keeping its own. <b>RP</b> (Rendezvous Point): the meeting point receivers and sources both head for when a group starts up — the shared tree is rooted there. <b>RPT / shared tree</b>: the tree rooted at the RP, written (*,G) — "any source, this group". <b>SPT</b> (Shortest Path Tree): a tree rooted at the source itself, written (S,G) — always the fastest route, one per source. <b>SSM</b> (Source-Specific Multicast, RFC 4607): receivers name the exact source they want, so no RP is needed at all; its home is 232.0.0.0/8. <b>ASM</b> (Any-Source Multicast): the original model — receivers join a group and any source may send to it, which is why it needs an RP. <b>BSR</b> (Bootstrap Router): the mechanism that hands every router the same candidate-RP list and lets a standard hash (RFC 7761 §4.7.2) elect one RP per group, identically everywhere. <b>RPF</b> (Reverse Path Forwarding): the loop-safety check — a multicast packet is only accepted on the interface that unicast routing would use to go <i>back</i> toward the source or RP. <b>(S,G) / (*,G)</b>: the state entries routers keep — one per source-and-group pair, or one wildcard entry per group.</p></div>'
 ,
-"bgp-rr-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Routers inside one network share routes over <b>iBGP</b> — BGP spoken inside your own network rather than between networks. By default every router must talk to every other router (a "full mesh"), and the conversation count explodes as you add routers: 40 routers need 780 separate sessions. A <b>route reflector</b> breaks that rule on purpose: ordinary routers (its <b>clients</b>) report their routes to the reflector, and the reflector passes them on — so each client only needs a session or two. This planner designs that setup: say how many clusters you have and how many reflectors and clients each one holds, and it works out the session math, writes every router\'s peer list, checks your cluster-IDs, shows what breaks when a reflector dies, and walks one route through the reflection rules step by step.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and data-center network engineers scaling iBGP past the point where a full mesh is sane — campus cores, multi-site networks, and anyone who has inherited a reflector design and wants to know exactly what it depends on.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a four-site campus, one <b>cluster</b> per site (a cluster is one reflector group plus the clients it serves), each with 2 reflectors and 8 clients: 40 routers, ASN 65000. The full mesh would need <b>780</b> sessions; the reflected design needs <b>92</b> — an 88.2% cut. Then use the failure panel: kill one reflector and nothing is orphaned; kill both in a site and that site\'s 8 clients are cut off. That difference is the whole reason reflectors come in pairs.</div><p class="pi-gloss"><b>iBGP</b> (internal BGP): BGP sessions between routers in the same autonomous system — your own network talking to itself. <b>Route reflector</b>: a router allowed to pass iBGP routes on to other iBGP routers, which plain iBGP forbids; the behaviour is defined in RFC 4456. <b>Cluster</b>: one reflector group and the clients it serves; the reflectors in a cluster share one cluster-ID. <b>Cluster-ID</b>: the label a reflector stamps on routes it reflects, so a route that comes back around can be recognised and dropped. <b>Client / non-client</b>: a client is a router the reflector serves; every other iBGP speaker is a non-client — in this planner, any non-client is itself a reflector. <b>ORIGINATOR_ID</b>: a stamp naming the router that first put a route into iBGP, so that router can refuse its own route if it ever comes back. <b>CLUSTER_LIST</b>: the running list of cluster-IDs a route has passed through — the loop-prevention trail a reflector checks before accepting a route. <b>Add-paths</b>: a BGP extension (RFC 7911) that lets a reflector send more than its single best path, so clients can see alternates.</p></div>'
+"bgp-rr-planner": '<div class="card panel pi-intro"><h3>Plain English</h3><p class="pi-plain"><strong>What does this do?</strong> Routers inside one network share routes over <b>iBGP</b> — BGP spoken inside your own network rather than between networks. By default every router must talk to every other router (a "full mesh"), and the conversation count explodes as you add routers: 40 routers need 780 separate sessions. A <b>route reflector</b> breaks that rule on purpose: ordinary routers (its <b>clients</b>) report their routes to the reflector, and the reflector passes them on — so each client only needs a session or two. This planner designs that setup: say how many clusters you have and how many reflectors and clients each one holds, and it works out the session math, writes every router\'s peer list, checks your cluster-IDs, shows what breaks when a reflector dies, and walks one route through the reflection rules step by step.</p><p class="pi-plain"><strong>Who is this for?</strong> Enterprise and data-center network engineers scaling iBGP past the point where a full mesh is sane — campus cores, multi-site networks, and anyone who has inherited a reflector design and wants to know exactly what it depends on.</p><div class="pi-try"><strong>Try this example:</strong> the defaults are the worked example — a four-site campus, one <b>cluster</b> per site (a cluster is one reflector group plus the clients it serves), each with 2 reflectors and 8 clients: 40 routers, ASN 65000. The full mesh would need <b>780</b> sessions; the reflected design needs <b>92</b> — an 88.2% cut. Then use the failure panel: kill one reflector and nothing is orphaned; kill both in a site and that site\'s 8 clients are cut off. That difference is the whole reason reflectors come in pairs. One more step: turn the <b>hierarchy</b> toggle on and watch 92 sessions become <b>81</b> while the router count goes 40 → <b>42</b> — two <b>top-level reflectors</b> are added above the clusters, and the reflectors below stop meshing with each other and peer upward to the top pair instead.</div><p class="pi-gloss"><b>iBGP</b> (internal BGP): BGP sessions between routers in the same autonomous system — your own network talking to itself. <b>Route reflector</b>: a router allowed to pass iBGP routes on to other iBGP routers, which plain iBGP forbids; the behaviour is defined in RFC 4456. <b>Cluster</b>: one reflector group and the clients it serves; the reflectors in a cluster share one cluster-ID. <b>Cluster-ID</b>: the label a reflector stamps on routes it reflects, so a route that comes back around can be recognised and dropped. <b>Client / non-client</b>: a client is a router the reflector serves; every other iBGP speaker is a non-client — in this planner, any non-client is itself a reflector. <b>ORIGINATOR_ID</b>: a stamp naming the router that first put a route into iBGP, so that router can refuse its own route if it ever comes back. <b>CLUSTER_LIST</b>: the running list of cluster-IDs a route has passed through — the loop-prevention trail a reflector checks before accepting a route. <b>Top-level reflector / hierarchy</b>: a second tier of reflectors sitting above the clusters; in a two-tier (hierarchical) design, cluster reflectors peer upward to the top-level pair instead of meshing with every other reflector in the AS, which caps session growth on very large networks. <b>Add-paths</b>: a BGP extension (RFC 7911) that lets a reflector send more than its single best path, so clients can see alternates.</p></div>'
 };
 function bindCopyButtons(root){
   $$("pre.code",root).forEach(function(pre){
@@ -791,7 +795,7 @@ function comma(n){ return Number(n).toLocaleString("en-US"); }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function initBgpRr(){
   function defaults(){
-    return {mode:"per",clusters:4,rrsPer:2,clientsPer:8,totalRouters:40,asn:65000,cidBase:"10.0.0.1",cids:[],failCluster:-1,failMode:"none",whatif:"none"};
+    return {mode:"per",clusters:4,rrsPer:2,clientsPer:8,totalRouters:40,asn:65000,cidBase:"10.0.0.1",cids:[],hierarchy:false,topCids:[],failCluster:-1,failMode:"none",whatif:"none"};
   }
   var state=defaults();
   function clampInt(v,lo,hi,dflt){ v=parseInt(v,10); if(!isFinite(v)) return dflt; return Math.max(lo,Math.min(hi,v)); }
@@ -814,7 +818,14 @@ function initBgpRr(){
       out.push(row);
     }
     state.cids=out;
+    syncTopCids();
   }
+  function syncTopCids(){
+    if(!state.topCids) state.topCids=[];
+    for(var t=0;t<2;t++){ if(!state.topCids[t]) state.topCids[t]=bumpIp(state.cidBase,state.clusters); }
+    if(state.topCids.length>2) state.topCids.length=2;
+  }
+  function hierOn(){ return !!state.hierarchy&&state.clusters>1; }
   /* ---------- design construction ---------- */
   function buildDesign(){
     var perClients=[];
@@ -833,24 +844,37 @@ function initBgpRr(){
       for(var k=0;k<perClients[ci];k++){ var kid="C"+(ci+1)+"-CL"+(k+1); cl.clientIds.push(kid); routers.push({id:kid,role:"Client",cluster:ci,cid:state.cids[ci][0]}); }
       clusters.push(cl);
     }
+    var hier=hierOn(), tops=[];
+    if(hier){
+      for(var t=0;t<2;t++){ var tid="TOP-RR"+(t+1); tops.push(tid); routers.push({id:tid,role:"Top-level reflector",cluster:-1,cid:state.topCids[t]}); }
+    }
     var loop={}; routers.forEach(function(rt,i){ loop[rt.id]="10.0.0."+(i+1); });
     var edges=[], eset={};
     function addEdge(a,b){ var key=a<b?a+"|"+b:b+"|"+a; if(!eset[key]){ eset[key]=true; edges.push([a,b]); } }
     var rrAll=[];
     clusters.forEach(function(cl){ cl.rrIds.forEach(function(id){ rrAll.push(id); }); });
     clusters.forEach(function(cl){ cl.clientIds.forEach(function(cid){ cl.rrIds.forEach(function(rr){ addEdge(cid,rr); }); }); });
-    for(var i=0;i<rrAll.length;i++) for(var j=i+1;j<rrAll.length;j++) addEdge(rrAll[i],rrAll[j]);
+    if(hier){
+      rrAll.forEach(function(rr){ tops.forEach(function(tp){ addEdge(rr,tp); }); });
+      addEdge(tops[0],tops[1]);
+    } else {
+      for(var i=0;i<rrAll.length;i++) for(var j=i+1;j<rrAll.length;j++) addEdge(rrAll[i],rrAll[j]);
+    }
     var peers={}; routers.forEach(function(rt){ peers[rt.id]=[]; });
     edges.forEach(function(e){ peers[e[0]].push(e[1]); peers[e[1]].push(e[0]); });
     var clientSessions=0; clusters.forEach(function(cl){ clientSessions+=cl.clientIds.length*cl.rrIds.length; });
-    var rrSessions=rrAll.length*(rrAll.length-1)/2;
-    return {routers:routers,clusters:clusters,edges:edges,peers:peers,loop:loop,perClients:perClients,
-      totalRouters:routers.length,totalReflectors:rrAll.length,clientSessions:clientSessions,rrSessions:rrSessions,
-      reflected:clientSessions+rrSessions,fullMesh:routers.length*(routers.length-1)/2};
+    var rrSessions=hier?0:rrAll.length*(rrAll.length-1)/2;
+    var upSessions=hier?(rrAll.length*2+1):0;
+    return {routers:routers,clusters:clusters,edges:edges,peers:peers,loop:loop,perClients:perClients,hier:hier,tops:tops,
+      totalRouters:routers.length,totalReflectors:rrAll.length,clientSessions:clientSessions,rrSessions:rrSessions,upSessions:upSessions,
+      reflected:clientSessions+rrSessions+upSessions,fullMesh:routers.length*(routers.length-1)/2};
   }
   function failedSet(d){
     var f={};
-    if(state.failCluster<0||state.failMode==="none") return f;
+    if(state.failMode==="none") return f;
+    if(state.failMode==="topone"){ if(d.tops&&d.tops.length) f[d.tops[0]]=true; return f; }
+    if(state.failMode==="topboth"){ if(d.tops) d.tops.forEach(function(id){ f[id]=true; }); return f; }
+    if(state.failCluster<0) return f;
     var cl=d.clusters[state.failCluster]; if(!cl) return f;
     var n=state.failMode==="both"?cl.rrIds.length:1;
     for(var i=0;i<n;i++) f[cl.rrIds[i]]=true;
@@ -862,32 +886,48 @@ function initBgpRr(){
     var lost=0;
     d.edges.forEach(function(e){ if(f[e[0]]||f[e[1]]) lost++; });
     var orphaned=[],degraded=0,isolated=[];
-    var liveTotal=0;
-    d.clusters.forEach(function(cl){ cl.rrIds.forEach(function(id){ if(!f[id]) liveTotal++; }); });
     d.clusters.forEach(function(cl){
       var live=cl.rrIds.filter(function(id){ return !f[id]; }).length;
       var hit=cl.rrIds.length-live;
       if(cl.clientIds.length){
-        if(live===0){ orphaned=orphaned.concat(cl.clientIds); isolated.push(cl.idx+1); }
-        else {
-          if(hit>0) degraded+=cl.clientIds.length;
-          if(d.clusters.length>1&&liveTotal===live) isolated.push(cl.idx+1);
-        }
+        if(live===0) orphaned=orphaned.concat(cl.clientIds);
+        else if(hit>0) degraded+=cl.clientIds.length;
       }
     });
-    return {failed:ids,lost:lost,remaining:d.edges.length-lost,orphaned:orphaned,degraded:degraded,isolated:isolated,cluster:state.failCluster+1};
+    if(d.clusters.length>1){
+      var parent={};
+      d.routers.forEach(function(rt){ parent[rt.id]=rt.id; });
+      var find=function(x){ while(parent[x]!==x){ parent[x]=parent[parent[x]]; x=parent[x]; } return x; };
+      d.edges.forEach(function(e){ if(f[e[0]]||f[e[1]]) return; var a=find(e[0]),bb=find(e[1]); if(a!==bb) parent[a]=bb; });
+      var rootsByCluster=d.clusters.map(function(cl){
+        var s={};
+        cl.rrIds.concat(cl.clientIds).forEach(function(id){ if(!f[id]) s[find(id)]=true; });
+        return s;
+      });
+      d.clusters.forEach(function(cl,i){
+        if(!cl.clientIds.length) return;
+        var linked=false;
+        rootsByCluster.forEach(function(s,j){
+          if(j!==i) Object.keys(rootsByCluster[i]).forEach(function(r){ if(s[r]) linked=true; });
+        });
+        if(!linked) isolated.push(cl.idx+1);
+      });
+    }
+    var topFail=state.failMode==="topone"?1:(state.failMode==="topboth"?2:0);
+    return {failed:ids,lost:lost,remaining:d.edges.length-lost,orphaned:orphaned,degraded:degraded,isolated:isolated,cluster:topFail?0:state.failCluster+1,topFail:topFail};
   }
   function validate(d){
+    var groups=d.clusters.map(function(cl){ return {label:"Cluster "+(cl.idx+1),ids:state.cids[cl.idx]}; });
+    if(d.hier) groups.push({label:"Top tier",ids:state.topCids.slice()});
     var mismatch=[],shared=[],single=[];
-    d.clusters.forEach(function(cl){
-      var ids=state.cids[cl.idx];
-      for(var r=1;r<ids.length;r++) if(ids[r]!==ids[0]){ mismatch.push({cluster:cl.idx+1,ids:ids.slice()}); break; }
-      if(cl.rrIds.length===1) single.push(cl.idx+1);
+    groups.forEach(function(g){
+      for(var r=1;r<g.ids.length;r++) if(g.ids[r]!==g.ids[0]){ mismatch.push({label:g.label,ids:g.ids.slice()}); break; }
     });
+    d.clusters.forEach(function(cl){ if(cl.rrIds.length===1) single.push(cl.idx+1); });
     var byCid={};
-    d.clusters.forEach(function(cl){ state.cids[cl.idx].forEach(function(x){ (byCid[x]=byCid[x]||{}); byCid[x][cl.idx]=true; }); });
-    Object.keys(byCid).forEach(function(x){ var cs=Object.keys(byCid[x]); if(cs.length>1) shared.push({cid:x,clusters:cs.map(function(n){return Number(n)+1;})}); });
-    return {mismatch:mismatch,shared:shared,single:single};
+    groups.forEach(function(g){ g.ids.forEach(function(x){ (byCid[x]=byCid[x]||{}); byCid[x][g.label]=true; }); });
+    Object.keys(byCid).forEach(function(x){ var ls=Object.keys(byCid[x]); if(ls.length>1) shared.push({cid:x,labels:ls}); });
+    return {mismatch:mismatch,shared:shared,single:single,hier:d.hier};
   }
   /* ---------- rendering ---------- */
   function renderCidEditor(){
@@ -899,6 +939,13 @@ function initBgpRr(){
       }
       html+='</div>';
     }
+    if(hierOn()){
+      html+='<div class="rr-cid-cluster"><span class="rr-cid-name">Top tier</span>';
+      for(var t=0;t<2;t++){
+        html+='<label for="rr-topcid-'+t+'">Top reflector TOP-RR'+(t+1)+' cluster-ID</label><input id="rr-topcid-'+t+'" data-topcid="'+t+'" type="text" value="'+esc(state.topCids[t])+'" spellcheck="false">';
+      }
+      html+='</div>';
+    }
     $("#rr-cidedit").innerHTML=html;
     $$("#rr-cidedit [data-cid]").forEach(function(inp){
       inp.addEventListener("input",function(){
@@ -907,9 +954,20 @@ function initBgpRr(){
         render(false);
       });
     });
+    $$("#rr-cidedit [data-topcid]").forEach(function(inp){
+      inp.addEventListener("input",function(){
+        state.topCids[Number(inp.getAttribute("data-topcid"))]=inp.value.trim();
+        render(false);
+      });
+    });
   }
   function renderTopo(d,f){
     var html="";
+    if(d.hier){
+      html+='<div class="rr-ccard" style="grid-column:1/-1;border-color:#0d9488"><h4>Top tier <span class="rr-cid-lbl">cluster-ID '+esc(state.topCids[0])+'</span></h4><div class="rr-chips">'
+        +d.tops.map(function(id){ return '<span class="rr-chip'+(f[id]?" dead":"")+'">'+id+'</span>'; }).join("")
+        +'</div><p class="rr-note" style="margin:.5rem 0 0">Two dedicated top-level reflectors above the clusters. Every cluster reflector peers with both of them, and the two tops peer with each other — there is no reflector mesh in hierarchy mode.</p></div>';
+    }
     d.clusters.forEach(function(cl){
       html+='<div class="rr-ccard"><h4>Cluster '+(cl.idx+1)+' <span class="rr-cid-lbl">cluster-ID '+esc(state.cids[cl.idx][0])+'</span></h4><div class="rr-chips">'
         +cl.rrIds.map(function(id){ return '<span class="rr-chip'+(f[id]?" dead":"")+'">'+id+'</span>'; }).join("")
@@ -917,7 +975,9 @@ function initBgpRr(){
         +'</div></div>';
     });
     $("#rr-topo").innerHTML=html;
-    $("#rr-meshpill").textContent="Reflector mesh: all "+d.totalReflectors+" reflectors peer with each other across the AS — "+comma(d.rrSessions)+" sessions. Clients peer only with the reflectors in their own cluster.";
+    $("#rr-meshpill").textContent=d.hier
+      ? "Hierarchy: "+d.totalReflectors+" cluster reflectors × 2 top-level reflectors = "+comma(d.totalReflectors*2)+" upward sessions, plus 1 session between the two top reflectors. Clients peer only with the reflectors in their own cluster."
+      : "Reflector mesh: all "+d.totalReflectors+" reflectors peer with each other across the AS — "+comma(d.rrSessions)+" sessions. Clients peer only with the reflectors in their own cluster.";
   }
   function renderMath(d){
     $("#rr-s-routers").textContent=comma(d.totalRouters);
@@ -926,6 +986,15 @@ function initBgpRr(){
     var red=d.fullMesh>0?(100*(1-d.reflected/d.fullMesh)):0;
     $("#rr-s-red").textContent=red.toFixed(1)+"%";
     var totalClients=d.routers.filter(function(r){return r.role==="Client";}).length;
+    if(d.hier){
+      var hPeers=d.clusters.map(function(cl){ return cl.clientIds.length+2; });
+      var hSame=hPeers.every(function(x){ return x===hPeers[0]; });
+      var hTxt=hSame?("each cluster reflector holds <b>"+hPeers[0]+"</b> sessions ("+d.clusters[0].clientIds.length+" to its own clients + 2 to the top-level reflectors)")
+        :("cluster reflector peer counts vary by cluster: "+d.clusters.map(function(cl,i){ return "Cluster "+(i+1)+" reflectors hold <b>"+hPeers[i]+"</b> ("+cl.clientIds.length+" own clients + 2 top-level reflectors)"; }).join("; "));
+      $("#rr-math").innerHTML='<p style="margin:.2rem 0;line-height:1.6"><b>'+comma(d.reflected)+' reflected sessions</b> = <b>'+comma(d.clientSessions)+'</b> client–reflector ('+totalClients+' clients × '+state.rrsPer+' reflector'+(state.rrsPer===1?"":"s")+' each) + <b>'+comma(d.totalReflectors*2)+'</b> cluster reflector–top ('+d.totalReflectors+' cluster reflectors × 2 top-level reflectors) + <b>1</b> top–top. Total = (clients × reflectors per cluster, summed over clusters) + (total cluster reflectors × 2) + 1. Against the full mesh of <b>'+comma(d.fullMesh)+'</b> for '+comma(d.totalRouters)+' routers, that is a <b>'+red.toFixed(1)+'%</b> reduction.</p>'
+        +'<p style="margin:.2rem 0;line-height:1.6">Per router: each client holds <b>'+state.rrsPer+'</b> session'+(state.rrsPer===1?"":"s")+' — one to every reflector in its own cluster; '+hTxt+'; each top-level reflector holds <b>'+(d.totalReflectors+1)+'</b> sessions ('+d.totalReflectors+' to the cluster reflectors + 1 to the other top-level reflector).</p>';
+      return;
+    }
     var rrPeers=d.clusters.map(function(cl){ return cl.clientIds.length+(d.totalReflectors-1); });
     var rrSame=rrPeers.every(function(x){ return x===rrPeers[0]; });
     var rrTxt=rrSame?("each reflector holds <b>"+rrPeers[0]+"</b> sessions ("+d.clusters[0].clientIds.length+" to its own clients + "+(d.totalReflectors-1)+" to the other reflectors)")
@@ -936,14 +1005,14 @@ function initBgpRr(){
   function renderValid(v){
     var rows="";
     if(v.mismatch.length){
-      rows+='<div class="rr-check"><span class="rr-pill err">ERROR</span><p><b>Reflectors in the same cluster disagree on the cluster-ID:</b> '+v.mismatch.map(function(m){ return "Cluster "+m.cluster+" runs "+m.ids.map(esc).join(" and "); }).join("; ")+'. Paired reflectors must share one cluster-ID — while they differ, each treats the other\'s reflected routes as coming from a different cluster, so loop prevention breaks down inside the cluster and routes can circulate or be dropped.</p></div>';
+      rows+='<div class="rr-check"><span class="rr-pill err">ERROR</span><p><b>Reflectors in the same cluster disagree on the cluster-ID:</b> '+v.mismatch.map(function(m){ return m.label+" runs "+m.ids.map(esc).join(" and "); }).join("; ")+'. Paired reflectors must share one cluster-ID — while they differ, each treats the other\'s reflected routes as coming from a different cluster, so loop prevention breaks down inside the cluster and routes can circulate or be dropped.</p></div>';
     } else {
-      rows+='<div class="rr-check"><span class="rr-pill pass">PASS</span><p><b>Same-cluster reflectors share one cluster-ID</b> in every cluster.</p></div>';
+      rows+='<div class="rr-check"><span class="rr-pill pass">PASS</span><p><b>Same-cluster reflectors share one cluster-ID</b> in every cluster'+(v.hier?', and the two top-level reflectors share theirs in the top tier':'')+'.</p></div>';
     }
     if(v.shared.length){
-      rows+='<div class="rr-check"><span class="rr-pill err">ERROR</span><p><b>Two clusters share a cluster-ID:</b> '+v.shared.map(function(s){ return "Clusters "+s.clusters.join(" and ")+" both use "+esc(s.cid); }).join("; ")+'. Reflected routes passing between those clusters can be discarded as if already reflected — each cluster mistakes the other\'s stamp for its own, and routes silently black-hole between them.</p></div>';
+      rows+='<div class="rr-check"><span class="rr-pill err">ERROR</span><p><b>Two clusters share a cluster-ID:</b> '+v.shared.map(function(s){ return s.labels.join(" and ")+" both use "+esc(s.cid); }).join("; ")+'. Reflected routes passing between those clusters can be discarded as if already reflected — each cluster mistakes the other\'s stamp for its own, and routes silently black-hole between them.</p></div>';
     } else {
-      rows+='<div class="rr-check"><span class="rr-pill pass">PASS</span><p><b>No two clusters share a cluster-ID</b> — every cluster stamps routes with its own ID.</p></div>';
+      rows+='<div class="rr-check"><span class="rr-pill pass">PASS</span><p><b>No two clusters share a cluster-ID</b> — every cluster stamps routes with its own ID'+(v.hier?', and the top tier uses an ID of its own':'')+'.</p></div>';
     }
     if(v.single.length){
       rows+='<div class="rr-check"><span class="rr-pill warnp">WARNING</span><p><b>Single-reflector clusters:</b> '+v.single.map(function(n){ return "Cluster "+n; }).join(", ")+' ha'+(v.single.length===1?"s":"ve")+' only one reflector — no redundancy. If it fails, its clients are orphaned; see the <a href="#rr-blastcard">blast radius</a> section.</p></div>';
@@ -957,11 +1026,23 @@ function initBgpRr(){
       $("#rr-blast").innerHTML='<p style="line-height:1.6;margin:.2rem 0">No failure selected. Use the failure test panel to fail one reflector — or every reflector — in a cluster, and this section scores the damage: sessions lost, clients orphaned (left with no live reflector), and clusters isolated from the rest of the AS. Keep the key distinction in mind: a client whose cluster still has a live reflector is <b>degraded</b>, not orphaned — it keeps its routes, it just has no backup left.</p>';
       return;
     }
-    var html='<div class="stat-strip" style="margin:.4rem 0 .8rem"><div class="stat"><span class="v">'+comma(b.lost)+'</span><span class="l">Sessions lost</span></div><div class="stat"><span class="v">'+b.orphaned.length+'</span><span class="l">Clients orphaned</span></div><div class="stat"><span class="v">'+comma(b.degraded)+'</span><span class="l">Clients degraded (one reflector left)</span></div><div class="stat"><span class="v">'+comma(b.remaining)+'</span><span class="l">Sessions remaining</span></div></div>'
-      +'<p style="line-height:1.6;margin:.2rem 0">Failed: <b>'+b.failed.map(esc).join(", ")+'</b> in Cluster '+b.cluster+'. Those reflectors held '+comma(b.lost)+' sessions between their clients and the reflector mesh; every one of them is gone.</p>';
+    var html='<div class="stat-strip" style="margin:.4rem 0 .8rem"><div class="stat"><span class="v">'+comma(b.lost)+'</span><span class="l">Sessions lost</span></div><div class="stat"><span class="v">'+b.orphaned.length+'</span><span class="l">Clients orphaned</span></div><div class="stat"><span class="v">'+comma(b.degraded)+'</span><span class="l">Clients degraded (one reflector left)</span></div><div class="stat"><span class="v">'+comma(b.remaining)+'</span><span class="l">Sessions remaining</span></div></div>';
+    if(b.topFail===1){
+      html+='<p style="line-height:1.6;margin:.2rem 0">Failed: <b>'+b.failed.map(esc).join(", ")+'</b>, one of the two top-level reflectors. It held '+comma(b.lost)+' sessions — one to every cluster reflector, plus its session to the other top-level reflector — and every one of them is gone.</p>'
+        +'<p style="line-height:1.6;margin:.2rem 0"><b>No clients orphaned, and no cluster isolated.</b> The surviving top-level reflector still connects every cluster, so inter-cluster routes keep flowing. The design is degraded — the top tier is running on one reflector with no backup — not broken.</p>';
+      $("#rr-blast").innerHTML=html;
+      return;
+    }
+    if(b.topFail===2){
+      html+='<p style="line-height:1.6;margin:.2rem 0">Failed: <b>'+b.failed.map(esc).join(", ")+'</b> — both top-level reflectors, the whole top tier. Together they held '+comma(b.lost)+' sessions; every one of them is gone.</p>'
+        +'<p style="line-height:1.6;margin:.2rem 0"><b>No clients orphaned.</b> Every cluster\'s own reflectors are still up, so clients keep their local routes. But with both top-level reflectors down, <b>all '+b.isolated.length+' clusters are isolated from each other</b> — no route crosses between clusters until a top-level reflector comes back. Orphaned and isolated are different failures: these clients still have reflectors; it is the clusters that have lost each other.</p>';
+      $("#rr-blast").innerHTML=html;
+      return;
+    }
+    html+='<p style="line-height:1.6;margin:.2rem 0">Failed: <b>'+b.failed.map(esc).join(", ")+'</b> in Cluster '+b.cluster+'. Those reflectors held '+comma(b.lost)+' sessions between their clients and '+(d.hier?'the top tier':'the reflector mesh')+'; every one of them is gone.</p>';
     if(b.orphaned.length) html+='<p style="line-height:1.6;margin:.2rem 0"><b>'+b.orphaned.length+' clients orphaned</b> ('+b.orphaned.map(esc).join(", ")+'): every reflector in their cluster is down, so they hold no iBGP session at all and stop receiving routes. <b>Cluster '+b.cluster+' is isolated</b> — cut off from the rest of the AS.</p>';
     else html+='<p style="line-height:1.6;margin:.2rem 0"><b>No clients orphaned.</b> Every client in Cluster '+b.cluster+' still has a live reflector, so routes keep flowing — those clients are degraded (no redundancy left), not orphaned.</p>';
-    if(b.isolated.length&&!b.orphaned.length) html+='<p style="line-height:1.6;margin:.2rem 0"><b>Cluster '+b.isolated.join(", ")+' is isolated</b> from the other clusters: its reflector is the only one left standing in the AS, so its clients can reach local routes only.</p>';
+    if(b.isolated.length&&!b.orphaned.length) html+='<p style="line-height:1.6;margin:.2rem 0"><b>Cluster '+b.isolated.join(", ")+' is isolated</b> from the other clusters: '+(d.hier?'nothing above it is left standing to carry its routes to the rest of the AS':'its reflector is the only one left standing in the AS')+', so its clients can reach local routes only.</p>';
     $("#rr-blast").innerHTML=html;
   }
   function renderPeers(d,f){
@@ -970,7 +1051,7 @@ function initBgpRr(){
       if(shown>=cap) return;
       shown++;
       rows+='<tr><td data-label="Router"><b>'+rt.id+'</b>'+(f[rt.id]?' <span class="rr-pill err">FAILED</span>':"")+'<br><span style="color:var(--muted);font-size:.82rem">router-ID '+d.loop[rt.id]+'</span></td>'
-        +'<td data-label="Role">'+rt.role+'</td><td data-label="Cluster">Cluster '+(rt.cluster+1)+'</td><td data-label="Cluster-ID">'+esc(rt.cid)+'</td>'
+        +'<td data-label="Role">'+rt.role+'</td><td data-label="Cluster">'+(rt.cluster>=0?('Cluster '+(rt.cluster+1)):'Top tier')+'</td><td data-label="Cluster-ID">'+esc(rt.cid)+'</td>'
         +'<td data-label="Peers">'+d.peers[rt.id].length+'</td><td data-label="Peer list" class="peers">'+d.peers[rt.id].map(esc).join(", ")+'</td></tr>';
     });
     var html='<table class="rr-table"><thead><tr><th>Router</th><th>Role</th><th>Cluster</th><th>Cluster-ID</th><th>Peers</th><th>Peer list</th></tr></thead><tbody>'+rows+'</tbody></table>';
@@ -988,8 +1069,28 @@ function initBgpRr(){
     });
     if(cl.clientIds.length>20) lines.push(" ! …and "+(cl.clientIds.length-20)+" more clients, same three lines each");
     lines.push(" !");
-    d.routers.forEach(function(rt){ if(rt.role==="Reflector"&&rt.id!==rr){ lines.push(" neighbor "+d.loop[rt.id]+" remote-as "+asn); lines.push(" neighbor "+d.loop[rt.id]+" update-source Loopback0"); } });
+    if(d.hier){
+      lines.push(" ! Hierarchy: this reflector's only non-client peers are the two top-level reflectors.");
+      d.tops.forEach(function(tp){ lines.push(" neighbor "+d.loop[tp]+" remote-as "+asn); lines.push(" neighbor "+d.loop[tp]+" update-source Loopback0"); });
+    } else {
+      d.routers.forEach(function(rt){ if(rt.role==="Reflector"&&rt.id!==rr){ lines.push(" neighbor "+d.loop[rt.id]+" remote-as "+asn); lines.push(" neighbor "+d.loop[rt.id]+" update-source Loopback0"); } });
+    }
     var html='<p class="rr-note" style="margin:.2rem 0 .5rem"><b>Reflector</b> — '+rr+', serving Cluster 1:</p><pre class="code"><code>'+esc(lines.join("\n"))+'</code></pre>';
+    if(d.hier){
+      var rrList=d.routers.filter(function(rt){ return rt.role==="Reflector"; });
+      var tl=["! TOP-RR1 — top-level reflector for the Top tier (AS "+asn+")","router bgp "+asn," bgp router-id "+d.loop[d.tops[0]]," bgp cluster-id "+state.topCids[0]," bgp log-neighbor-changes"," !"," ! Every cluster reflector is a route-reflector-client of the top tier:"];
+      rrList.slice(0,20).forEach(function(rt){
+        tl.push(" neighbor "+d.loop[rt.id]+" remote-as "+asn);
+        tl.push(" neighbor "+d.loop[rt.id]+" update-source Loopback0");
+        tl.push(" neighbor "+d.loop[rt.id]+" route-reflector-client");
+      });
+      if(rrList.length>20) tl.push(" ! …and "+(rrList.length-20)+" more cluster reflectors, same three lines each");
+      tl.push(" !");
+      tl.push(" ! The other top-level reflector is a plain non-client peer:");
+      tl.push(" neighbor "+d.loop[d.tops[1]]+" remote-as "+asn);
+      tl.push(" neighbor "+d.loop[d.tops[1]]+" update-source Loopback0");
+      html+='<p class="rr-note" style="margin:1rem 0 .5rem"><b>Top-level reflector</b> — '+d.tops[0]+', serving the Top tier:</p><pre class="code"><code>'+esc(tl.join("\n"))+'</code></pre>';
+    }
     if(cl.clientIds.length){
       var c0=cl.clientIds[0], cl2=["! "+c0+" — client in Cluster 1 (AS "+asn+")","router bgp "+asn," bgp router-id "+d.loop[c0]," bgp log-neighbor-changes"," !"];
       cl.rrIds.forEach(function(rid){ cl2.push(" neighbor "+d.loop[rid]+" remote-as "+asn); cl2.push(" neighbor "+d.loop[rid]+" update-source Loopback0"); });
@@ -1015,6 +1116,26 @@ function initBgpRr(){
     actors.innerHTML='<p style="line-height:1.6;margin:.2rem 0">The route: <b>'+pfx+'</b>, originated by client <b>'+src+'</b> in Cluster 1 and delivered to client <b>'+dst+'</b> in Cluster '+(dstC.idx+1)+'. Watch the two RFC 4456 stamps at every hop: <span class="attr" style="font-family:var(--font-mono)">ORIGINATOR_ID</span> (who first put the route into iBGP) and <span class="attr" style="font-family:var(--font-mono)">CLUSTER_LIST</span> (every cluster the route has been reflected through).</p>';
     var steps=[];
     steps.push('<b>'+src+'</b> originates '+pfx+' and advertises it to its reflector <b>'+rrA+'</b>'+(rrMate?' (and to '+rrMate+' — every client peers with every reflector in its cluster)':'')+'. <span class="attr">ORIGINATOR_ID</span> not set yet — the first reflector to reflect the route sets it. <span class="attr">CLUSTER_LIST</span> empty.');
+    if(d.hier){
+      var topA=d.tops[0], topB=d.tops[1], topCid=state.topCids[0];
+      var hiddenH='<p style="line-height:1.6;margin:1rem 0 0"><b>The hidden-path cost.</b> A reflector advertises only its single best path for a prefix. If Cluster 1 had two equal routes to '+pfx+', '+dst+' would only ever see the one '+rrB+' picked — the alternate stays invisible until the best path fails. BGP <b>add-paths</b> (RFC 7911) is the mitigation: it lets a reflector send several paths for the same prefix, so clients can see the alternates and fail over instantly.</p>';
+      steps.push('<b>'+rrA+'</b> receives the route from a <b>client</b>, so the reflection rules let it pass the route to clients <i>and</i> non-clients. It stamps <span class="attr">ORIGINATOR_ID = '+lo[src]+'</span> (the originator\'s router-ID) and starts <span class="attr">CLUSTER_LIST = ['+esc(cidA)+']</span> with its own cluster-ID, then reflects the route to its other clients and up to both top-level reflectors — in a hierarchy the top pair are a cluster reflector\'s only non-client peers; cluster reflectors no longer mesh with each other.');
+      if(state.whatif==="cluster"){
+        steps.push('<b>'+topA+'</b> reflects the route up the tier as normal, prepending the top cluster-ID: <span class="attr">CLUSTER_LIST = ['+esc(topCid)+', '+esc(cidA)+']</span>. A copy reaches <b>'+topB+'</b>, the second top-level reflector, over the top–top session. Before accepting it, '+topB+' checks the list: the top tier\'s own cluster-ID, '+esc(topCid)+', is already in <span class="attr">CLUSTER_LIST</span>. Per RFC 4456 the route is <span class="discard">discarded</span> — this tier has already reflected it, and accepting it again is how routing loops start. (The healthy copies from the normal path are unaffected.)');
+      } else if(state.whatif==="originator"){
+        steps.push('One copy of the route eventually finds its way back to <b>'+src+'</b> itself, offered by a reflector. '+src+' compares <span class="attr">ORIGINATOR_ID = '+lo[src]+'</span> with its own router-ID, '+lo[src]+': they match. Per RFC 4456 the route is <span class="discard">discarded</span> — a router never accepts its own route back from a reflector. (The healthy copies delivered to other clusters are unaffected.)');
+      } else {
+        steps.push('<b>'+topA+'</b>, a top-level reflector, receives the route from '+rrA+'. Loop checks first: is the top tier\'s own cluster-ID ('+esc(topCid)+') in <span class="attr">CLUSTER_LIST = ['+esc(cidA)+']</span>? No. '+rrA+' is a <b>client</b> of the top tier, so the reflection rules let '+topA+' pass the route to clients <i>and</i> non-clients: it prepends the top cluster-ID, <span class="attr">CLUSTER_LIST = ['+esc(topCid)+', '+esc(cidA)+']</span>, and reflects the route to every cluster reflector in the AS (and to '+topB+', which holds it as a backup path).');
+        steps.push('<b>'+rrB+'</b>, the reflector in Cluster '+(dstC.idx+1)+', receives the route from '+topA+' — a <b>non-client</b>. Loop checks first: is its own cluster-ID ('+esc(cidB)+') in <span class="attr">CLUSTER_LIST = ['+esc(topCid)+', '+esc(cidA)+']</span>? No. Is <span class="attr">ORIGINATOR_ID = '+lo[src]+'</span> its own router-ID ('+lo[rrB]+')? No. Route accepted.');
+        steps.push('<b>'+rrB+'</b> reflects the route — and a route learned from a non-client is reflected <b>only to clients</b>. It prepends its cluster-ID, <span class="attr">CLUSTER_LIST = ['+esc(cidB)+', '+esc(topCid)+', '+esc(cidA)+']</span>, and sends the route to '+dst+' and its other clients in Cluster '+(dstC.idx+1)+'. It does not send it back up to the top tier.');
+        steps.push('<b>'+dst+'</b> installs '+pfx+'. Final check at the receiver: <span class="attr">ORIGINATOR_ID = '+lo[src]+'</span> is not its own router-ID ('+lo[dst]+'), so the route stands. The CLUSTER_LIST tells the whole journey — Cluster '+(dstC.idx+1)+', the top tier, Cluster 1 — one stamp per reflecting tier. '+dst+' now reaches a prefix from another site through two tiers of reflection, without ever holding a session with '+src+'.');
+      }
+      var rulesH='<div class="rr-rules"><b>The reflection rules, as just exercised (RFC 4456):</b><br>'
+        +'• Route learned from a <b>client</b> → reflected to clients and non-clients. ('+rrA+' sent '+src+'\'s route to its other clients and up to the top tier; '+topA+', which learned it from a client, sent it on to every cluster reflector.)<br>'
+        +'• Route learned from a <b>non-client</b> → reflected to clients only. ('+rrB+' sent it to '+dst+' and its cluster-mates — not back up to the top tier.)</div>';
+      el.innerHTML='<ol class="rr-steps">'+steps.map(function(s){ return "<li>"+s+"</li>"; }).join("")+'</ol>'+rulesH+hiddenH;
+      return;
+    }
     steps.push('<b>'+rrA+'</b> receives the route from a <b>client</b>, so the reflection rules let it pass the route to clients <i>and</i> non-clients. It stamps <span class="attr">ORIGINATOR_ID = '+lo[src]+'</span> (the originator\'s router-ID) and starts <span class="attr">CLUSTER_LIST = ['+esc(cidA)+']</span> with its own cluster-ID, then reflects the route to its other clients and across the reflector mesh.');
     if(state.whatif==="cluster"){
       var who=rrMate?('<b>'+rrMate+'</b>, the other reflector in Cluster 1, also receives a copy of the route — carried over the reflector mesh from '+rrA):('The route eventually comes back around to <b>'+rrA+'</b> itself on another path');
@@ -1036,12 +1157,16 @@ function initBgpRr(){
     var cls,txt;
     if(v.mismatch.length){
       var m=v.mismatch[0];
-      cls="bad"; txt="Fix the cluster-IDs first: Cluster "+m.cluster+"'s reflectors disagree ("+m.ids.map(esc).join(" vs ")+"). Paired reflectors must share one cluster-ID — until they do, loop prevention inside that cluster is broken and no count below is trustworthy.";
+      cls="bad"; txt="Fix the cluster-IDs first: "+m.label+"'s reflectors disagree ("+m.ids.map(esc).join(" vs ")+"). Paired reflectors must share one cluster-ID — until they do, loop prevention inside that cluster is broken and no count below is trustworthy.";
     } else if(v.shared.length){
       var s=v.shared[0];
-      cls="bad"; txt="Fix the cluster-IDs first: Clusters "+s.clusters.join(" and ")+" share cluster-ID "+esc(s.cid)+". Routes reflected between them can be discarded as if already reflected — give every cluster its own ID.";
+      cls="bad"; txt="Fix the cluster-IDs first: "+s.labels.join(" and ")+" share cluster-ID "+esc(s.cid)+". Routes reflected between them can be discarded as if already reflected — give every cluster its own ID.";
     } else if(b&&b.orphaned.length){
       cls="bad"; txt="With the selected failure, "+b.orphaned.length+" client"+(b.orphaned.length===1?"":"s")+" in Cluster "+b.cluster+" are orphaned — left with no live reflector and no routes. This design survives losing one reflector per cluster, not all of them.";
+    } else if(b&&b.topFail===2){
+      cls="warn"; txt="Both top-level reflectors are down: the "+d.clusters.length+" clusters are isolated from each other. No client is orphaned — each cluster's own reflectors still serve its clients — but no route crosses between clusters until a top-level reflector comes back.";
+    } else if(b&&b.topFail===1){
+      cls="warn"; txt="One top-level reflector is down: the design is degraded, not isolated — the surviving top-level reflector still carries inter-cluster routes, but the top tier is running with no redundancy left until the failure is fixed.";
     } else if(v.single.length){
       cls="warn"; txt="Every cluster is a single point of failure: each has exactly one reflector, so failing it orphans its "+(d.clusters[0]?d.clusters[0].clientIds.length:0)+" clients outright. Add a second reflector per cluster before this design carries production routes.";
     } else if(b&&b.isolated.length){
@@ -1055,6 +1180,8 @@ function initBgpRr(){
   }
   function render(rebuildCids){
     syncCids();
+    if(state.clusters<2) state.hierarchy=false;
+    if(!hierOn()&&(state.failMode==="topone"||state.failMode==="topboth")) state.failMode="none";
     if(rebuildCids) renderCidEditor();
     var d=buildDesign(), f=failedSet(d), b=blast(d), v=validate(d);
     /* failure select options */
@@ -1065,6 +1192,16 @@ function initBgpRr(){
     $("#rr-fmboth").textContent=state.rrsPer===1?"Fail the only reflector":"Fail both reflectors";
     if(state.rrsPer===1&&state.failMode==="both") state.failMode="one";
     $$("#rr-failmode .btn").forEach(function(x){ x.classList.toggle("on",x.getAttribute("data-fm")===state.failMode); });
+    $$("#rr-hier .btn").forEach(function(x){ x.classList.toggle("on",(x.getAttribute("data-hier")==="on")===!!state.hierarchy); x.disabled=state.clusters<2; });
+    $("#rr-hiernote").textContent=state.clusters<2
+      ? "A second tier needs at least two clusters to sit above — add a cluster and the hierarchy toggle unlocks."
+      : (state.hierarchy
+        ? "Hierarchy on: 2 dedicated top-level reflectors sit above the clusters — the top tier is always a pair of 2, so there is no count to set. Cluster reflectors peer up to both tops instead of meshing with each other."
+        : "Flat: every reflector peers with every other reflector in one mesh. Turn the hierarchy on to add a top tier of 2 dedicated top-level reflectors above the clusters instead.");
+    $("#rr-fmtopone").hidden=!d.hier;
+    $("#rr-fmtopboth").hidden=!d.hier;
+    $("#rr-legendtop").hidden=!d.hier;
+    sel.disabled=(state.failMode==="topone"||state.failMode==="topboth");
     $$("#rr-mode .btn").forEach(function(x){ x.classList.toggle("on",x.getAttribute("data-mode")===state.mode); });
     $$("#rr-whatif .btn").forEach(function(x){ x.classList.toggle("on",x.getAttribute("data-wi")===state.whatif); });
     $("#rr-perwrap").hidden=state.mode!=="per";
@@ -1077,6 +1214,7 @@ function initBgpRr(){
   }
   /* ---------- wiring ---------- */
   $$("#rr-mode .btn").forEach(function(btn){ btn.addEventListener("click",function(){ state.mode=btn.getAttribute("data-mode"); render(false); }); });
+  $$("#rr-hier .btn").forEach(function(btn){ btn.addEventListener("click",function(){ if(state.clusters<2) return; state.hierarchy=btn.getAttribute("data-hier")==="on"; render(true); }); });
   $$("#rr-failmode .btn").forEach(function(btn){ btn.addEventListener("click",function(){ state.failMode=btn.getAttribute("data-fm"); if(state.failMode!=="none"&&state.failCluster<0) state.failCluster=0; render(false); }); });
   $$("#rr-whatif .btn").forEach(function(btn){ btn.addEventListener("click",function(){ state.whatif=btn.getAttribute("data-wi"); render(false); }); });
   $("#rr-failcluster").addEventListener("change",function(){ state.failCluster=Number(this.value); if(state.failMode==="none") state.failMode="one"; render(false); });
@@ -1088,6 +1226,7 @@ function initBgpRr(){
   $("#rr-cidbase").addEventListener("input",function(){ state.cidBase=this.value.trim(); });
   $("#rr-cidauto").addEventListener("click",function(){
     for(var c=0;c<state.clusters;c++) for(var r=0;r<state.rrsPer;r++) state.cids[c][r]=bumpIp(state.cidBase,c);
+    state.topCids=[bumpIp(state.cidBase,state.clusters),bumpIp(state.cidBase,state.clusters)];
     render(true);
   });
   $("#rr-reset").addEventListener("click",function(){
@@ -1102,6 +1241,8 @@ function pageBgpRr(){
   var css='<style>'
   +'.rr-note{font-size:.85rem;color:var(--muted);margin:.35rem 0 0;line-height:1.5}'
   +'.rr-seg{display:flex;gap:.5rem;margin:.2rem 0 .4rem;flex-wrap:wrap}'
+  +'.rr-seg .btn[hidden]{display:none}'
+  +'#rr-legendtop[hidden]{display:none}'
   +'.rr-seg .btn{opacity:.55}'
   +'.rr-seg .btn.on{opacity:1;outline:2px solid var(--accent);outline-offset:1px}'
   +'.rr-verdict{border:1px solid var(--line);border-radius:var(--radius-sm);padding:.95rem 1.1rem;margin:0 0 1.2rem;line-height:1.55;background:var(--surface2)}'
@@ -1146,7 +1287,7 @@ function pageBgpRr(){
   +'@media(max-width:760px){.rr-table,.rr-table tbody,.rr-table tr,.rr-table td{display:block}.rr-table thead{display:none}.rr-table tr{border:1px solid var(--line);border-radius:8px;margin:.6rem 0;overflow:hidden}.rr-table td{border-bottom:1px solid var(--line-soft)}.rr-table td:before{content:attr(data-label);display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}.rr-table td.peers{font-size:.85rem}}'
   +'</style>';
   var h=css
-  +'<div class="page-head"><h1>BGP Route Reflector Design Planner</h1><p class="lede">Design an iBGP route-reflector layout in one flow: full-mesh vs reflected session math for any cluster design, every router\'s peer list, cluster-ID validation, blast-radius analysis when reflectors fail, and one route walked through the RFC 4456 reflection rules — all computed in your browser.</p></div>'
+  +'<div class="page-head"><h1>BGP Route Reflector Design Planner</h1><p class="lede">Design an iBGP route-reflector layout in one flow: full-mesh vs reflected session math for any cluster design (flat or two-tier hierarchical), every router\'s peer list, cluster-ID validation, blast-radius analysis when reflectors fail, and one route walked through the RFC 4456 reflection rules — all computed in your browser.</p></div>'
   +plainIntro("bgp-rr-planner")
   +'<div id="rr-verdict" aria-live="polite"></div>'
   +'<div class="tool-shell">'
@@ -1160,6 +1301,8 @@ function pageBgpRr(){
   +'<div class="field" id="rr-totalwrap" style="margin-top:.8rem" hidden><label for="rr-total">Total routers in the AS</label><input id="rr-total" type="number" min="2" max="344" step="1" value="40">'
   +'<p class="rr-note" id="rr-distnote" aria-live="polite"></p></div>'
   +'<div class="field" style="margin-top:.8rem"><label for="rr-asn">Autonomous system number (used in the configs)</label><input id="rr-asn" type="number" min="1" max="4294967295" step="1" value="65000"></div>'
+  +'<div class="field" style="margin-top:.8rem"><label>Hierarchy — a second tier of reflectors</label><div class="rr-seg" id="rr-hier"><button class="btn btn-sm on" type="button" data-hier="off">Flat — one tier</button><button class="btn btn-sm" type="button" data-hier="on">Two-tier hierarchy</button></div>'
+  +'<p class="rr-note" id="rr-hiernote" aria-live="polite"></p></div>'
   +'<div style="margin-top:1rem"><button class="btn btn-ghost btn-sm" id="rr-reset" type="button">Reset the four-site campus preset</button></div>'
   +'</div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Cluster-IDs</h3>'
@@ -1170,19 +1313,19 @@ function pageBgpRr(){
   +'</div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Failure test</h3>'
   +'<div class="field"><label for="rr-failcluster">Cluster to hit</label><select id="rr-failcluster"></select></div>'
-  +'<div class="field" style="margin-top:.7rem"><label>Failure</label><div class="rr-seg" id="rr-failmode"><button class="btn btn-sm on" type="button" data-fm="none">No failure</button><button class="btn btn-sm" type="button" data-fm="one">Fail one reflector</button><button class="btn btn-sm" type="button" data-fm="both" id="rr-fmboth">Fail both reflectors</button></div>'
+  +'<div class="field" style="margin-top:.7rem"><label>Failure</label><div class="rr-seg" id="rr-failmode"><button class="btn btn-sm on" type="button" data-fm="none">No failure</button><button class="btn btn-sm" type="button" data-fm="one">Fail one reflector</button><button class="btn btn-sm" type="button" data-fm="both" id="rr-fmboth">Fail both reflectors</button><button class="btn btn-sm" type="button" data-fm="topone" id="rr-fmtopone" hidden>Fail one top-level reflector</button><button class="btn btn-sm" type="button" data-fm="topboth" id="rr-fmtopboth" hidden>Fail both top-level reflectors</button></div>'
   +'<p class="rr-note">The blast-radius section below scores the damage: sessions lost, clients orphaned, clusters cut off.</p></div>'
   +'</div>'
   +'</div>'
   +'<div>'
   +'<div class="card panel"><h3 style="margin-top:0">The design</h3>'
   +'<div class="rr-topo-wrap"><div class="rr-clusters" id="rr-topo"></div><p class="rr-meshpill" id="rr-meshpill"></p></div>'
-  +'<div class="rr-legend"><span><span class="rr-chip">C1-RR1</span> route reflector</span><span><span class="rr-chip client">C1-CL1</span> client</span><span><span class="rr-chip dead">C1-RR2</span> failed in the failure test</span></div>'
+  +'<div class="rr-legend"><span><span class="rr-chip">C1-RR1</span> route reflector</span><span><span class="rr-chip client">C1-CL1</span> client</span><span id="rr-legendtop" hidden><span class="rr-chip">TOP-RR1</span> top-level reflector</span><span><span class="rr-chip dead">C1-RR2</span> failed in the failure test</span></div>'
   +'</div>'
   +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Session math — full mesh vs reflected</h3>'
   +'<div class="stat-strip" style="margin:.4rem 0 .8rem"><div class="stat"><span class="v" id="rr-s-routers">—</span><span class="l">Routers in the AS</span></div><div class="stat"><span class="v" id="rr-s-full">—</span><span class="l">Full-mesh sessions</span></div><div class="stat"><span class="v" id="rr-s-refl">—</span><span class="l">Reflected sessions</span></div><div class="stat"><span class="v" id="rr-s-red">—</span><span class="l">Session reduction</span></div></div>'
   +'<div id="rr-math" aria-live="polite"></div>'
-  +'<p class="rr-note"><b>Counting method.</b> Sessions are undirected iBGP sessions, each counted once. Full mesh for N routers = N(N−1)/2. In the reflected design every client peers with <i>every</i> reflector in its own cluster (that is what makes the pair redundant); reflectors peer with each other in a full mesh across the whole AS; clients never peer with each other or with reflectors outside their cluster; any non-client is a reflector. Sanity anchor: 14 routers in a full mesh = 91 sessions. <b>Hierarchy:</b> two-tier (hierarchical) reflection is not included in this planner yet — everything here is one flat tier, counted exactly as stated.</p>'
+  +'<p class="rr-note"><b>Counting method.</b> Sessions are undirected iBGP sessions, each counted once. Full mesh for N routers = N(N−1)/2. In the reflected design every client peers with <i>every</i> reflector in its own cluster (that is what makes the pair redundant); reflectors peer with each other in a full mesh across the whole AS; clients never peer with each other or with reflectors outside their cluster; any non-client is a reflector. Sanity anchor: 14 routers in a full mesh = 91 sessions. <b>Hierarchy:</b> with the two-tier toggle on, the reflector mesh is replaced, not supplemented — total = (clients × reflectors per cluster, summed over clusters) + (total cluster reflectors × 2) + 1: every cluster reflector peers with both top-level reflectors, the two top-level reflectors peer with each other, and clients peer only inside their own cluster, exactly as in the flat design.</p>'
   +'</div>'
   +'</div>'
   +'</div>'
@@ -1212,7 +1355,7 @@ function pageBgpRr(){
   $("#app").innerHTML=h;
   markNav("tools"); document.title="BGP Route Reflector Design Planner: Session Math, Cluster-ID Checks & Blast Radius | Packet Path";
   var md=document.querySelector('meta[name="description"]');
-  if(md) md.setAttribute("content","Free BGP route reflector design planner: full-mesh vs reflected iBGP session math, per-router peer lists, cluster-ID validation, blast-radius analysis for reflector failures, an RFC 4456 reflection walk-through, and a starter Cisco config.");
+  if(md) md.setAttribute("content","Free BGP route reflector design planner: full-mesh vs reflected iBGP session math for flat and two-tier hierarchical designs, per-router peer lists, cluster-ID validation, blast-radius analysis for reflector failures, an RFC 4456 reflection walk-through, and a starter Cisco config.");
   setLD({"@context":"https://schema.org","@type":"WebApplication","name":"BGP Route Reflector Design Planner","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
   bindCopyButtons($("#app"));
   initBgpRr();
