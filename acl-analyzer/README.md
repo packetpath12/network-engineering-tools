@@ -30,7 +30,20 @@ Hit **Analyze**. Findings update live as you type. Each rule gets one verdict:
   Delete it and the firewall behaves identically.
 - **Overly broad** — a `permit ip any any`: every protocol, any source, any
   destination. Anything not explicitly denied above it is open.
+- **Partially shadowed / partially redundant** — an earlier rule already
+  decides *part* of this rule's match space (the page says which part and
+  about what share). The rest still fires — but check the dead part is not
+  the part you cared about.
 - **Clean** — reachable, and doing work no earlier rule already does for it.
+
+Coverage is also checked **jointly**: a rule covered only by several earlier
+rules together (two /25 permits jointly covering a /24 deny, two port ranges
+jointly covering a wider range) is reported shadowed or redundant *via
+union*, with every contributing rule named. When any rule is fully dead, a
+**Safe to delete** panel lists the dead rules with their deciders plus a
+cleaned config (dead lines removed; remarks and unparsed lines preserved)
+with a Copy button — Cisco and Juniper set-format; Juniper brace-format
+gets the delete list only.
 
 ## The logic, in brief
 
@@ -41,8 +54,11 @@ operators treated as the full port range with a note). Rules are evaluated
 top-down: a rule is covered by an earlier rule when protocol, both address
 ranges, and the port range are all contained. Shadowed rules are excluded as
 cover candidates — a dead rule can never match traffic, so it cannot cover
-anything. Protocol `ip` correctly covers tcp, udp, and icmp. Only full
-containment is reported; partial overlaps are deliberately not flagged.
+anything. Protocol `ip` correctly covers tcp, udp, and icmp. Beyond single
+coverers, each rule's match box is checked against the *union* of all
+earlier live rules by interval-box subtraction (protocol atoms included, so
+tcp + udp can never "cover" an `ip` rule), and partial overlaps are flagged
+with the already-decided part named.
 
 **Parser scope:** numbered extended IOS ACLs and bare permit/deny lines, IPv4
 only; Juniper `family inet` filters (set-format and brace-format). Juniper
