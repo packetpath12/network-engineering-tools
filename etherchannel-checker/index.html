@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EtherChannel / LACP Two-End Bundle Checker — Free Network Engineering Tool | Packet Path</title>
+<meta name="description" content="Paste the EtherChannel output from BOTH ends of a bundle and get a verdict: the exact mismatches that stop a port-channel forming, every flag decoded, and the fix commands for your exact ports. 100% in your browser.">
+<link rel="canonical" href="https://allaboutitinfrastructure.com/tools/etherchannel-checker/">
+<meta property="og:title" content="EtherChannel / LACP Two-End Bundle Checker — Free Network Engineering Tool | Packet Path">
+<meta property="og:description" content="Paste the EtherChannel output from BOTH ends of a bundle and get a verdict: the exact mismatches that stop a port-channel forming, every flag decoded, and the fix commands for your exact ports. 100% in your browser.">
+<meta property="og:url" content="https://allaboutitinfrastructure.com/tools/etherchannel-checker/">
+<meta property="og:type" content="website">
+<style>
+:root{
+  color-scheme:light dark;
+  --font-head:"Spectral",Georgia,"Times New Roman",serif;
+  --font-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f7faf8; --surface:#ffffff; --surface2:#eef4f1; --surface3:#e6eee9;
+  --ink:#142a25; --muted:#4f635b; --faint:#789089;
+  --line:#dde7e1; --line-soft:#eaf0ec;
+  --accent:#0a7d5f; --accent-strong:#076a51; --on-accent:#ffffff; --accent-soft:rgba(10,125,95,.10);
+  --teal:#0b6e99; --teal-soft:rgba(11,110,153,.10);
+  --amber:#9c5c00; --amber-soft:rgba(156,92,0,.10);
+  --warn-bg:#fff8e8; --warn-line:#e4b54d;
+  --code-bg:#0e1f1a; --code-ink:#e6f3ed; --code-line:#243530;
+  --link:#0b6e99;
+  --shadow:0 1px 2px rgba(16,40,32,.07),0 10px 28px -16px rgba(16,40,32,.25);
+  --radius:12px; --radius-sm:8px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a1210; --surface:#101816; --surface2:#141e1b; --surface3:#1a2522;
+    --ink:#e9f2ee; --muted:#a5b9b0; --faint:#7c938a;
+    --line:#223029; --line-soft:#1a2421;
+    --accent:#3cd79a; --accent-strong:#2fbe85; --on-accent:#05231a; --accent-soft:rgba(60,215,154,.12);
+    --teal:#5fc4e6; --teal-soft:rgba(95,196,230,.10);
+    --amber:#f0b13e; --amber-soft:rgba(240,177,62,.10);
+    --warn-bg:rgba(240,177,62,.07); --warn-line:#8a6a24;
+    --code-bg:#050b09; --code-ink:#dcf2e7; --code-line:#22302b;
+    --link:#5fc4e6;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.55);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.62}
+img{max-width:100%}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.18;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 .55em}
+h2{font-size:clamp(1.35rem,2.8vw,1.75rem);margin:1.7em 0 .5em}
+h3{font-size:1.12rem;margin:1.5em 0 .4em}
+p{margin:0 0 1.05em}
+::selection{background:var(--accent);color:var(--on-accent)}
+.wrap{max-width:1150px;margin:0 auto;padding:0 20px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:-999px;top:0;background:var(--ink);color:var(--bg);padding:.7rem 1rem;border-radius:0 0 8px 0;z-index:200;font-weight:700;text-decoration:none}
+.skip-link:focus{left:0}
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar-inner{display:flex;align-items:center;gap:14px;min-height:60px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--font-head);font-weight:700;font-size:1.18rem;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand:hover{text-decoration:none}
+.brand svg{flex:none}
+.brand .dot{color:var(--accent)}
+.mainnav{display:flex;gap:2px;margin-left:6px}
+.mainnav a{color:var(--muted);text-decoration:none;font-weight:700;font-size:.94rem;padding:.5rem .7rem;border-radius:8px;white-space:nowrap}
+.mainnav a:hover{color:var(--ink);background:var(--surface2)}
+.mainnav a[aria-current="page"]{color:var(--ink);background:var(--accent-soft)}
+.top-search{margin-left:auto;display:flex;align-items:center;gap:8px}
+.top-search input{width:170px;max-width:34vw;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:.42rem .9rem;font:inherit;font-size:.9rem}
+.top-search input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.theme-btn{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:999px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.theme-btn:hover{border-color:var(--accent)}
+.theme-btn .moon{display:none}
+html.darkm .theme-btn .moon{display:block}
+html.darkm .theme-btn .sun{display:none}
+html.lightm .theme-btn .moon{display:none}
+@media (prefers-color-scheme:dark){
+  html:not(.lightm):not(.darkm) .theme-btn .moon{display:block}
+  html:not(.lightm):not(.darkm) .theme-btn .sun{display:none}
+}
+.menu{display:none}
+/* ---------- layout helpers ---------- */
+main{min-height:60vh}
+.page-head{padding:2.4rem 0 1.2rem}
+.page-head .lede{font-size:1.12rem;color:var(--muted);max-width:62ch}
+.section-title{display:flex;align-items:baseline;gap:12px;margin:2.6rem 0 1.1rem;border-top:1px solid var(--line);padding-top:1.4rem}
+.section-title h2{margin:0;font-size:1.45rem}
+.section-title .more{margin-left:auto;font-size:.92rem;font-weight:700;white-space:nowrap}
+.lead-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:2rem;align-items:stretch;padding:2.6rem 0 1rem}
+.lede{font-size:1.13rem;color:var(--muted);max-width:56ch}
+.lede strong{color:var(--ink)}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:1.3rem 0 0}
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.98rem;padding:.66rem 1.15rem;border-radius:10px;text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:var(--font-body)}
+.btn:hover{background:var(--accent-strong);color:var(--on-accent);text-decoration:none}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.btn-sm{padding:.42rem .85rem;font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.soft{background:var(--surface2);border:1px solid var(--line-soft)}
+/* ---------- tool rows (home + tools hub) ---------- */
+.tool-list{display:grid;gap:12px;margin:0 0 .5rem;padding:0;list-style:none}
+.tool-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.05rem 1.25rem;box-shadow:var(--shadow)}
+.tool-row > a{color:inherit;text-decoration:none;display:contents}
+.tool-ic{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--surface3);border:1px solid var(--line)}
+.tool-row h3{margin:0 0 .2rem;font-family:var(--font-body);font-size:1.04rem;font-weight:700}
+.tool-row p{margin:0;color:var(--muted);font-size:.94rem;max-width:70ch}
+.tool-go{font-weight:700;font-size:.95rem;white-space:nowrap;color:var(--accent)}
+.tool-go .arr{display:inline-block;transition:transform .15s ease}
+.tool-row:hover .tool-go .arr{transform:translateX(4px)}
+/* ---------- mini tool card (home lead) ---------- */
+.mini-tool{padding:1.35rem;display:flex;flex-direction:column;gap:.9rem}
+.mini-tool header{display:flex;align-items:center;gap:10px}
+.mini-tool header .t{font-family:var(--font-head);font-weight:700;font-size:1.15rem}
+.mini-tool .foot{margin-top:auto}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.3rem;letter-spacing:.02em}
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.55rem .7rem}
+.field textarea{min-height:120px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .9rem;font-size:.94rem;background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem;margin:.4rem 0 0}
+.kv dt{color:var(--muted);font-weight:700;white-space:nowrap}
+.kv dd{margin:0;font-family:var(--font-mono);font-size:.93rem;overflow-wrap:anywhere}
+.err{color:#b3261e;font-size:.9rem;font-weight:700}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .err{color:#ff8a80}}
+html.darkm .err{color:#ff8a80}
+/* ---------- articles ---------- */
+.featured{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);overflow:hidden;text-decoration:none;color:inherit;transition:border-color .15s}
+.featured:hover{border-color:var(--accent)}
+.featured .fimg{min-height:300px}
+.featured .fimg img,.art-card img{width:100%;height:100%;object-fit:cover;display:block}
+.featured .fbody{padding:1.8rem;display:flex;flex-direction:column;justify-content:center}
+.featured h3{font-size:clamp(1.4rem,2.6vw,2rem);margin:.4rem 0 .6rem}
+.featured p{color:var(--muted);margin:0 0 1rem;max-width:52ch}
+.art-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.art-card{overflow:hidden;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s ease}
+.art-card:hover{border-color:var(--accent)}
+.art-card .ci{aspect-ratio:16/9;overflow:hidden;background:var(--surface3)}
+.art-card img{transition:transform .3s ease}
+.art-card:hover img{transform:scale(1.03)}
+.art-card .cb{padding:1.1rem 1.15rem 1.25rem;display:flex;flex-direction:column;gap:.45rem;flex:1}
+.art-card h3{font-size:1.06rem;margin:0;font-family:var(--font-body);font-weight:700;line-height:1.35}
+.art-card .ex{color:var(--muted);font-size:.93rem;margin:0;flex:1}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.8rem;color:var(--faint)}
+.chip{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:.18rem .65rem}
+.chip.teal{color:var(--teal);background:var(--teal-soft)}
+.chip.amber{color:var(--amber);background:var(--amber-soft)}
+.level-tag{font-size:.74rem;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem}
+.topic-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 1.3rem}
+.topic-filters button{font:inherit;font-size:.9rem;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.4rem 1rem;cursor:pointer}
+.topic-filters button[aria-pressed="true"]{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
+.topic-filters button:hover{border-color:var(--accent);color:var(--ink)}
+.topic-filters button[aria-pressed="true"]:hover{color:var(--on-accent)}
+/* ---------- article page ---------- */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:200;transition:width .08s linear}
+.art-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:2.5rem;padding:1.5rem 0 3rem}
+.art-main{min-width:0}
+.art-hero{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:0 0 1.6rem}
+.art-hero img{width:100%;aspect-ratio:21/9;object-fit:cover;display:block}
+.art-body h2{scroll-margin-top:80px}
+.toc{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 110px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.1rem;font-size:.9rem}
+.toc h4{margin:0 0 .6rem;font-family:var(--font-body);font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.toc ol{margin:0;padding-left:1.1rem;display:grid;gap:.35rem}
+.toc a{color:var(--muted);text-decoration:none}
+.toc a:hover{color:var(--accent);text-decoration:underline}
+.byline{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;color:var(--muted);font-size:.92rem;margin:0 0 1rem}
+.key-take{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);padding:1.1rem 1.25rem;margin:1.2rem 0 1.8rem}
+.key-take h4{margin:0 0 .5rem;font-family:var(--font-body);font-size:.85rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)}
+.key-take ul{margin:0;padding-left:1.2rem;display:grid;gap:.35rem}
+.callout{border:1px solid var(--line);border-left:5px solid var(--teal);background:var(--teal-soft);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.9rem 1.1rem;margin:1.3rem 0;font-size:.96rem}
+.callout.warn{border-left-color:var(--amber);background:var(--warn-bg);border-color:var(--warn-line)}
+.callout.key{border-left-color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+.callout strong.t{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;color:var(--teal)}
+.callout.warn strong.t{color:var(--amber)}
+.callout.key strong.t{color:var(--accent)}
+pre.code{position:relative;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:10px;padding:1rem 3.4rem 1rem 1.1rem;overflow:auto;font-family:var(--font-mono);font-size:.88rem;line-height:1.6;margin:1.2rem 0}
+pre.code code{font:inherit}
+.copy-btn{position:absolute;top:.55rem;right:.55rem;background:var(--surface3);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:.74rem;font-weight:700;border-radius:6px;padding:.28rem .6rem;cursor:pointer}
+.copy-btn:hover{border-color:var(--accent)}
+code.inline{font-family:var(--font-mono);font-size:.86em;background:var(--surface3);border:1px solid var(--line);border-radius:5px;padding:.08em .4em}
+table.tbl{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.94rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+table.tbl th,table.tbl td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.tbl thead th{background:var(--surface2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl td.num,table.tbl th.num{text-align:right;font-family:var(--font-mono);white-space:nowrap}
+.tbl-wrap{overflow-x:auto;margin:0 -20px;padding:0 20px}
+.read-next{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:2.5rem 0 0}
+.read-next a{text-decoration:none;color:inherit}
+.read-next .rn{padding:1.1rem 1.25rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.read-next .rn:hover{border-color:var(--accent)}
+.read-next .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:700}
+.read-next .rn h4{margin:.3rem 0 0;font-family:var(--font-body);font-size:1rem}
+
+/* ---------- RPKI article lab ---------- */
+.rpki-figure{margin:1.5rem 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;overflow:hidden}
+.rpki-figure svg{display:block;min-width:0}
+.rpki-figure figcaption{margin-top:.65rem;color:var(--muted);font-size:.9rem;text-align:center}
+.rpki-lab{padding:1.2rem;margin:1.25rem 0}
+.rpki-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.rpki-presets button{font:inherit;font-size:.86rem;font-weight:700;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.45rem .72rem;cursor:pointer}
+.rpki-presets button:hover,.rpki-presets button:focus-visible{border-color:var(--accent);outline:none}
+.rpki-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rpki-fields label{display:grid;gap:.25rem;color:var(--muted);font-size:.82rem;font-weight:700}
+.rpki-fields input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .65rem}
+.rpki-fields input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.rpki-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:1rem 0}
+.rpki-checks div{display:grid;grid-template-columns:auto 1fr;gap:.15rem .55rem;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem}
+.rpki-checks span{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface3);font-weight:700}
+.rpki-checks b{font-size:.86rem}.rpki-checks em{font-style:normal;font-size:.82rem;color:var(--muted)}
+.rpki-checks .pass em{color:var(--accent);font-weight:700}.rpki-checks .fail em{color:#b3261e;font-weight:700}
+.rpki-result{display:flex;align-items:baseline;gap:.65rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:.9rem}
+.rpki-result>span{color:var(--muted);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rpki-result strong{font-family:var(--font-mono);font-size:1.35rem}
+.rpki-result.valid strong{color:var(--accent)}.rpki-result.invalid strong{color:#b3261e}.rpki-result.notfound strong{color:var(--amber)}
+.rpki-result p{width:100%;margin:0;color:var(--muted);font-size:.92rem}
+.rpki-honesty{margin-bottom:0}
+.rpki-timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:relative;margin:1.4rem 0 1.6rem;gap:0}
+.rpki-timeline:before{content:"";position:absolute;left:7%;right:7%;top:36px;border-top:3px solid var(--line)}
+.rpki-timeline div{position:relative;padding:0 .55rem;text-align:center}
+.rpki-timeline div:before{content:"";display:block;width:13px;height:13px;margin:30px auto .65rem;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent)}
+.rpki-timeline time{display:block;min-height:2.7rem;color:var(--accent);font-weight:700;font-size:.82rem;line-height:1.35}
+.rpki-timeline p{font-size:.84rem;line-height:1.4;margin:0;color:var(--muted)}
+.rpki-fixes{counter-reset:rpki-fix;list-style:none;padding:0;display:grid;gap:1rem}
+.rpki-fixes li{counter-increment:rpki-fix;position:relative;padding-left:3rem}
+.rpki-fixes li:before{content:counter(rpki-fix);position:absolute;left:0;top:.08rem;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:700}
+.rpki-related{padding:1.1rem 1.25rem;margin-top:1.5rem}.rpki-related h3{margin-top:0}.rpki-tool-link a{display:flex;flex-direction:column;gap:.1rem;padding:.75rem;background:var(--accent-soft);border-radius:8px;text-decoration:none}.rpki-tool-link span{color:var(--muted);font-size:.9rem}
+.announcement-card{margin:1.25rem 0;border:1px solid var(--code-line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);color:var(--code-ink);font-family:var(--font-mono);font-size:.88rem}
+.announcement-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:.8rem 1rem;background:#07110e;border-bottom:1px solid var(--code-line);font-size:.78rem;letter-spacing:.04em}
+.announcement-card details{border-bottom:1px solid var(--code-line)}.announcement-card details:last-child{border-bottom:0}
+.announcement-card summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:.82rem 1rem;cursor:pointer;list-style-position:inside}
+.announcement-card summary:hover{background:rgba(255,255,255,.04)}.announcement-card summary span{font-weight:700}.announcement-card summary code{font:inherit;color:#9cd9c0;text-align:right;overflow-wrap:anywhere}
+.announcement-card details p{margin:0;padding:0 1rem 1rem 2.15rem;color:#b7c9c1;font-family:var(--font-body);font-size:.94rem}.announcement-card mark{background:rgba(240,177,62,.22);color:#ffd27a;padding:.05em .3em;border-radius:3px}
+.rov-valid{color:#76e2ae}
+@media(max-width:620px){.announcement-card summary{grid-template-columns:1fr}.announcement-card summary code{text-align:left;padding-left:1.35rem}.announcement-head{align-items:flex-start;flex-direction:column}.rpki-related .read-next{grid-template-columns:1fr}}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .rpki-checks .fail em,:root:not(.lightm) .rpki-result.invalid strong{color:#ff8a80}}
+html.darkm .rpki-checks .fail em,html.darkm .rpki-result.invalid strong{color:#ff8a80}
+@media (prefers-reduced-motion:reduce){.rpki-anim{display:none}}
+@media(max-width:680px){.rpki-fields,.rpki-checks{grid-template-columns:1fr}.rpki-timeline{grid-template-columns:1fr;gap:.8rem}.rpki-timeline:before{left:20px;right:auto;top:12px;bottom:12px;border-top:0;border-left:3px solid var(--line)}.rpki-timeline div{text-align:left;padding-left:3.3rem}.rpki-timeline div:before{position:absolute;left:14px;top:7px;margin:0}.rpki-timeline time{min-height:0}.rpki-figure{padding:.5rem}.rpki-figure svg{font-size:90%}}
+
+/* ---------- tracks ---------- */
+.tracks-fresh{margin:2px 0 0;color:var(--muted);font-size:.92rem;max-width:70ch}
+.tracks-fresh a{color:var(--accent);font-weight:600}
+.track-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:center;padding:1.4rem 1.5rem;margin:0 0 14px;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.track-banner:hover{border-color:var(--accent)}
+.track-banner h3{margin:.3rem 0 .4rem;font-size:1.3rem}
+.track-banner p{margin:0;color:var(--muted);font-size:.95rem;max-width:70ch}
+.track-banner .go{font-weight:700;color:var(--accent);white-space:nowrap}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.steps a{text-decoration:none;color:inherit}
+.step{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:1rem 1.2rem}
+.step:hover{border-color:var(--accent)}
+.step-n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--surface3);border:1px solid var(--line);flex:none}
+.step h3{margin:0 0 .2rem;font-size:1.02rem;font-family:var(--font-body)}
+.step p{margin:0;color:var(--muted);font-size:.9rem}
+.step img,.step .noimg{width:120px;height:68px;object-fit:cover;border-radius:var(--radius-sm);background:var(--surface3)}
+/* ---------- gear ---------- */
+.gear-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.gear-card{padding:1.3rem;display:flex;flex-direction:column;gap:.55rem}
+.gear-card .gcat{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--teal)}
+.gear-card h3{margin:0;font-size:1.15rem}
+.gear-card p{margin:0;color:var(--muted);font-size:.93rem;flex:1}
+.gear-card .why{background:var(--surface2);border-radius:var(--radius-sm);padding:.7rem .85rem;font-size:.88rem}
+.gear-card .why b{color:var(--ink)}
+.disclosure{font-size:.9rem;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius-sm);padding:.9rem 1.1rem;margin:1.4rem 0 0}
+/* ---------- search ---------- */
+.search-results{list-style:none;margin:1rem 0 3rem;padding:0;display:grid;gap:0}
+.search-results li{border-bottom:1px solid var(--line);padding:1rem 0}
+.search-results h3{margin:0 0 .3rem;font-size:1.15rem;font-family:var(--font-body)}
+.search-results .snip{color:var(--muted);font-size:.94rem;margin:0}
+mark{background:var(--amber-soft);color:inherit;border-radius:3px;padding:0 .15em}
+/* ---------- about / misc ---------- */
+.about-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin:1.2rem 0}
+.about-cols .card{padding:1.3rem}
+.about-cols h3{margin:.1rem 0 .5rem;font-size:1.15rem}
+.about-cols p:last-child{margin-bottom:0}
+.footer{border-top:1px solid var(--line);margin-top:3rem;padding:2rem 0 2.6rem;color:var(--muted);font-size:.92rem}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1.5rem}
+.footer h4{font-family:var(--font-body);font-size:.84rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);margin:0 0 .6rem}
+.footer ul{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}
+.footer a{color:var(--muted);text-decoration:none}
+.footer a:hover{color:var(--accent);text-decoration:underline}
+.footer .fine{margin-top:1.8rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.84rem;color:var(--faint);display:flex;flex-wrap:wrap;gap:8px 24px}
+/* ---------- tool pages ---------- */
+.tool-tabs{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px;margin:0 0 1.4rem}
+.tool-tabs button{font:inherit;font-weight:700;font-size:.92rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.5rem 1.1rem;cursor:pointer}
+.tool-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.tool-pane{display:none}
+.tool-pane.on{display:block}
+.tool-shell{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1.5rem;align-items:start}
+.panel{padding:1.4rem}
+.panel h3{margin-top:0;font-size:1.15rem}
+.pi-intro{margin:0 0 1.2rem}
+.pi-intro h3{margin-top:0}
+.pi-plain{font-size:.93rem;line-height:1.65;margin:.55rem 0;color:var(--ink)}
+.pi-try{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7rem .95rem;font-size:.92rem;line-height:1.62;margin:.75rem 0}
+.pi-gloss{font-size:.85rem;color:var(--muted);line-height:1.6;margin:.55rem 0 0}
+.pi-gloss b{color:var(--ink)}
+.cite-box .cite-label{font-size:.85rem;color:var(--muted);font-weight:700;margin:.95rem 0 .3rem}
+.cite-box pre.code{width:100%;box-sizing:border-box;margin:.2rem 0 .6rem}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--surface3);border:1px solid var(--line);margin:.5rem 0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:pointer}
+.bitgrid{font-family:var(--font-mono);font-size:.82rem;line-height:1.5;overflow-wrap:anywhere;word-break:break-all}
+.bitgrid .net{color:var(--amber);font-weight:700}
+.bitgrid .host{color:var(--teal)}
+.quiz-q{font-family:var(--font-head);font-size:clamp(1.3rem,3vw,1.8rem);margin:.4rem 0 1rem}
+.quiz-feedback{border-radius:var(--radius-sm);padding:.8rem 1rem;margin:1rem 0 0;font-weight:700;display:none}
+.quiz-feedback.ok{display:block;background:var(--accent-soft);color:var(--accent-strong);border:1px solid var(--accent)}
+html.darkm .quiz-feedback.ok,html:not(.lightm):not(.darkm) .quiz-feedback.ok{color:var(--accent)}
+.quiz-feedback.bad{display:block;background:#fbe9e7;color:#b3261e;border:1px solid #e0a49e}
+@media (prefers-color-scheme:dark){html:not(.lightm) .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}}
+html.darkm .quiz-feedback.bad{background:rgba(255,110,100,.08);color:#ff8a80}
+.quiz-score{display:flex;gap:16px;flex-wrap:wrap;font-size:.95rem;color:var(--muted);margin:.8rem 0 0}
+.quiz-score b{color:var(--ink);font-family:var(--font-mono)}
+.explain{font-weight:400;font-size:.94rem;margin-top:.4rem;display:block}
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:1.2rem 0}
+.stat{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.9rem 1rem}
+.stat .v{font-family:var(--font-mono);font-weight:600;font-size:1.22rem;display:block;overflow-wrap:anywhere}
+.stat .l{font-size:.8rem;color:var(--muted)}
+/* ---------- SLA / capacity / tick-to-trade tools ---------- */
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px}
+.seg button{font:inherit;font-weight:700;font-size:.88rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.42rem .95rem;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:.55rem 0 0}
+.presets button{font:inherit;font-size:.85rem;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:.32rem .85rem;cursor:pointer}
+.presets button:hover{border-color:var(--accent);color:var(--ink)}
+.comp-head{display:grid;grid-template-columns:minmax(0,1fr) 92px 150px 38px;gap:8px;align-items:end;font-size:.82rem;font-weight:700;color:var(--muted);letter-spacing:.02em;margin-top:.8rem}
+.comp-row{display:grid;grid-template-columns:minmax(0,1fr) 92px 150px 38px;gap:8px;align-items:center;margin-top:8px}
+.comp-row input,.comp-row select{font:inherit;font-size:.95rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.5rem .65rem;width:100%}
+.comp-row .del{background:transparent;border:1px solid var(--line);border-radius:var(--radius-sm);color:var(--muted);font-size:1.05rem;cursor:pointer;line-height:1;padding:.45rem 0}
+.comp-row .del:hover{border-color:var(--amber);color:var(--amber)}
+.comp-row .del:disabled{opacity:.35;cursor:default}
+@media (max-width:560px){
+  .comp-head{display:none}
+  .comp-row{grid-template-columns:1fr 1fr}
+  .comp-row .nm{grid-column:1/-1}
+}
+.ttt-bar{display:flex;height:36px;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:var(--surface3);margin:.9rem 0 0}
+.ttt-bar span{display:block;height:100%;min-width:0;transition:none}
+.ttt-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:.65rem 0 0;font-size:.85rem;color:var(--muted)}
+.ttt-legend .dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;font-style:normal;vertical-align:-1px}
+/* ---------- ECMP hash visualizer ---------- */
+.ec-bars{display:grid;gap:7px;margin:.9rem 0 0}
+.ec-bar{display:grid;grid-template-columns:96px minmax(0,1fr) 112px;gap:10px;align-items:center;font-size:.85rem}
+.ec-bar .lab{color:var(--muted);font-weight:700;white-space:nowrap}
+.ec-bar .tr{position:relative;height:18px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:5px}
+.ec-bar .fl{position:absolute;top:0;left:0;bottom:0;background:var(--teal);border-radius:4px 0 0 4px;min-width:2px}
+.ec-bar .exp{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--amber)}
+.ec-bar .n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+.ec-heat{display:grid;gap:3px;margin:.9rem 0 0;align-items:stretch}
+.ec-cell{position:relative;aspect-ratio:1.5;border-radius:4px;background:var(--surface3);overflow:hidden}
+.ec-fill{position:absolute;inset:0;background:var(--teal)}
+.ec-cell .n{position:relative;display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--font-mono);font-size:.66rem}
+.ec-ax{font-family:var(--font-mono);font-size:.68rem;color:var(--faint);display:flex;align-items:center;justify-content:center}
+.ec-good{color:#1c7a43}
+.ec-bad{color:#b3261e}
+.ec-mid{color:#9a6206}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .ec-good{color:#4cc38a}:root:not(.lightm) .ec-bad{color:#ff8a80}:root:not(.lightm) .ec-mid{color:#f0b13e}}
+html.darkm .ec-good{color:#4cc38a}
+html.darkm .ec-bad{color:#ff8a80}
+html.darkm .ec-mid{color:#f0b13e}
+@media (max-width:560px){.ec-bar{grid-template-columns:70px minmax(0,1fr) 92px}.ec-bar .n{font-size:.7rem}.ec-cell .n{font-size:.55rem}
+  #ec-seg{display:flex;max-width:100%}
+  #ec-seg button{white-space:normal;flex:1 1 0;min-width:0}}
+/* ---------- ACL rule analyzer ---------- */
+.acl-findings{display:grid;gap:10px;margin:.9rem 0 0}
+.acl-row{background:var(--surface2);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:.75rem .9rem}
+.acl-row .acl-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acl-row .rn{font-weight:700;font-size:.9rem;white-space:nowrap}
+.acl-row code{display:block;font-family:var(--font-mono);font-size:.82rem;overflow-wrap:anywhere;margin:.35rem 0 0;color:var(--muted)}
+.acl-row .why{font-size:.9rem;margin:.35rem 0 0}
+.acl-badge{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:.18rem .65rem;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.acl-badge.sh{background:#fbe9e7;border-color:#e0a49e;color:#b3261e}
+.acl-badge.rd{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+.acl-badge.br{background:var(--warn-bg);border-color:var(--warn-line);color:var(--amber)}
+.acl-badge.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-strong)}
+.acl-badge.ps{background:#fbe9e7;border-color:#e0a49e;color:#b3261e;border-style:dashed}
+.acl-badge.pr{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);border-style:dashed}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
+html.darkm .acl-badge.sh{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+@media (prefers-color-scheme:dark){:root:not(.lightm) .acl-badge.ps{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}}
+html.darkm .acl-badge.ps{background:rgba(255,110,100,.08);border-color:#8a4a44;color:#ff8a80}
+/* ---------- manual theme overrides ---------- */
+html.darkm{--bg:#0a1210;--surface:#101816;--surface2:#141e1b;--surface3:#1a2522;--ink:#e9f2ee;--muted:#a5b9b0;--faint:#7c938a;--line:#223029;--line-soft:#1a2421;--accent:#3cd79a;--accent-strong:#2fbe85;--on-accent:#05231a;--accent-soft:rgba(60,215,154,.12);--teal:#5fc4e6;--teal-soft:rgba(95,196,230,.10);--amber:#f0b13e;--amber-soft:rgba(240,177,62,.10);--warn-bg:rgba(240,177,62,.07);--warn-line:#8a6a24;--code-bg:#050b09;--code-ink:#dcf2e7;--code-line:#22302b;--link:#5fc4e6;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.55);color-scheme:dark}
+html.lightm{color-scheme:light}
+/* ---------- responsive ---------- */
+@media (max-width:1020px){
+  .art-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tool-shell{grid-template-columns:1fr}
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .gear-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .mainnav{display:none}
+  .menu{display:block;position:relative;margin-left:auto;z-index:120}
+  .menu:not([open]) nav{display:none}
+  .menu summary{list-style:none;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:10px;width:40px;height:40px;display:grid;place-items:center}
+  .menu summary::-webkit-details-marker{display:none}
+  .menu nav{position:fixed;z-index:1000;right:12px;top:64px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:.6rem;min-width:220px;display:grid;gap:2px}
+  .menu nav a{color:var(--ink);text-decoration:none;font-weight:700;padding:.55rem .8rem;border-radius:8px;display:block}
+  .menu nav a:hover{background:var(--surface2)}
+  .top-search{margin-left:0}
+  .lead-grid,.art-layout{grid-template-columns:1fr}
+  .toc{display:none}
+  .featured{grid-template-columns:1fr}
+  .featured .fimg{min-height:200px}
+  .read-next{grid-template-columns:1fr}
+  .about-cols{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .step	img,.step .noimg{width:88px;height:52px}
+}
+@media (max-width:560px){
+  .art-grid{grid-template-columns:1fr}
+  .gear-grid{grid-template-columns:1fr}
+  .stat-strip{grid-template-columns:1fr 1fr}
+  .tool-row{grid-template-columns:auto minmax(0,1fr)}
+  .tool-go{display:none}
+  .top-search input{width:110px}
+  .track-banner{grid-template-columns:1fr}
+  .track-banner .go{display:none}
+  .tool-tabs{max-width:100%;overflow-x:auto}
+}
+@media print{
+  .topbar,.menu,.theme-btn,.top-search,.toc,.progress,.read-next,.footer,.tool-tabs button:not([aria-selected="true"]){display:none}
+  body{font-size:12pt;background:#fff;color:#000}
+  .art-layout,.lead-grid,.card,.tool-shell{grid-template-columns:1fr}
+  .card{box-shadow:none;break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important;animation:none!important}
+}
+/* Packet Path — PTP/SyncE timing chain simulator: scoped styles.
+ * All classes are prefixed `tsim-`. Theme comes from the site's CSS vars
+ * (OS light/dark aware); fallbacks keep the fragment usable standalone. */
+.tsim-root { font-size: 15px; line-height: 1.55; }
+.tsim-crumb { font-size: .85rem; margin-bottom: .4rem; }
+.tsim-crumb a { color: var(--link, #0b6e99); text-decoration: none; font-weight: 700; }
+.tsim-crumb a:hover { text-decoration: underline; }
+.tsim-crumb span { color: var(--faint, #789089); margin: 0 .35rem; }
+.tsim-root h1 { font-family: var(--font-head, Georgia, serif); font-size: 1.9rem; line-height: 1.2; margin: .2rem 0 .5rem; color: var(--ink, #142a25); }
+.tsim-lede { color: var(--muted, #4f635b); max-width: 70ch; margin: 0 0 .6rem; }
+.tsim-simplabel {
+  display: inline-block; font-size: .8rem; font-weight: 700;
+  color: var(--amber, #9c5c00); background: var(--amber-soft, rgba(156,92,0,.10));
+  border: 1px solid var(--warn-line, #e4b54d); border-radius: 999px;
+  padding: .25rem .7rem; margin: 0 0 1rem;
+}
+.tsim-bar { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin-bottom: .6rem; }
+.tsim-btn {
+  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  color: var(--ink, #142a25); background: var(--surface, #fff);
+  border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px);
+  padding: .42rem .7rem;
+}
+.tsim-btn:hover { border-color: var(--accent, #0a7d5f); }
+.tsim-btn.on { background: var(--accent, #0a7d5f); border-color: var(--accent, #0a7d5f); color: var(--on-accent, #fff); }
+.tsim-btn.tsim-run { background: var(--accent, #0a7d5f); border-color: var(--accent, #0a7d5f); color: var(--on-accent, #fff); font-size: .95rem; padding: .5rem 1.1rem; }
+.tsim-btn.tsim-danger { color: #b23a48; border-color: #d8a3ab; margin-top: .6rem; }
+.tsim-in {
+  font: inherit; font-size: .85rem; color: var(--ink, #142a25);
+  background: var(--surface, #fff); border: 1px solid var(--line, #dde7e1);
+  border-radius: var(--radius-sm, 8px); padding: .4rem .55rem;
+}
+.tsim-num { width: 5.2rem; }
+.tsim-simbar label { font-size: .85rem; color: var(--muted, #4f635b); display: inline-flex; align-items: center; gap: .35rem; }
+.tsim-check input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--accent, #0a7d5f); }
+.tsim-err { color: #b23a48; font-size: .85rem; font-weight: 600; }
+.tsim-ws { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: .9rem; margin-bottom: .9rem; }
+@media (max-width: 900px) { .tsim-ws { grid-template-columns: 1fr; } }
+.tsim-card {
+  background: var(--surface, #fff); border: 1px solid var(--line, #dde7e1);
+  border-radius: var(--radius, 12px); padding: .9rem 1rem; margin-bottom: .9rem;
+  box-shadow: var(--shadow, 0 1px 2px rgba(16,40,32,.07));
+}
+.tsim-card h3 { margin: 0 0 .6rem; font-size: 1.02rem; color: var(--ink, #142a25); }
+.tsim-sub { font-weight: 400; font-size: .78rem; color: var(--muted, #4f635b); }
+.tsim-muted { color: var(--muted, #4f635b); font-size: .82rem; }
+.tsim-ed { width: 100%; height: auto; display: block; border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px); cursor: crosshair; touch-action: none; }
+.tsim-chart { width: 100%; height: auto; display: block; border: 1px solid var(--line, #dde7e1); border-radius: var(--radius-sm, 8px); }
+.tsim-hint, .tsim-note { font-size: .82rem; color: var(--muted, #4f635b); margin: .55rem 0 0; }
+.tsim-note b { color: var(--ink, #142a25); }
+.tsim-legend { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin-top: .5rem; font-size: .82rem; }
+.tsim-leg i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .3rem; vertical-align: baseline; }
+.tsim-leg em { font-style: normal; color: var(--muted, #4f635b); }
+.tsim-cfghead { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; flex-wrap: wrap; }
+.tsim-chip {
+  font-size: .72rem; font-weight: 700; padding: .15rem .55rem; border-radius: 999px;
+  background: var(--accent-soft, rgba(10,125,95,.10)); color: var(--accent-strong, #076a51);
+  border: 1px solid var(--line, #dde7e1);
+}
+.tsim-f { display: block; margin-bottom: .55rem; font-size: .85rem; color: var(--muted, #4f635b); }
+.tsim-f .tsim-in { display: block; width: 100%; margin-top: .2rem; box-sizing: border-box; }
+.tsim-inrow { display: flex; align-items: center; gap: .4rem; margin-top: .2rem; }
+.tsim-inrow .tsim-in { flex: 1; margin-top: 0; }
+.tsim-unit { font-size: .78rem; color: var(--faint, #789089); white-space: nowrap; }
+.tsim-twrap { overflow-x: auto; }
+.tsim-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.tsim-table th, .tsim-table td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line-soft, #eaf0ec); }
+.tsim-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted, #4f635b); }
+.tsim-table td.num { font-family: var(--font-mono, ui-monospace, monospace); white-space: nowrap; }
+.tsim-verdict { font-size: .72rem; font-weight: 800; padding: .18rem .55rem; border-radius: 999px; letter-spacing: .03em; }
+.tsim-verdict.pass { background: var(--accent-soft, rgba(10,125,95,.10)); color: var(--accent-strong, #076a51); border: 1px solid var(--accent, #0a7d5f); }
+.tsim-verdict.fail { background: rgba(178,58,72,.08); color: #b23a48; border: 1px solid #d8a3ab; }
+.tsim-warn { color: var(--amber, #9c5c00); font-size: .78rem; font-weight: 600; }
+.tsim-blist { list-style: none; margin: .4rem 0 0; padding: 0; }
+.tsim-blist li { margin-bottom: .55rem; }
+.tsim-brow { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; font-size: .87rem; }
+.tsim-brow .num { font-family: var(--font-mono, ui-monospace, monospace); white-space: nowrap; }
+.tsim-bbar { height: .45rem; background: var(--surface2, #eef4f1); border-radius: 999px; margin-top: .25rem; overflow: hidden; }
+.tsim-bbar i { display: block; height: 100%; background: var(--accent, #0a7d5f); border-radius: 999px; }
+.tsim-what { border-left: 4px solid var(--amber, #9c5c00); }
+.tsim-what ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+.tsim-what li { margin-bottom: .45rem; font-size: .9rem; }
+.tsim-how { margin-top: 1.4rem; }
+.tsim-how h2 { font-family: var(--font-head, Georgia, serif); font-size: 1.35rem; margin: 0 0 .6rem; color: var(--ink, #142a25); }
+.tsim-how h3 { font-size: 1rem; margin: 1.1rem 0 .35rem; color: var(--ink, #142a25); }
+.tsim-how p, .tsim-how li { font-size: .9rem; color: var(--muted, #4f635b); }
+.tsim-how p b, .tsim-how li b { color: var(--ink, #142a25); }
+.tsim-how ul { padding-left: 1.2rem; }
+.tsim-eq {
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: .82rem;
+  background: var(--code-bg, #0e1f1a); color: var(--code-ink, #e6f3ed);
+  border-radius: var(--radius-sm, 8px); padding: .7rem .9rem; overflow-x: auto; margin: .5rem 0;
+}
+.tsim-eq .cm { color: var(--faint, #789089); }
+.tsim-results { margin-top: .4rem; }
+/* ============================================================================
+   Packet Path — Network config verifier styles.
+   All classes are prefixed `cv-` and scoped under .cv-wrap.
+   Colors come from the site's CSS variables, with fallbacks so the fragment
+   also renders standalone.
+   ============================================================================ */
+.cv-wrap{
+  --cv-bg:var(--bg,#f7faf8);
+  --cv-surface:var(--surface,#ffffff);
+  --cv-surface2:var(--surface2,#eef4f1);
+  --cv-ink:var(--ink,#142a25);
+  --cv-muted:var(--muted,#4f635b);
+  --cv-faint:var(--faint,#789089);
+  --cv-line:var(--line,#dde7e1);
+  --cv-line-soft:var(--line-soft,#eaf0ec);
+  --cv-accent:var(--accent,#0a7d5f);
+  --cv-accent-strong:var(--accent-strong,#076a51);
+  --cv-on-accent:var(--on-accent,#ffffff);
+  --cv-accent-soft:var(--accent-soft,rgba(10,125,95,.10));
+  --cv-teal:var(--teal,#0b6e99);
+  --cv-amber:var(--amber,#9c5c00);
+  --cv-err:#b3261e;
+  --cv-radius:var(--radius,12px);
+  --cv-radius-sm:var(--radius-sm,8px);
+  --cv-mono:var(--font-mono,"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);
+  color:var(--cv-ink);
+}
+@media (prefers-color-scheme:dark){
+  .cv-wrap{ --cv-err:#ff8a80; }
+}
+
+/* crumb + header */
+.cv-crumb{ font-size:.9rem; color:var(--cv-muted); margin-bottom:1rem; }
+.cv-crumb a{ color:var(--cv-teal); text-decoration:none; font-weight:700; }
+.cv-crumb a:hover{ text-decoration:underline; }
+.cv-crumb-sep{ margin:0 .5rem; color:var(--cv-faint); }
+.cv-head{ margin-bottom:1.4rem; }
+.cv-head h1{ font-size:1.9rem; margin:.5rem 0 .6rem; line-height:1.25; }
+.cv-scope-badge{
+  display:inline-block; font-size:.78rem; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--cv-accent);
+  background:var(--cv-accent-soft); border:1px solid var(--cv-accent);
+  border-radius:999px; padding:.28rem .8rem;
+}
+.cv-lede{ font-size:1.08rem; color:var(--cv-muted); max-width:64ch; }
+.cv-honest{
+  background:var(--cv-surface2); border:1px solid var(--cv-line);
+  border-left:4px solid var(--cv-accent); border-radius:var(--cv-radius-sm);
+  padding:.8rem 1rem; font-size:.94rem; max-width:72ch;
+}
+.cv-honest strong{ color:var(--cv-ink); }
+
+/* device panes */
+.cv-devices{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; margin-bottom:1rem; }
+.cv-pane{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); overflow:hidden; }
+.cv-pane-head{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:.45rem .6rem;
+  padding:.6rem .9rem; background:var(--cv-surface2); border-bottom:1px solid var(--cv-line);
+}
+.cv-pane-name{ font-size:1rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cv-pane-meta{ grid-column:1/-1; grid-row:2; min-width:0; font-size:.8rem; color:var(--cv-muted); white-space:normal; overflow-wrap:anywhere; }
+.cv-mini-btn{
+  background:transparent; border:1px solid var(--cv-line); color:var(--cv-muted);
+  border-radius:6px; font-size:.78rem; padding:.25rem .6rem; cursor:pointer;
+}
+.cv-mini-btn:hover{ border-color:var(--cv-err); color:var(--cv-err); }
+.cv-vendor-seg{ display:inline-flex; border:1px solid var(--cv-line); border-radius:7px; overflow:hidden; flex:none; }
+.cv-vendor-btn{ border:0; border-right:1px solid var(--cv-line); background:var(--cv-surface); color:var(--cv-muted); padding:.22rem .42rem; font-size:.7rem; font-weight:700; cursor:pointer; }
+.cv-vendor-btn:last-child{ border-right:0; }
+.cv-vendor-btn.on{ background:var(--cv-accent); color:var(--cv-on-accent); }
+.cv-vendor-btn:focus-visible{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+@media (max-width:640px){ .cv-pane-head{ grid-template-columns:minmax(0,1fr) auto; } .cv-vendor-seg{ grid-row:2; grid-column:1; justify-self:start; } .cv-pane-meta{ grid-row:3; } }
+.cv-ta{
+  width:100%; display:block; border:0; resize:vertical; min-height:220px;
+  font-family:var(--cv-mono); font-size:.82rem; line-height:1.5;
+  color:var(--cv-ink); background:var(--cv-surface); padding:.8rem .9rem;
+}
+.cv-ta:focus{ outline:2px solid var(--cv-accent); outline-offset:-2px; }
+
+/* actions */
+.cv-actions{ display:flex; flex-wrap:wrap; gap:.6rem; margin:.4rem 0 .4rem; }
+.cv-btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  background:transparent; color:var(--cv-ink); border:1px solid var(--cv-line);
+  font-weight:700; font-size:.95rem; padding:.6rem 1.1rem; border-radius:10px; cursor:pointer;
+}
+.cv-btn:hover{ border-color:var(--cv-accent); background:var(--cv-accent-soft); }
+.cv-btn-primary{ background:var(--cv-accent); border-color:transparent; color:var(--cv-on-accent); }
+.cv-btn-primary:hover{ background:var(--cv-accent-strong); color:var(--cv-on-accent); }
+.cv-privacy{ font-size:.82rem; color:var(--cv-faint); margin:.2rem 0 1rem; }
+
+/* results */
+.cv-results{ margin-top:1rem; }
+.cv-hint{ color:var(--cv-muted); background:var(--cv-surface); border:1px dashed var(--cv-line); border-radius:var(--cv-radius); padding:1rem 1.2rem; }
+.cv-summary{ margin-bottom:1.2rem; }
+.cv-stat-strip{ display:flex; flex-wrap:wrap; gap:.7rem; margin-bottom:.8rem; }
+.cv-stat{
+  background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius-sm);
+  padding:.55rem .9rem; min-width:86px; text-align:center;
+}
+.cv-stat .v{ display:block; font-size:1.35rem; font-weight:800; }
+.cv-stat .l{ display:block; font-size:.76rem; color:var(--cv-muted); }
+.cv-stat.cv-total{ border-color:var(--cv-accent); }
+.cv-stat.cv-total .v{ color:var(--cv-accent); }
+.cv-check-key{ font-size:.85rem; color:var(--cv-muted); max-width:78ch; }
+.cv-check-key strong{ color:var(--cv-ink); }
+
+/* callouts */
+.cv-callout{
+  border:1px solid var(--cv-line); border-left:4px solid var(--cv-amber);
+  background:var(--cv-surface); border-radius:var(--cv-radius-sm);
+  padding:.9rem 1.1rem; margin-bottom:1.2rem;
+}
+.cv-callout.cv-ok{ border-left-color:var(--cv-accent); }
+
+/* findings */
+.cv-findings{ display:grid; gap:.7rem; margin-bottom:1.6rem; }
+.cv-finding{
+  background:var(--cv-surface); border:1px solid var(--cv-line);
+  border-radius:var(--cv-radius-sm); padding:.75rem 1rem;
+}
+.cv-finding-head{ display:flex; align-items:center; gap:.6rem; margin-bottom:.3rem; }
+.cv-badge-sev{ font-size:.72rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border-radius:999px; padding:.18rem .7rem; }
+.cv-badge-sev.cv-err{ color:var(--cv-err); border:1px solid var(--cv-err); }
+.cv-badge-sev.cv-warn{ color:var(--cv-amber); border:1px solid var(--cv-amber); }
+.cv-check-tag{ font-size:.76rem; color:var(--cv-muted); }
+.cv-finding-title{ font-weight:700; margin-bottom:.25rem; }
+.cv-finding-detail{ font-size:.92rem; color:var(--cv-muted); }
+
+/* topology */
+.cv-sec{ font-size:1.15rem; margin:1.6rem 0 .7rem; }
+.cv-sec-sm{ font-size:1rem; margin:1.1rem 0 .5rem; }
+.cv-dim{ color:var(--cv-muted); font-weight:400; font-size:.85em; }
+.cv-svg{ width:100%; max-width:640px; height:auto; display:block; margin:.4rem 0 .8rem;
+  background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius); }
+.cv-node{ fill:var(--cv-surface); stroke:var(--cv-accent); stroke-width:2.5; }
+.cv-node-label{ fill:var(--cv-ink); font-size:12px; font-weight:800; }
+.cv-link-line{ stroke:var(--cv-accent); stroke-width:2; opacity:.75; }
+.cv-link-label{ fill:var(--cv-muted); font-size:11px; font-family:var(--cv-mono); }
+.cv-links{ list-style:none; padding:0; margin:0 0 1rem; display:grid; gap:.5rem; }
+.cv-links li{ background:var(--cv-surface); border:1px solid var(--cv-line-soft); border-radius:var(--cv-radius-sm); padding:.55rem .9rem; font-size:.92rem; }
+.cv-inline{ font-family:var(--cv-mono); font-size:.86em; background:var(--cv-surface2); border:1px solid var(--cv-line-soft); border-radius:5px; padding:.1em .45em; }
+
+/* per-device detail */
+.cv-dev{ background:var(--cv-surface); border:1px solid var(--cv-line); border-radius:var(--cv-radius-sm); margin-bottom:.6rem; }
+.cv-dev summary{ cursor:pointer; padding:.7rem 1rem; list-style:none; }
+.cv-dev summary::-webkit-details-marker{ display:none; }
+.cv-dev summary::before{ content:"▸ "; color:var(--cv-accent); font-weight:700; }
+.cv-dev[open] summary::before{ content:"▾ "; }
+.cv-dev-body{ padding:0 1rem 1rem; border-top:1px solid var(--cv-line-soft); }
+.cv-table{ width:100%; border-collapse:collapse; font-size:.88rem; margin:.8rem 0; }
+.cv-table th{ text-align:left; font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; color:var(--cv-muted); padding:.4rem .5rem; border-bottom:1px solid var(--cv-line); }
+.cv-table td{ padding:.4rem .5rem; border-bottom:1px solid var(--cv-line-soft); }
+.cv-shut{ color:var(--cv-amber); font-weight:700; }
+.cv-kv{ display:grid; grid-template-columns:150px 1fr; gap:.3rem .8rem; font-size:.9rem; margin:.6rem 0; }
+.cv-kv dt{ color:var(--cv-muted); font-weight:700; }
+.cv-kv dd{ margin:0; }
+.cv-rib-row{ display:flex; gap:.8rem; font-size:.88rem; padding:.25rem 0; align-items:baseline; flex-wrap:wrap; }
+.cv-rib-label{ min-width:96px; font-weight:700; color:var(--cv-muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+.cv-warns{ margin:.8rem 0 0; padding-left:1.2rem; font-size:.88rem; color:var(--cv-amber); }
+
+/* how-it-works */
+.cv-how{ margin-top:2.4rem; border-top:1px solid var(--cv-line); padding-top:1.4rem; }
+.cv-how h2{ font-size:1.4rem; margin-bottom:.8rem; }
+.cv-how h3{ font-size:1.05rem; margin:1.2rem 0 .4rem; }
+.cv-how p, .cv-how li{ font-size:.94rem; color:var(--cv-muted); max-width:76ch; }
+.cv-how strong{ color:var(--cv-ink); }
+.cv-how ul{ padding-left:1.3rem; }
+.cv-how li{ margin-bottom:.4rem; }
+
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"EtherChannel / LACP Two-End Bundle Checker","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0"}}</script>
+</head>
+<body>
+<header class="pp-top"><a class="pp-brand" href="/">Packet Path</a><span class="pp-sep">/</span><nav class="pp-nav"><a href="/">Home</a><a href="/tools/">Tools</a><a href="/#guides">Guides</a><a href="/contact/">Contact</a></nav></header>
+<main id="app" class="pp-main"></main>
+<section class="pp-about"><h2>About this tool</h2><p>Paste the EtherChannel output from BOTH ends of a bundle and get a verdict: the exact mismatches that stop a port-channel forming, every flag decoded, and the fix commands for your exact ports. 100% in your browser.</p><div class="card panel"><h3 style="margin-top:0">More free tools from Packet Path</h3><p style="margin:0"><a href="/tools/subnet/">Subnet / CIDR Calculator</a> · <a href="/tools/bdp/">Bandwidth-Delay Product Calculator</a> · <a href="/tools/quiz/">Subnet Quiz</a> · <a href="/tools/sla/">Availability / SLA Calculator</a> · <a href="/tools/dcap/">Data-Center Capacity Planner</a> · <a href="/tools/ttt/">Tick-to-Trade Latency Calculator</a> · <a href="/tools/optic/">Optical Link Budget Calculator</a> · <a href="/tools/ptp-budget/">PTP Timing Budget Calculator</a> · <a href="/tools/ptp-holdover/">PTP Holdover Planner</a> · <a href="/tools/ecmp-hash/">ECMP Hash Polarization Visualizer</a> · <a href="/tools/acl-analyzer/">Network ACL Analyzer — Cisco Access-List Checker</a> · <a href="/tools/config-verify/">Network config verifier</a> · <a href="/tools/config-topology-mapper/">Config to Topology Mapper</a> · <a href="/tools/timing-sim/">PTP/SyncE Network-Wide Timing Simulator</a> · <a href="/tools/wireshark-filter-builder/">Wireshark Display Filter Builder</a> · <a href="/tools/wifi-planner/">Wi-Fi Channel Interference Planner</a> · <a href="/tools/qos-simulator/">QoS Token-Bucket Policer &amp; Shaper Simulator</a> · <a href="/tools/bgp-toolkit/">BGP Toolkit</a> · <a href="/tools/iperf3-builder/">iPerf3 Command Builder</a> · <a href="/tools/mtu-mss-calculator/">MTU/MSS Tunnel Overhead Calculator</a> · <a href="/tools/sr-te-path-lab/">Segment Routing Policy Lab</a> · <a href="/tools/clos-fabric-designer/">Data Center Fabric Designer</a> · <a href="/tools/rocev2-planner/">RoCEv2 Lossless Ethernet Planner</a> · <a href="/tools/dwdm-reach-planner/">Coherent DWDM / 400ZR Reach Planner</a> · <a href="/tools/multicast-design-studio/">Multicast Design Studio</a> · <a href="/tools/bgp-rr-planner/">BGP Route Reflector Design Planner</a> · <a href="/tools/cgnat-planner/">CGNAT Port-Block Planner</a> · <a href="/tools/microburst-planner/">Microburst Buffer Planner</a> · <a href="/tools/breakout-planner/">400G/800G Port Breakout Planner</a> · <a href="/tools/qos-policy-auditor/">End-to-End QoS Policy Auditor</a> · <a href="/tools/asic-drop-forensics/">ASIC Packet-Drop Forensics Analyzer</a> · <a href="/tools/hft-multicast-feed-analyzer/">HFT Multicast A/B Feed Forensics Analyzer</a> — all free, all run entirely in your browser.</p></div></section>
+<footer class="pp-foot"><p><a href="/">Packet Path</a> — free network engineering tools and guides. Every tool runs entirely in your browser; nothing is uploaded.</p><p><a href="/">Home</a> · <a href="/#tools">All tools</a> · <a href="/#guides">All guides</a> · <a href="/tracks/">Study tracks</a> · <a href="/contact/">Contact</a></p></footer>
+<script>
+
+function markNav(){}
+function setLD(){}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+var CURRENT_TOOL="";
+function toolRows(){
+  var rows = TOOLS_CLEAN.filter(function(t){ return t.id !== CURRENT_TOOL; });
+  return '<ul class="tool-list">' + rows.map(function(t){
+    return '<li class="tool-row"><a href="/tools/'+t.id+'/"><span><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p></span><span class="tool-go">Open <span class="arr" aria-hidden="true">\u2192</span></span></a></li>';
+  }).join('') + '</ul>';
+}
+
+var TOOLS_CLEAN=[{id:"subnet",slug:"subnet",title:"Subnet / CIDR Calculator",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",chip:"Enterprise"},{id:"bdp",slug:"bdp",title:"Bandwidth-Delay Product Calculator",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",chip:"Enterprise"},{id:"quiz",slug:"quiz",title:"Subnet Quiz",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",chip:"Enterprise"},{id:"sla",slug:"sla",title:"Availability / SLA Calculator",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",chip:"Enterprise"},{id:"dcap",slug:"dcap",title:"Data-Center Capacity Planner",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",chip:"Hyperscaler"},{id:"ttt",slug:"ttt",title:"Tick-to-Trade Latency Calculator",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",chip:"HFT"},{id:"optic",slug:"optic",title:"Optical Link Budget Calculator",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",chip:"Enterprise"},{id:"ptp-budget",slug:"ptp-budget",title:"PTP Timing Budget Calculator",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",chip:"HFT"},{id:"ptp-holdover",slug:"ptp-holdover",title:"PTP Holdover Planner",desc:"GPS just died — how long until your clock drifts outside its limit? Holdover drift from your oscillator's offset and ageing, exact crossing times for the ±100 ns, ±1 µs, ±1.5 µs and ±10 µs limits, and a reverse mode that names the oscillator class you actually need.",chip:"HFT"},{id:"ecmp-hash",slug:"ecmp-hash",title:"ECMP Hash Polarization Visualizer",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.",chip:"Hyperscaler"},{id:"acl-analyzer",slug:"acl-analyzer",title:"Network ACL Analyzer — Cisco Access-List Checker",desc:"Check a Cisco ACL in your browser — paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules: shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.",chip:"Enterprise"},{id:"config-verify",slug:"config-verify",title:"Network config verifier",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",chip:"Enterprise"},{id:"config-topology-mapper",slug:"config-topology-mapper",title:"Config to Topology Mapper",desc:"Paste configs from several devices and get one reconciled topology map — plus every mismatch between devices (masks, VLANs, OSPF areas, missing peers) flagged with the evidence. 100% in your browser.",chip:"New"},{id:"etherchannel-checker",slug:"etherchannel-checker",title:"EtherChannel / LACP Two-End Bundle Checker",desc:"Paste the EtherChannel output from BOTH ends of a bundle and get a verdict: the exact mismatches that stop a port-channel forming, every flag decoded, and the fix commands for your exact ports. 100% in your browser.",chip:"New"},{id:"timing-sim",slug:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",chip:"Enterprise"},{id:"wireshark-filter-builder",slug:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",desc:"Tell it what you're looking for in plain words and get the exact Wireshark display filter — plus a step-by-step builder for any filter, recipes by problem, and a checker for filters you paste in.",chip:"Enterprise"},{id:"wifi-planner",slug:"wifi-planner",title:"Wi-Fi Channel Interference Planner",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",chip:"Enterprise"},{id:"qos-simulator",slug:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",chip:"Enterprise"},{id:"bgp-toolkit",slug:"bgp-toolkit",title:"BGP Toolkit",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",chip:"Enterprise"},{id:"iperf3-builder",slug:"iperf3-builder",title:"iPerf3 Command Builder",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",chip:"Enterprise"},{id:"mtu-mss-calculator",slug:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE, WireGuard or MACsec headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",chip:"Enterprise"},{id:"sr-te-path-lab",slug:"sr-te-path-lab",title:"Segment Routing Policy Lab",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",chip:"Hyperscaler"},{id:"clos-fabric-designer",slug:"clos-fabric-designer",title:"Data Center Fabric Designer",desc:"Turn server count and switch choices into a complete Clos fabric design: leaf/spine counts, a full cabling matrix, BGP ASN and IP addressing plan, EVPN/VNI overlay plan, failure analysis, and copy-ready switch config.",chip:"Hyperscaler"},{id:"rocev2-planner",slug:"rocev2-planner",title:"RoCEv2 Lossless Ethernet Planner",desc:"Tune a lossless RoCEv2 fabric in one flow: validate the ECN threshold ladder (Kmin/Kmax/Pmax) against your real per-port buffer, compute PFC XOFF headroom from link speed and cable length, simulate incast queue build-up, and catch PFC deadlock and pause-storm risk flags.",chip:"Hyperscaler"},{id:"dwdm-reach-planner",slug:"dwdm-reach-planner",title:"Coherent DWDM / 400ZR Reach Planner",desc:"Plan a coherent DWDM route end to end: per-span OSNR cascade combined in linear units, a margin waterfall with ROADM and nonlinear penalties, CD/PMD budgets checked against module tolerances, and a straight verdict — 400ZR works, step up to OpenZR+, or redesign the route.",chip:"Hyperscaler"},{id:"multicast-design-studio",slug:"multicast-design-studio",title:"Multicast Design Studio",desc:"Design a PIM multicast network in one flow: shared (RPT) and source (SPT) trees drawn on a live topology with per-receiver stretch, RP placement scored for every candidate, the exact RFC 7761 BSR hash, an ASM-vs-SSM decision helper, anycast-RP failover, and a starter config.",chip:"HFT"},{id:"bgp-rr-planner",slug:"bgp-rr-planner",title:"BGP Route Reflector Design Planner",desc:"Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout — flat or two-tier hierarchical — per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.",chip:"Enterprise"},{id:"cgnat-planner",slug:"cgnat-planner",title:"CGNAT Port-Block Planner",desc:"How many subscribers actually fit behind your public IPs? Port-block sizing with stranded-port waste, guaranteed vs statistical capacity, logging-volume estimates, and a deterministic reverse lookup that maps a public IP and port back to its subscriber block.",chip:"Enterprise"},{id:"microburst-planner",slug:"microburst-planner",title:"Microburst Buffer Planner",desc:"Will this switch drop that burst? Peak queue, shared-buffer pool occupancy, dynamic-threshold (alpha) limits, the drop point and dropped bytes for synchronised microbursts — plus how long the last byte waits.",chip:"Hyperscaler"},{id:"breakout-planner",slug:"breakout-planner",title:"400G/800G Port Breakout Planner",desc:"Plan 400G and 800G port breakout: pick a port speed and a breakout mode and get the lane map, a valid/invalid verdict with the reason, cable and connector guidance, and full-switch port counts.",chip:"Hyperscaler"},{id:"qos-policy-auditor",slug:"qos-policy-auditor",title:"End-to-End QoS Policy Auditor",desc:"Audit QoS markings hop by hop across real device configs: paste the Cisco IOS XE config of every device on a path and trace exactly where DSCP or CoS is rewritten, trusted, or lost — with the config lines as evidence.",chip:"Enterprise"},{id:"asic-drop-forensics",slug:"asic-drop-forensics",title:"ASIC Packet-Drop Forensics Analyzer",desc:"Compare real IOS XE forwarding-drop counters across time: paste QFP drop stats, interface and policy-map output from two moments and see which counters moved, at what rate, and what the evidence does — and does not — prove.",chip:"Hyperscaler"},{id:"hft-multicast-feed-analyzer",slug:"hft-multicast-feed-analyzer",title:"HFT Multicast A/B Feed Forensics Analyzer",desc:"Load two market-data captures and compare them message by message: real PCAP/PCAPNG parsing and MoldUDP64 sequence analysis — which messages each feed saw, where they first diverged, and what the evidence does and does not prove.",chip:"HFT"}];
+</script>
+<script>
+function $(sel, el){ return (el||document).querySelector(sel); }
+function $$(sel, el){ return Array.prototype.slice.call((el||document).querySelectorAll(sel)); }
+var TOOLS = [
+{id:"subnet",title:"Subnet / CIDR Calculator",route:"/tools/subnet/",desc:"Subnet details, binary views, CIDR-to-range tables, same-subnet checks — instant, in your browser.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/><circle cx="6" cy="6.5" r="1" fill="var(--accent)" stroke="none"/><circle cx="6" cy="14" r="1" fill="var(--accent)" stroke="none"/></svg>'},
+{id:"bdp",title:"Bandwidth-Delay Product Calculator",route:"/tools/bdp/",desc:"Sizing TCP windows, Mathis throughput bounds under loss, packet rates, and file-transfer times — for the link you actually have.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3.5 2"/><path d="M18 3.5c1.4 1 2.4 2.4 2.8 4.1" stroke="var(--teal)"/></svg>'},
+{id:"quiz",title:"Subnet Quiz",route:"/tools/quiz/",desc:"Endless CCNA-style practice: network addresses, broadcasts, host counts, and VLAN-range questions with explanations.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.9-2.7 2.3-2.7 4"/><circle cx="12" cy="17.4" r="1.1" fill="var(--accent)" stroke="none"/></svg>'},
+{id:"sla",title:"Availability / SLA Calculator",route:"/tools/sla/",chip:"Enterprise",chipCls:"",desc:"What an SLA percentage actually allows in downtime — and what your components add up to when reliability multiplies.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M12 3l7 2.5V11c0 5-3.2 8.2-7 10-3.8-1.8-7-5-7-10V5.5z"/><path d="M9 11.5l2 2 4-4.5"/></svg>'},
+{id:"dcap",title:"Data-Center Capacity Planner",route:"/tools/dcap/",chip:"Hyperscaler",chipCls:"teal",desc:"Size a spine-leaf fabric: servers per leaf, uplinks per spine-leaf pair, oversubscription, and real bisection estimates.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="16" rx="1"/><path d="M6.5 7h2M6.5 10h2M6.5 13h2M6.5 16h2M15.5 7h2M15.5 10h2M15.5 13h2M15.5 16h2"/></svg>'},
+{id:"ttt",title:"Tick-to-Trade Latency Calculator",route:"/tools/ttt/",chip:"HFT",chipCls:"amber",desc:"Build the path from market tick to order and see the waterfall — propagation, serialization, switch hops, and feed handling.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M13 2L5 13.5h5L9 22l8-11.5h-5z"/></svg>'},
+{id:"optic",title:"Optical Link Budget Calculator",route:"/tools/optic/",chip:"Enterprise",chipCls:"",desc:"Will this fiber run survive the physics? Power budget, per-element losses, link margin, and max reach — with realistic fiber presets.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M3 12c2.5-5 5-5 7.5 0s5 5 7.5 0 2-2 3-1"/><path d="M3 17c2.5-5 5-5 7.5 0s5 5 7.5 0 2-2 3-1" stroke="var(--teal)"/><circle cx="19" cy="5" r="1.6" fill="var(--accent)" stroke="none"/></svg>'},
+{id:"ptp",title:"PTP Timing Budget Calculator",route:"/tools/ptp-budget/",chip:"HFT",chipCls:"amber",desc:"Add up IEEE 1588 time error across a boundary-clock chain — worst-case and RMS totals checked against 5G, MiFID II, and power-utility budgets.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/><path d="M12 1.5v2M12 20.5v2M1.5 12h2M20.5 12h2" stroke="var(--teal)"/></svg>'},
+{id:"ptp-holdover",title:"PTP Holdover Planner",route:"/tools/ptp-holdover/",chip:"HFT",chipCls:"amber",desc:"GPS just died — how long until your clock drifts outside its limit? Holdover drift from your oscillator's offset and ageing, exact crossing times for the ±100 ns, ±1 µs, ±1.5 µs and ±10 µs limits, and a reverse mode that names the oscillator class you actually need.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/><path d="M18.5 3.5a9 9 0 0 1 2 2" stroke="var(--teal)" stroke-dasharray="2 2.4"/></svg>'},
+{id:"ecmp",title:"ECMP Hash Polarization Visualizer",route:"/tools/ecmp-hash/",chip:"Hyperscaler",chipCls:"teal",desc:"Simulate ECMP hashing across a Clos fabric — identical seeds polarize traffic onto hot paths, per-switch seeds heal it. New: a link-failure lab comparing classic rehashing churn against resilient hashing. Plus a UCMP weight planner that computes proportional hash buckets and IOS XR normalized weights for mixed-speed links.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="5" cy="5" r="1.8"/><circle cx="19" cy="5" r="1.8"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="19" r="1.8"/><path d="M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6M5 6.8v10.4M19 6.8v10.4" stroke="var(--teal)"/></svg>'},
+{id:"acl",title:"Network ACL Analyzer — Cisco Access-List Checker",route:"/tools/acl-analyzer/",chip:"Enterprise",chipCls:"",desc:"Check a Cisco ACL in your browser — paste a Cisco IOS extended ACL or a Juniper firewall filter and find the dead rules: shadowed lines that can never fire, redundant duplicates, rules covered jointly by several earlier lines, partial overlaps, and dangerous allow-anything holes.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M12 3l7 2.5V11c0 5-3.2 8.2-7 10-3.8-1.8-7-5-7-10V5.5z"/><circle cx="15" cy="14.5" r="3.4" stroke="var(--teal)"/><path d="M17.4 16.9L20 19.5" stroke="var(--teal)"/></svg>'},
+{id:"config-verify",title:"Network config verifier",route:"/tools/config-verify/",chip:"Enterprise",chipCls:"",desc:"Paste Cisco IOS or Juniper JunOS configs — one pane per device — and verify duplicate IPs, OSPF and BGP mismatches, subnet reachability and dead ACL/firewall-filter rules. Cisco IOS + Juniper JunOS.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="3" y="8" width="6" height="8" rx="1"/><rect x="15" y="3" width="6" height="8" rx="1"/><rect x="15" y="13" width="6" height="8" rx="1"/><path d="M9 12h3l3-4M9 12h3l3 6" stroke="var(--teal)"/><path d="M13.5 6l1.5 1.5 2.5-2.5" stroke="var(--teal)"/></svg>'},
+{id:"config-topology-mapper",title:"Config to Topology Mapper",route:"/tools/config-topology-mapper/",chip:"New",chipCls:"teal",desc:"Paste configs from several devices and get one reconciled topology map — plus every mismatch between devices (masks, VLANs, OSPF areas, missing peers) flagged with the evidence. 100% in your browser.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="5" r="2.2"/><circle cx="12" cy="19" r="2.2"/><path d="M7 7l3.5 9.5M17 7l-3.5 9.5M7.2 6h9.6" stroke="var(--teal)"/></svg>'},
+{id:"etherchannel-checker",title:"EtherChannel / LACP Two-End Bundle Checker",route:"/tools/etherchannel-checker/",chip:"New",chipCls:"teal",desc:"Paste the EtherChannel output from BOTH ends of a bundle and get a verdict: the exact mismatches that stop a port-channel forming, every flag decoded, and the fix commands for your exact ports. 100% in your browser.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="2.5" y="7" width="6" height="10" rx="1"/><rect x="15.5" y="7" width="6" height="10" rx="1"/><path d="M8.5 10h7M8.5 14h7" stroke="var(--teal)"/></svg>'},
+{id:"timing-sim",title:"PTP/SyncE Network-Wide Timing Simulator",route:"/tools/timing-sim/",desc:"Simulate a full PTP/SyncE chain over time — PI servo wander, per-hop asymmetry bias, PDV noise, holdover drift, and ITU-T G.8273.2 Class A–D pass/fail for every clock.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><circle cx="19" cy="12" r="2.2"/><path d="M7 11l3-3.5M7 13l3 3.5M14 7.5l3 3M14 16.5l3-3" stroke="var(--teal)"/></svg>'},{id:"wireshark-filter-builder",title:"Wireshark Display Filter Builder",route:"/tools/wireshark-filter-builder/",chip:"Enterprise",chipCls:"",desc:"Tell it what you're looking for in plain words and get the exact Wireshark display filter — plus a step-by-step builder for any filter, recipes by problem, and a checker for filters you paste in.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"/></svg>'},{id:"wifi-planner",title:"Wi-Fi Channel Interference Planner",route:"/tools/wifi-planner/",desc:"Enter the APs you can hear — band, channel, width, RSSI — and get a spectral overlap graph, ranked channel recommendations for 2.4, 5, and 6 GHz, plus a printable multi-AP channel plan.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M4 10a11 11 0 0 1 16 0"/><path d="M7.5 13.5a6.5 6.5 0 0 1 9 0"/><path d="M11 17a2 2 0 0 1 2 0"/><circle cx="12" cy="19.5" r="1" fill="var(--accent)"/></svg>'},{id:"qos-simulator",title:"QoS Token-Bucket Policer & Shaper Simulator",route:"/tools/qos-simulator/",desc:"Set CIR, Bc and Be the way you would on a Cisco MQC policy, inject traffic, and watch conform/exceed/violate coloring and shaping delay — with the exact IOS CLI.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M5 9h14v2.5A7 7 0 0 1 5 11.5V9z"/><path d="M8 9V5.5h8V9" stroke="var(--teal)"/><path d="M5 15.5h14" stroke="var(--teal)"/><path d="M9 19h6" stroke="var(--teal)"/></svg>'},
+{id:"bgp-toolkit",title:"BGP Toolkit",route:"/tools/bgp-toolkit/",chip:"Enterprise",chipCls:"",desc:"One-click hijack verdict for any prefix, plus prefix/AS lookup, looking glass, RPKI check, bogon check, community decoder, D-PATH (RFC 10039) decoder, propagation tracker, and peering filter generator — live RIPEstat data.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M12 7.5v5m0 0l-5.5 4.5M12 12.5l5.5 4.5" stroke="var(--teal)"/></svg>'},
+{id:"iperf3-builder",title:"iPerf3 Command Builder",route:"/tools/iperf3-builder/",chip:"Enterprise",chipCls:"",desc:"Point-and-click iPerf3: build correct client and server commands with plain-English flag explanations, ready-made presets, and a gotcha linter — no man-page spelunking.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 3-3 3M12.5 15.5H17" stroke="var(--teal)"/></svg>'},
+{id:"mtu-mss-calculator",title:"MTU/MSS Tunnel Overhead Calculator",route:"/tools/mtu-mss-calculator/",chip:"Enterprise",chipCls:"",desc:"Stack GRE, IPsec, VXLAN, MPLS, PPPoE, WireGuard or MACsec headers and get the exact byte overhead, the TCP MSS to configure, and whether your packets will fragment — in plain English.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>'},
+{id:"sr-te-path-lab",title:"Segment Routing Policy Lab",route:"/tools/sr-te-path-lab/",desc:"Draw a topology, define SR policies with dynamic (CSPF) and explicit candidate paths, watch the lab pick a winner, compress the SID list, animate TI-LFA repairs, and compare Flex-Algo routing.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="5" r="2.2"/><circle cx="19" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/><path d="M6.8 10.8l3.4-3.6M15.8 7.2l1.4 2.6M17.2 13.4l-3.4 3.8M9.8 16.8l-2.6-2.6" stroke="var(--teal)"/></svg>'},
+{id:"clos-fabric-designer",title:"Data Center Fabric Designer",route:"/tools/clos-fabric-designer/",chip:"Hyperscaler",chipCls:"teal",desc:"Turn server count and switch choices into a complete Clos fabric design: leaf/spine counts, a full cabling matrix, BGP ASN and IP addressing plan, EVPN/VNI overlay plan, failure analysis, and copy-ready switch config.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="4" y="2.5" width="5" height="4" rx="1"/><rect x="15" y="2.5" width="5" height="4" rx="1"/><path d="M6.5 6.5L4 17.5M6.5 6.5L12 17.5M6.5 6.5L20 17.5M17.5 6.5L4 17.5M17.5 6.5L12 17.5M17.5 6.5L20 17.5" stroke="var(--teal)"/><rect x="1.5" y="17.5" width="5" height="4" rx="1"/><rect x="9.5" y="17.5" width="5" height="4" rx="1"/><rect x="17.5" y="17.5" width="5" height="4" rx="1"/></svg>'},
+{id:"rocev2-planner",title:"RoCEv2 Lossless Ethernet Planner",route:"/tools/rocev2-planner/",chip:"Hyperscaler",chipCls:"teal",desc:"Tune a lossless RoCEv2 fabric in one flow: validate the ECN threshold ladder (Kmin/Kmax/Pmax) against your real per-port buffer, compute PFC XOFF headroom from link speed and cable length, simulate incast queue build-up, and catch PFC deadlock and pause-storm risk flags.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M4 20V12M9.3 20V6M14.6 20v-8M20 20V3"/><path d="M2.5 15.5h19" stroke="var(--teal)" stroke-dasharray="3 2.4"/></svg>'},
+{id:"dwdm-reach-planner",title:"Coherent DWDM / 400ZR Reach Planner",route:"/tools/dwdm-reach-planner/",chip:"Hyperscaler",chipCls:"teal",desc:"Plan a coherent DWDM route end to end: per-span OSNR cascade combined in linear units, a margin waterfall with ROADM and nonlinear penalties, CD/PMD budgets checked against module tolerances, and a straight verdict — 400ZR works, step up to OpenZR+, or redesign the route.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M2 15c2.8-6.5 5.6-6.5 8.4 0 1.4 3.2 3.4 4.4 5.6 3.4"/><circle cx="4" cy="6" r="1.6" fill="var(--teal)" stroke="none"/><circle cx="12" cy="6" r="1.6" fill="var(--teal)" stroke="none"/><circle cx="20" cy="6" r="1.6" fill="var(--teal)" stroke="none"/><path d="M4 7.6v4M12 7.6v1.8M20 7.6v4" stroke="var(--teal)"/></svg>'},
+{id:"multicast-design-studio",title:"Multicast Design Studio",route:"/tools/multicast-design-studio/",chip:"HFT",chipCls:"amber",desc:"Design a PIM multicast network in one flow: shared (RPT) and source (SPT) trees drawn on a live topology with per-receiver stretch, RP placement scored for every candidate, the exact RFC 7761 BSR hash, an ASM-vs-SSM decision helper, anycast-RP failover, and a starter config.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="4.5" cy="12" r="2"/><circle cx="19.5" cy="4.5" r="2"/><circle cx="19.5" cy="12" r="2"/><circle cx="19.5" cy="19.5" r="2"/><path d="M6.3 10.8l11-5M6.5 12h11M6.3 13.2l11 5" stroke="var(--teal)"/></svg>'},
+{id:"bgp-rr-planner",title:"BGP Route Reflector Design Planner",route:"/tools/bgp-rr-planner/",chip:"Enterprise",chipCls:"",desc:"Plan an iBGP route-reflector design in one flow: full-mesh vs reflected session math for any cluster layout — flat or two-tier hierarchical — per-router peer lists, cluster-ID validation, blast-radius analysis when reflectors fail, an RFC 4456 reflection walk-through with the loop-prevention discards, and a starter Cisco config.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="2.4"/><circle cx="4" cy="5" r="1.8"/><circle cx="20" cy="5" r="1.8"/><circle cx="4" cy="19" r="1.8"/><circle cx="20" cy="19" r="1.8"/><path d="M10.3 10.5L5.7 6.5M13.7 10.5l4.6-4M10.3 13.5l-4.6 4M13.7 13.5l4.6 4" stroke="var(--teal)"/></svg>'},
+{id:"cgnat-planner",title:"CGNAT Port-Block Planner",route:"/tools/cgnat-planner/",chip:"Enterprise",chipCls:"",desc:"How many subscribers actually fit behind your public IPs? Port-block sizing with stranded-port waste, guaranteed vs statistical capacity, logging-volume estimates, and a deterministic reverse lookup that maps a public IP and port back to its subscriber block.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16M3 12h18" stroke="var(--teal)"/></svg>'},
+{id:"microburst-planner",title:"Microburst Buffer Planner",route:"/tools/microburst-planner/",chip:"Hyperscaler",chipCls:"teal",desc:"Will this switch drop that burst? Peak queue, shared-buffer pool occupancy, dynamic-threshold (alpha) limits, the drop point and dropped bytes for synchronised microbursts — plus how long the last byte waits.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M2 5l8 4M2 12h8M2 19l8-4" stroke="var(--teal)"/><rect x="13" y="4" width="9" height="16" rx="1"/><path d="M13 14h9" stroke="var(--teal)"/></svg>'},
+{id:"breakout-planner",title:"400G/800G Port Breakout Planner",route:"/tools/breakout-planner/",chip:"Hyperscaler",chipCls:"teal",desc:"Plan 400G and 800G port breakout: pick a port speed and a breakout mode and get the lane map, a valid/invalid verdict with the reason, cable and connector guidance, and full-switch port counts.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="2" y="9" width="5" height="6" rx="1"/><path d="M7 12h4M11 12l8-6.5M11 12h9M11 12l8 6.5" stroke="var(--teal)"/><circle cx="20.6" cy="5" r="1.5"/><circle cx="21" cy="12" r="1.5"/><circle cx="20.6" cy="19" r="1.5"/></svg>'},
+{id:"qos-policy-auditor",title:"End-to-End QoS Policy Auditor",route:"/tools/qos-policy-auditor/",chip:"Enterprise",chipCls:"",desc:"Audit QoS markings hop by hop across real device configs: paste the Cisco IOS XE config of every device on a path and trace exactly where DSCP or CoS is rewritten, trusted, or lost — with the config lines as evidence.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="20" cy="12" r="2"/><path d="M6 12h4M14 12h4" stroke="var(--teal)"/><path d="M10.8 15.5l1 1 1.8-2" stroke="var(--teal)"/></svg>'},
+{id:"asic-drop-forensics",title:"ASIC Packet-Drop Forensics Analyzer",route:"/tools/asic-drop-forensics/",chip:"Hyperscaler",chipCls:"teal",desc:"Compare real IOS XE forwarding-drop counters across time: paste QFP drop stats, interface and policy-map output from two moments and see which counters moved, at what rate, and what the evidence does — and does not — prove.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 2v3M14 2v3M10 19v3M14 19v3M2 10h3M2 14h3M19 10h3M19 14h3" stroke="var(--teal)"/><path d="M12 10v4M10.5 12.5L12 14l1.5-1.5" stroke="var(--teal)"/></svg>'},
+{id:"hft-multicast-feed-analyzer",title:"HFT Multicast A/B Feed Forensics Analyzer",route:"/tools/hft-multicast-feed-analyzer/",chip:"HFT",chipCls:"amber",desc:"Load two market-data captures and compare them message by message: real PCAP/PCAPNG parsing and MoldUDP64 sequence analysis — which messages each feed saw, where they first diverged, and what the evidence does and does not prove.",icon:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="M3 7h13M3 12h18M3 17h10" stroke="var(--teal)"/><path d="M18 5v4M16 7h4" stroke="var(--teal)"/><circle cx="17" cy="17" r="2.2"/><path d="M15.5 15.5L21 21" stroke="var(--teal)"/></svg>'}
+];
+function bindCopyButtons(root){
+  $$("pre.code",root).forEach(function(pre){
+    if($(".copy-btn",pre)) return;
+    var b=document.createElement("button"); b.className="copy-btn"; b.type="button"; b.textContent="Copy";
+    b.addEventListener("click",function(){
+      var txt=pre.textContent.replace(/Copy$/,"");
+      function done(){ b.textContent="Copied"; setTimeout(function(){b.textContent="Copy";},1600); }
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(function(){b.textContent="Copy failed";}); }
+      else { var ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");done();}catch(e){b.textContent="Copy failed";} document.body.removeChild(ta); }
+    });
+    pre.appendChild(b);
+  });
+}
+function citeBox(slug){
+  var url="https://allaboutitinfrastructure.com/tools/"+slug+"/";
+  var t=null;
+  for(var i=0;i<TOOLS.length;i++){ if(TOOLS[i].route==="#/tools/"+slug){ t=TOOLS[i]; break; } }
+  var title=t?t.title:slug;
+  var snippet='<a href="'+url+'">'+title+' \u2014 Packet Path</a>';
+  return '<div class="card panel cite-box" style="margin-top:1.4rem">'
+    +'<h3 style="margin-top:0">Found this useful? Link to this tool</h3>'
+    +'<p>Bloggers, teachers, and forum posters \u2014 feel free to link to this page. Copy either version below; no permission needed, and your readers need no signup to use it.</p>'
+    +'<p class="cite-label">HTML link (for blogs and web pages):</p>'
+    +'<pre class="code">'+esc(snippet)+'</pre>'
+    +'<p class="cite-label">Plain URL (for forums, docs, and chats):</p>'
+    +'<pre class="code">'+esc(url)+'</pre>'
+    +'</div>';
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function pageEtherchannelChecker(){
+  var PRESET1_A=[
+"SW-A#show etherchannel summary",
+"Flags:  D - down        P - bundled in port-channel",
+"        I - stand-alone s - suspended",
+"        H - Hot-standby (LACP only)",
+"        R - Layer3      S - Layer2",
+"        U - in use      f - failed to allocate aggregator",
+"",
+"Group  Port-channel  Protocol    Ports",
+"------+-------------+-----------+-----------------------------------------------",
+"1      Po1(SU)          LACP   Gi1/0/1(P)   Gi1/0/2(P)",
+"",
+"SW-A#show lacp neighbor",
+"Flags:  S - Device is requesting Slow LACPDUs",
+"        F - Device is requesting Fast LACPDUs",
+"        A - Device is in Active mode       P - Device is in Passive mode",
+"",
+"Partner's information:",
+"",
+"          LACP port                        Admin  Oper   Port    Port",
+"Port      Flags   Priority  Dev ID          Key    Key    Number  State",
+"Gi1/0/1   SA      32768     aaaa.bbbb.cccc  0x0    0x1    0x1     0x3D",
+"Gi1/0/2   SA      32768     aaaa.bbbb.cccc  0x0    0x1    0x2     0x3D",
+"",
+"SW-A#show running-config",
+"interface GigabitEthernet1/0/1",
+" switchport mode trunk",
+" switchport trunk native vlan 999",
+" switchport trunk allowed vlan 10,20,30",
+" channel-group 1 mode active",
+"!",
+"interface GigabitEthernet1/0/2",
+" switchport mode trunk",
+" switchport trunk native vlan 999",
+" switchport trunk allowed vlan 10,20,30",
+" channel-group 1 mode active",
+"!",
+"interface Port-channel1",
+" switchport mode trunk",
+" switchport trunk native vlan 999",
+" switchport trunk allowed vlan 10,20,30"
+].join("\n");
+  var PRESET1_B=[
+"SW-B#show etherchannel summary",
+"Flags:  D - down        P - bundled in port-channel",
+"        I - stand-alone s - suspended",
+"        H - Hot-standby (LACP only)",
+"        R - Layer3      S - Layer2",
+"        U - in use      f - failed to allocate aggregator",
+"",
+"Group  Port-channel  Protocol    Ports",
+"------+-------------+-----------+-----------------------------------------------",
+"1      Po1(SU)          LACP   Gi1/0/1(P)   Gi1/0/2(P)",
+"",
+"SW-B#show lacp neighbor",
+"Partner's information:",
+"",
+"          LACP port                        Admin  Oper   Port    Port",
+"Port      Flags   Priority  Dev ID          Key    Key    Number  State",
+"Gi1/0/1   SA      32768     1111.2222.3333  0x0    0x1    0x1     0x3D",
+"Gi1/0/2   SA      32768     1111.2222.3333  0x0    0x1    0x2     0x3D",
+"",
+"SW-B#show running-config",
+"interface GigabitEthernet1/0/1",
+" switchport mode trunk",
+" switchport trunk native vlan 999",
+" switchport trunk allowed vlan 10,20,30",
+" channel-group 1 mode active",
+"!",
+"interface GigabitEthernet1/0/2",
+" switchport mode trunk",
+" switchport trunk native vlan 999",
+" switchport trunk allowed vlan 10,20,30",
+" channel-group 1 mode active",
+"!",
+"interface Port-channel1",
+" switchport mode trunk",
+" switchport trunk native vlan 999",
+" switchport trunk allowed vlan 10,20,30"
+].join("\n");
+  var PRESET2_A=[
+"SW-A#show etherchannel summary",
+"Flags:  D - down        P - bundled in port-channel",
+"        I - stand-alone s - suspended",
+"        H - Hot-standby (LACP only)",
+"        R - Layer3      S - Layer2",
+"        U - in use      f - failed to allocate aggregator",
+"",
+"Group  Port-channel  Protocol    Ports",
+"------+-------------+-----------+-----------------------------------------------",
+"1      Po1(SU)          -      Gi1/0/1(P)   Gi1/0/2(P)",
+"",
+"SW-A#show interfaces status",
+"",
+"Port      Name               Status       Vlan       Duplex  Speed Type",
+"Gi1/0/1                      connected    trunk      a-full a-1000 10/100/1000BaseTX",
+"Gi1/0/2                      connected    trunk      a-full a-1000 10/100/1000BaseTX",
+"",
+"SW-A#show running-config",
+"interface GigabitEthernet1/0/1",
+" switchport mode trunk",
+" channel-group 1 mode on",
+"!",
+"interface GigabitEthernet1/0/2",
+" switchport mode trunk",
+" channel-group 1 mode on",
+"!",
+"interface Port-channel1",
+" switchport mode trunk",
+" switchport trunk native vlan 1"
+].join("\n");
+  var PRESET2_B=[
+"SW-B#show etherchannel summary",
+"Flags:  D - down        P - bundled in port-channel",
+"        I - stand-alone s - suspended",
+"        H - Hot-standby (LACP only)",
+"        R - Layer3      S - Layer2",
+"        U - in use      f - failed to allocate aggregator",
+"",
+"Group  Port-channel  Protocol    Ports",
+"------+-------------+-----------+-----------------------------------------------",
+"1      Po1(SD)          LACP   Gi1/0/1(s)   Gi1/0/2(s)",
+"",
+"SW-B#show interfaces status",
+"",
+"Port      Name               Status       Vlan       Duplex  Speed Type",
+"Gi1/0/1                      connected    trunk      a-full a-1000 10/100/1000BaseTX",
+"Gi1/0/2                      connected    trunk        full    100 10/100/1000BaseTX",
+"",
+"SW-B#show running-config",
+"interface GigabitEthernet1/0/1",
+" switchport mode trunk",
+" channel-group 1 mode active",
+"!",
+"interface GigabitEthernet1/0/2",
+" switchport mode trunk",
+" channel-group 1 mode active",
+"!",
+"interface Port-channel1",
+" switchport mode trunk",
+" switchport trunk native vlan 999"
+].join("\n");
+
+  var h='<style>'
+  +'#ec-app .ec-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}'
+  +'@media (max-width:760px){#ec-app .ec-grid{grid-template-columns:1fr}}'
+  +'#ec-app textarea{width:100%;min-height:230px;font-family:var(--font-mono);font-size:.78rem;line-height:1.5;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:.6rem;resize:vertical}'
+  +'#ec-app textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}'
+  +'#ec-app .ec-btnrow{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0;align-items:center}'
+  +'#ec-app .ec-verdict{border-radius:var(--radius-sm);padding:1rem 1.15rem;margin:0 0 1rem;border:1px solid var(--line);font-size:1.05rem}'
+  +'#ec-app .ec-verdict.ok{border-color:var(--accent);background:var(--accent-soft)}'
+  +'#ec-app .ec-verdict.bad{border-color:#b3261e;background:#fbe9e7}'
+  +'#ec-app .ec-verdict.warn{border-color:var(--warn-line);background:var(--warn-bg)}'
+  +'@media (prefers-color-scheme:dark){#ec-app .ec-verdict.bad{background:rgba(255,110,100,.08)}}'
+  +'#ec-app .ec-verdict .ec-vsub{font-size:.92rem;color:var(--muted);margin-top:.3rem}'
+  +'#ec-app .ec-problem{border:1px solid var(--line);border-left:5px solid #b3261e;border-radius:var(--radius-sm);padding:.85rem 1rem;margin:0 0 .8rem;background:var(--surface)}'
+  +'#ec-app .ec-problem.deg{border-left-color:var(--amber)}'
+  +'#ec-app .ec-problem h3{margin:0 0 .35rem;font-size:1.05rem}'
+  +'#ec-app .ec-problem p{margin:.35rem 0;font-size:.94rem}'
+  +'#ec-app .ec-ev{font-family:var(--font-mono);font-size:.76rem;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface2);border:1px solid var(--line-soft);border-radius:6px;padding:.55rem .7rem;margin:.45rem 0}'
+  +'#ec-app .ec-ev b{font-family:var(--font-body);font-size:.8rem}'
+  +'#ec-app .ec-fix{font-family:var(--font-mono);font-size:.78rem;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--code-bg);color:var(--code-ink);border-radius:6px;padding:.6rem .75rem;margin:.45rem 0}'
+  +'#ec-app .ec-state{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:6px;padding:.5rem .7rem;font-size:.9rem;margin:.45rem 0}'
+  +'#ec-app .ec-gloss{display:flex;flex-wrap:wrap;gap:.4rem .9rem;font-size:.86rem;color:var(--muted)}'
+  +'#ec-app .ec-gloss b{color:var(--ink);font-family:var(--font-mono)}'
+  +'#ec-app .ec-mut{color:var(--muted);font-size:.9rem}'
+  +'#ec-app .ec-diagram{border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;overflow:hidden}'
+  +'#ec-app .ec-diagram svg{display:block;width:100%;height:auto}'
+  +'</style>'
+  +'<div id="ec-app">'
+  +'<div class="page-head"><h1>EtherChannel / LACP Two-End Bundle Checker</h1><p class="lede">Paste the EtherChannel output from <strong>both</strong> ends of one bundle. Get a verdict: the exact mismatches stopping the port-channel forming, every flag decoded, and fix commands written for your exact ports.</p></div>'
+  +'<div class="card panel pi-intro"><h3>Plain English</h3>'
+  +'<p class="pi-plain"><strong>What does this do?</strong> — An <strong>EtherChannel</strong> (also called a <strong>port-channel</strong>) ties several cables between the same two switches into one logical link, so the pair acts like a single fatter pipe. You paste the <code class="inline">show</code> output and configuration from Switch A and Switch B. This checker pairs up the <strong>members</strong> (the individual cables inside the bundle), decodes the flag letters next to each port, and names the exact mismatch — a mode that can never start, a different <strong>native VLAN</strong> (the VLAN whose traffic crosses a trunk untagged) on each end, one slow member — instead of leaving you to compare two screens of output by eye. One line of difference from our <a href="/tools/config-topology-mapper/">Config to Topology Mapper</a>: the Mapper reconciles pasted <em>configs</em> into a topology map; this checker reads the live <em>show-output state</em> from both ends of one bundle.</p>'
+  +'<p class="pi-plain"><strong>Who is this for?</strong> — Anyone staring at a port-channel that will not come up: a member marked <strong>suspended</strong> (the switch refused the port and took it out of the bundle), a port sitting <strong>stand-alone</strong> (up, but forwarding on its own instead of as part of the bundle), or a <strong>hot-standby</strong> spare you cannot tell from a fault. If you can run <code class="inline">show etherchannel summary</code> on both switches, you can use this.</p>'
+  +'<p class="pi-plain"><strong>Your pasted output never leaves your browser.</strong> — Everything runs on this page, on your machine. Nothing you paste is uploaded, stored, logged, or sent anywhere — close the tab and it is gone.</p>'
+  +'<p class="pi-plain">We checked before building this: <strong>no free web tool found (re-checked Nov 24, 2026)</strong> that takes both ends of a bundle and returns a verdict like this — vendor debuggers check one switch at a time, and forum threads are the usual alternative.</p>'
+  +'<div class="pi-try"><strong>Try this example:</strong> load the broken-bundle example — three real faults planted across two switches (a mode war, a native VLAN disagreement, and one slow member). The checker should find exactly 3 problems.<div style="margin-top:.6rem"><button type="button" class="btn" id="ecTry">Load the broken bundle example</button></div></div>'
+  +'<p class="pi-gloss"><b>EtherChannel / port-channel</b>: several cables bundled into one logical link. <b>LACP</b>: the standard negotiation protocol — active starts talking, passive only answers. <b>PAgP</b>: Cisco\u2019s older negotiation protocol — desirable starts, auto only answers. <b>Member</b>: one physical cable/port inside the bundle. <b>Native VLAN</b>: the VLAN carried untagged on a trunk. <b>Suspended (s)</b>: the switch refused the port. <b>Stand-alone (I)</b>: the port is up but not in the bundle. <b>Hot-standby (H)</b>: a healthy LACP spare waiting its turn.</p>'
+  +'</div>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">1 · Paste both ends</h3>'
+  +'<div class="ec-grid">'
+  +'<div class="field"><label for="ecInA">Switch A — show output + config</label><textarea id="ecInA" spellcheck="false" placeholder="Paste any mix: show etherchannel summary, show lacp neighbor, show interfaces status, running-config interface blocks\u2026"></textarea><p class="ec-mut" id="ecCountA"></p></div>'
+  +'<div class="field"><label for="ecInB">Switch B — show output + config</label><textarea id="ecInB" spellcheck="false" placeholder="Paste the same commands from the other switch\u2026"></textarea><p class="ec-mut" id="ecCountB"></p></div>'
+  +'</div>'
+  +'<div class="ec-btnrow"><button type="button" class="btn" id="ecCheck">Check this bundle</button><button type="button" class="btn btn-ghost btn-sm" id="ecPreset1">Preset 1 · Working bundle</button><button type="button" class="btn btn-ghost btn-sm" id="ecPreset2">Preset 2 · Broken bundle</button><button type="button" class="btn btn-ghost btn-sm" id="ecClear">Clear</button></div>'
+  +'<p class="ec-mut">Works with Cisco IOS / IOS XE (<code class="inline">show etherchannel summary</code>), Cisco NX-OS (<code class="inline">show port-channel summary</code>) and Arista EOS (<code class="inline">show port-channel summary</code> / <code class="inline">show port-channel &lt;n&gt;</code>). Mix the blocks in any order, with or without the command lines themselves — unrecognised text is ignored. The port-channel <em>number</em> is local to each switch, so Po1 on one end and Po3 on the other is fine and is never flagged.</p>'
+  +'</div>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">2 · Member pairing</h3><div class="ec-diagram" id="ecDiagram"><p class="ec-mut" style="padding:14px">Run a check and the member pairs draw themselves here — one line per cable, coloured by the verdict.</p></div><p class="ec-mut" id="ecPairNote"></p></div>'
+  +'<div style="margin-top:1.4rem" id="ecResults"><div class="card panel"><p class="ec-mut" style="margin:0">No verdict yet — paste both ends (or load a preset) and press \u201CCheck this bundle\u201D.</p></div></div>'
+  +'<div class="card panel" style="margin-top:1.4rem"><h3 style="margin-top:0">Keep going</h3><ul>'
+  +'<li><a href="/articles/etherchannel-lacp-explained/">EtherChannel and LACP Explained</a> — how bundling, LACP, PAgP and static on really work, and which mode pairs form a channel.</li>'
+  +'<li><a href="/articles/etherchannel-mismatch-explained/">EtherChannel Mismatch Explained: Why a Port-Channel Won\u2019t Bundle</a> — the mismatch checklist behind these checks, in order.</li>'
+  +'</ul><p>If the port has already err-disabled itself, <a href="/troubleshooting/port-keeps-going-err-disabled/">work this case first</a>, then come back and check the bundle.</p></div>'
+  +citeBox("etherchannel-checker")
+  +'<div style="margin-top:1.6rem">'+toolRows()+'</div>'
+  +'</div>';
+  $("#app").innerHTML=h;
+  bindCopyButtons($("#app"));
+  markNav("tools"); document.title="EtherChannel / LACP Two-End Bundle Checker — Packet Path";
+  var md=document.querySelector('meta[name="description"]');
+  if(md) md.setAttribute("content","Paste EtherChannel output from both ends of a bundle and get a verdict: the exact mismatches stopping a port-channel forming, every flag decoded, and fix commands for your exact ports. Free, 100% in your browser.");
+  setLD({"@context":"https://schema.org","@type":"WebApplication","name":"EtherChannel / LACP Two-End Bundle Checker","applicationCategory":"UtilitiesApplication","operatingSystem":"Any"});
+
+  /* ---------------- parsing ---------------- */
+  function normName(raw){
+    var s=String(raw||"").trim();
+    s=s.replace(/^GigabitEthernet/i,"Gi").replace(/^TenGigabitEthernet/i,"Te").replace(/^FastEthernet/i,"Fa").replace(/^HundredGigE/i,"Hu").replace(/^FortyGigabitEthernet/i,"Fo").replace(/^TwentyFiveGigE/i,"Twe");
+    if(/^Ethernet\d+$/.test(s)) s="Et"+s.slice(8);
+    else if(/^Ethernet[\d\/]+$/.test(s)) s="Eth"+s.slice(8);
+    return s;
+  }
+  function isIntfTok(t){ return /^(Gi|Te|Fa|Hu|Fo|Twe|Eth|Et)[\d][\d\/\.]*$/.test(t||""); }
+  function dispName(raw){ return String(raw||"").trim(); }
+  function parseVlans(str){
+    var out=[]; String(str||"").split(",").forEach(function(p){ p=p.trim(); if(!p) return;
+      var m=p.match(/^(\d+)-(\d+)$/); if(m){ for(var v=+m[1]; v<=+m[2] && v<5000; v++) out.push(v); }
+      else if(/^\d+$/.test(p)) out.push(+p); });
+    out.sort(function(a,b){return a-b;}); return out;
+  }
+  function vlanKey(arr){ return (arr||[]).join(","); }
+
+  function parseSide(text,label){
+    var S={label:label,blocks:0,echoCount:{},groups:{},order:[],cfg:{},poCfg:{},status:{},neighbors:[],featureLacp:/^\s*feature\s+lacp\b/im.test(text||""),nxos:false,eos:false,flagsSeen:{},eosInactive:[],hasData:{}};
+    var lines=String(text||"").split(/\r?\n/);
+    var curCmd="",curCmdName="",curIface=null,curIfacePo=null,eosGroup=null,eosSection="";
+    function markEcho(kind,name){ curCmd=kind; curCmdName=name; S.echoCount[kind]=(S.echoCount[kind]||0)+1; S.hasData[kind]=true; }
+    function getGroup(n){ if(!S.groups[n]){ S.groups[n]={num:n,poFlags:"",layer:"",proto:"",protoMode:"",members:{},memberOrder:[],raw:"",cmd:""}; S.order.push(n);} return S.groups[n]; }
+    function addMember(g,norm,disp,flag,raw,cmd){
+      var mem=g.members[norm]; if(!mem){ mem={norm:norm,disp:disp||norm,flag:"",raw:"",cmd:""}; g.members[norm]=mem; g.memberOrder.push(norm); }
+      if(flag) mem.flag=flag; if(raw) mem.raw=raw; if(cmd) mem.cmd=cmd; if(disp) mem.disp=disp;
+      if(flag){ for(var i=0;i<flag.length;i++) S.flagsSeen[flag.charAt(i)]=true; }
+      return mem;
+    }
+    lines.forEach(function(line){
+      var t=line.trim(); if(!t) return;
+      var low=t.toLowerCase();
+      /* command echoes */
+      var em;
+      if(em=t.match(/show\s+(?:etherchannel|port-channel)\s+summary/i)) markEcho("summary",em[0]);
+      else if(em=t.match(/show\s+lacp\s+neighbor/i)) markEcho("neighbor",em[0]);
+      else if(em=t.match(/show\s+pagp\s+neighbor/i)) markEcho("neighbor",em[0]);
+      else if(em=t.match(/show\s+interfaces?\s+status/i)) markEcho("status",em[0]);
+      else if(em=t.match(/show\s+etherchannel\s+(?:port-channel|detail)/i)) markEcho("detail",em[0]);
+      else if(em=t.match(/show\s+port-channel\s+(\d+)/i)){ markEcho("eosdetail","show port-channel "+em[1]); eosGroup=em[1]; eosSection=""; }
+      else if(em=t.match(/show\s+running-config/i)) markEcho("config",em[0]);
+
+      /* config interface blocks */
+      var im=t.match(/^interface\s+(\S+)/i);
+      if(im){
+        var pc=im[1].match(/port-channel\s*(\d+)/i);
+        if(pc){ curIfacePo=pc[1]; curIface=null; if(!S.poCfg[pc[1]]) S.poCfg[pc[1]]={raws:[]}; }
+        else { curIface=normName(im[1]); curIfacePo=null; if(!S.cfg[curIface]) S.cfg[curIface]={disp:dispName(im[1]),raws:[]}; }
+        S.hasData.config=true; return;
+      }
+      if(t==="!"||/^[A-Za-z0-9_.-]+[>#]\s*$/.test(t)){ if(curCmd!=="config"){curIface=null;curIfacePo=null;} }
+      if(curIface||curIfacePo){
+        var tgt=curIface?S.cfg[curIface]:S.poCfg[curIfacePo]; if(tgt) tgt.raws.push(t);
+        var cm=t.match(/channel-group\s+(\d+)\s+mode\s+(\w+)/i);
+        if(cm&&curIface){ S.cfg[curIface].cg=+cm[1]; S.cfg[curIface].mode=cm[2].toLowerCase(); }
+        var sm=t.match(/switchport\s+mode\s+(trunk|access)/i); if(sm) tgt.swMode=sm[1].toLowerCase();
+        var av=t.match(/switchport\s+access\s+vlan\s+(\d+)/i); if(av) tgt.accessVlan=+av[1];
+        var nv=t.match(/switchport\s+trunk\s+native\s+vlan\s+(\d+)/i); if(nv) tgt.nativeVlan=+nv[1];
+        var al=t.match(/switchport\s+trunk\s+allowed\s+vlan\s+(?:add\s+)?(.+)$/i); if(al) tgt.allowed=parseVlans(al[1]);
+        var sp=t.match(/^speed\s+(\d+)/i); if(sp&&curIface) S.cfg[curIface].speed=+sp[1];
+        var du=t.match(/^duplex\s+(full|half|auto)/i); if(du&&curIface) S.cfg[curIface].duplex=du[1].toLowerCase();
+        if(/^shutdown/i.test(t)) tgt.shutdown=true;
+        if(/^no\s+shutdown/i.test(t)) tgt.shutdown=false;
+        if(!/^\s/.test(line)&&curCmd==="config"&&!/^(switchport|channel-group|speed|duplex|shutdown|no\s|description|spanning|storm|udld|cdp|lldp)/i.test(t)){ curIface=null; curIfacePo=null; }
+      }
+
+      /* summary / detail group lines: PoN(flags) */
+      var pm=t.match(/\bPo(\d+)\s*\(([^)]*)\)/);
+      if(pm&&(curCmd==="summary"||curCmd==="detail"||curCmd==="")){
+        var g=getGroup(pm[1]); g.poFlags=pm[2]; g.raw=t; g.cmd=curCmdName||"show etherchannel summary";
+        for(var fi=0;fi<pm[2].length;fi++) S.flagsSeen[pm[2].charAt(fi)]=true;
+        if(pm[2].indexOf("R")>=0) g.layer="R"; else if(pm[2].indexOf("S")>=0) g.layer="S";
+        var rest=t.slice(t.indexOf(pm[0])+pm[0].length);
+        var protoTok=(rest.match(/\b(LACP\(a\)|LACP\(p\)|LACP|PAgP|Static|-)\b/)||[])[1];
+        if(protoTok==="LACP") g.proto="LACP";
+        else if(protoTok==="PAgP") g.proto="PAgP";
+        else if(protoTok==="Static"||protoTok==="-") g.proto="STATIC";
+        else if(protoTok==="LACP(a)"){ g.proto="LACP"; g.protoMode="active"; }
+        else if(protoTok==="LACP(p)"){ g.proto="LACP"; g.protoMode="passive"; }
+        if(/LACP\(/.test(t)) S.eos=true;
+        var mt, mrx=/([A-Za-z]{2,}\d[\d\/\.]*)\s*\(([^)]*)\)/g;
+        while((mt=mrx.exec(t))!==null){ if(/^Po/i.test(mt[1])) continue; var nn=normName(mt[1]); if(isIntfTok(nn)) addMember(g,nn,mt[1],mt[2],t,g.cmd); if(/^Eth\d+\//.test(nn)) S.nxos=true; if(/^Et\d+$/.test(nn)) S.eos=true; }
+        S.hasData.summary=true;
+      }
+
+      /* interfaces status lines */
+      if(curCmd==="status"){
+        var st=t.match(/^(\S+)\s+.*?\b(a-)?(full|half)\b\s+(a-)?(\d{2,6})\b/i);
+        if(st){ var sn=normName(st[1]); if(isIntfTok(sn)){ S.status[sn]={speed:+st[5],duplex:st[3].toLowerCase(),raw:t,cmd:curCmdName||"show interfaces status"}; S.hasData.status=true; if(/^Eth\d+\//.test(sn)) S.nxos=true; if(/^Et\d+$/.test(sn)) S.eos=true; } }
+      }
+
+      /* neighbor lines */
+      if(curCmd==="neighbor"){
+        var sysM=t.match(/([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})/);
+        if(sysM){
+          var toks=t.split(/\s+/), local=null, partner=null;
+          for(var ti=0;ti<toks.length;ti++){ var nn2=normName(toks[ti].replace(/,$/,"")); if(isIntfTok(nn2)){ if(!local) local=nn2; else if(!partner&&nn2!==local) partner=toks[ti]; } }
+          if(local){ S.neighbors.push({local:local,sys:sysM[1].toLowerCase(),partner:partner,raw:t,cmd:curCmdName||"show lacp neighbor"}); S.hasData.neighbor=true; }
+        }
+      }
+
+      /* EOS port-channel detail sections */
+      if(curCmd==="eosdetail"&&eosGroup){
+        if(/active ports/i.test(t)&&!/inactive/i.test(t)) eosSection="active";
+        else if(/inactive ports/i.test(t)) eosSection="inactive";
+        else if(eosSection){
+          var et=t.split(/\s+/)[0], en=normName(et||"");
+          if(isIntfTok(en)){
+            var gg=getGroup(eosGroup);
+            if(eosSection==="active"){ addMember(gg,en,et,"P",t,"show port-channel "+eosGroup); }
+            else { var reason=t.slice(et.length).trim().replace(/^[-–—:]+\s*/,""); S.eosInactive.push({norm:en,reason:reason,group:eosGroup,raw:t}); addMember(gg,en,et,/incompatible/i.test(reason)?"i":"-",t,"show port-channel "+eosGroup); }
+            S.hasData.eosdetail=true; S.eos=true;
+          }
+        }
+      }
+    });
+    /* groups implied by config channel-group */
+    Object.keys(S.cfg).forEach(function(n){ var c=S.cfg[n]; if(c.cg!=null){ var g=getGroup(String(c.cg)); if(!g.members[n]) addMember(g,n,c.disp,"",c.raws.join(" "),"running-config"); } });
+    /* derive protocol from modes when summary silent */
+    S.order.forEach(function(gn){ var g=S.groups[gn]; if(!g.proto){ var modes={}; g.memberOrder.forEach(function(n){ var c=S.cfg[n]; if(c&&c.mode) modes[c.mode]=true; });
+      if(modes.active||modes.passive) g.proto="LACP"; else if(modes.desirable||modes.auto) g.proto="PAgP"; else if(modes.on) g.proto="STATIC"; } });
+    var kinds=["summary","neighbor","status","detail","eosdetail","config"];
+    var bc=0; kinds.forEach(function(k){ if(S.hasData[k]) bc+=Math.max(1,S.echoCount[k]||0); });
+    S.blocks=bc;
+    return S;
+  }
+
+  function groupModes(S,g){ var modes=[]; g.memberOrder.forEach(function(n){ var c=S.cfg[n]; if(c&&c.mode&&modes.indexOf(c.mode)<0) modes.push(c.mode); }); if(!modes.length&&g.protoMode) modes.push(g.protoMode); return modes; }
+  function protoOfMode(m){ if(m==="active"||m==="passive") return "LACP"; if(m==="desirable"||m==="auto") return "PAgP"; if(m==="on") return "STATIC"; return ""; }
+  function memberSpeed(S,n){ if(S.status[n]) return {v:S.status[n].speed,src:"status"}; var c=S.cfg[n]; if(c&&c.speed) return {v:c.speed,src:"config"}; return null; }
+  function memberDuplex(S,n){ if(S.status[n]) return S.status[n].duplex; var c=S.cfg[n]; if(c&&c.duplex&&c.duplex!=="auto") return c.duplex; return null; }
+  function groupNative(S,g){ var po=S.poCfg[String(g.num)]; if(po&&po.nativeVlan!=null) return {v:po.nativeVlan,src:"po"}; for(var i=0;i<g.memberOrder.length;i++){ var c=S.cfg[g.memberOrder[i]]; if(c&&c.nativeVlan!=null) return {v:c.nativeVlan,src:"member"}; } return null; }
+  function groupAllowed(S,g){ var po=S.poCfg[String(g.num)]; if(po&&po.allowed) return po.allowed; for(var i=0;i<g.memberOrder.length;i++){ var c=S.cfg[g.memberOrder[i]]; if(c&&c.allowed) return c.allowed; } return null; }
+  function evLines(S,norms,cmds){ var out=[]; norms.forEach(function(n){ var done=false;
+    S.order.forEach(function(gn){ var m=S.groups[gn].members[n]; if(m&&m.raw){ out.push({side:S.label,cmd:m.cmd||"show etherchannel summary",line:m.raw}); done=true; } });
+    if(S.status[n]) out.push({side:S.label,cmd:S.status[n].cmd,line:S.status[n].raw});
+    var c=S.cfg[n]; if(c&&c.raws&&c.raws.length) out.push({side:S.label,cmd:"running-config",line:"interface "+(c.disp||n)+"\n "+c.raws.join("\n ")});
+  }); return out; }
+  function poEv(S,g){ var out=[]; if(g.raw) out.push({side:S.label,cmd:g.cmd||"show etherchannel summary",line:g.raw}); var po=S.poCfg[String(g.num)]; if(po&&po.raws.length) out.push({side:S.label,cmd:"running-config",line:"interface Port-channel"+g.num+"\n "+po.raws.join("\n ")}); return out; }
+
+  /* ---------------- analysis: checks C1-C21 ---------------- */
+  function analyze(A,B){
+    var problems=[],infos=[],fine=[],states=[];
+    /* match groups: neighbor partner-port evidence first, else order */
+    var pairs=[],usedB={},pairMethod="order";
+    A.order.forEach(function(gn,idx){
+      var ga=A.groups[gn],gb=null;
+      ga.memberOrder.forEach(function(n){ A.neighbors.forEach(function(nb){ if(nb.local===n&&nb.partner){ var pn=normName(nb.partner); B.order.forEach(function(bn2){ if(!usedB[bn2]&&B.groups[bn2].members[pn]) gb=B.groups[bn2]; }); } }); });
+      if(!gb){ var cand=B.order.filter(function(x){return !usedB[x];}); if(cand.length) gb=B.groups[cand[Math.min(idx,cand.length-1)]]; }
+      if(gb) usedB[gb.num]=true;
+      pairs.push({ga:ga,gb:gb});
+    });
+    B.order.forEach(function(gn){ if(!usedB[gn]) pairs.push({ga:null,gb:B.groups[gn]}); });
+    /* member pairing inside matched groups */
+    pairs.forEach(function(p){
+      p.memberPairs=[]; p.unpairedA=[]; p.unpairedB=[];
+      if(p.ga&&p.gb){
+        var usedBm={};
+        p.ga.memberOrder.forEach(function(n,idx){
+          var target=null,via="order";
+          A.neighbors.forEach(function(nb){ if(nb.local===n&&nb.partner){ var pn=normName(nb.partner); if(p.gb.members[pn]&&!usedBm[pn]){ target=pn; via="neighbor"; } } });
+          B.neighbors.forEach(function(nb){ if(nb.partner){ var an=normName(nb.partner); if(an===n&&p.gb.members[nb.local]&&!usedBm[nb.local]){ target=nb.local; via="neighbor"; } } });
+          if(!target){ var cand=p.gb.memberOrder.filter(function(x){return !usedBm[x];}); if(cand.length) target=cand[Math.min(idx,cand.length-1)]; }
+          if(target){ usedBm[target]=true; p.memberPairs.push({a:n,b:target,via:via,bad:false}); if(via==="neighbor") pairMethod="neighbor"; }
+          else p.unpairedA.push(n);
+        });
+        p.gb.memberOrder.forEach(function(n){ if(!usedBm[n]) p.unpairedB.push(n); });
+      } else if(p.ga){ p.ga.memberOrder.forEach(function(n){ p.unpairedA.push(n); }); }
+      else if(p.gb){ p.gb.memberOrder.forEach(function(n){ p.unpairedB.push(n); }); }
+    });
+    /* collect member states */
+    function collectStates(S,g,sideKey,pairIdx){
+      if(!g) return;
+      g.memberOrder.forEach(function(n){ var m=g.members[n]; if(!m||!m.flag) return;
+        m.flag.split("").forEach(function(f){ if("sIDHwuMf-i".indexOf(f)>=0) states.push({side:sideKey,S:S,g:g,norm:n,flag:f,raw:m.raw,cmd:m.cmd,pairIdx:pairIdx}); });
+      });
+    }
+    pairs.forEach(function(p,pi){ collectStates(A,p.ga,"A",pi); collectStates(B,p.gb,"B",pi); });
+
+    /* C16 all-members-down special case: exactly one physical problem */
+    var totalMembers=states.length?0:0, allWithFlags=[], anyP=false;
+    pairs.forEach(function(p){ [ [A,p.ga],[B,p.gb] ].forEach(function(sg){ var S=sg[0],g=sg[1]; if(!g) return; g.memberOrder.forEach(function(n){ var m=g.members[n]; if(m&&m.flag){ allWithFlags.push(m.flag); if(m.flag.indexOf("P")>=0) anyP=true; } }); }); });
+    var allDown=allWithFlags.length>0&&allWithFlags.every(function(f){return f==="D";});
+    if(allDown){
+      var evD=[]; pairs.forEach(function(p){ if(p.ga) evD=evD.concat(poEv(A,p.ga)); if(p.gb) evD=evD.concat(poEv(B,p.gb)); });
+      problems.push({id:"C16",order:95,title:"Every member is down — this is physical, not configuration",why:"Every member port on both ends reports (D) down, so there is nothing for the bundle logic to negotiate over: no light, no link, no carrier. Configuration mismatches cannot cause this — check the physical path first (cabling, optics, the far-end ports being shut down) before changing any EtherChannel setting.",evidence:evD,fix:{},states:[],blocks:true,groupWide:true});
+      return finish(A,B,pairs,problems,infos,fine,states,pairMethod,"down");
+    }
+
+    var hasBundled=anyP;
+    pairs.forEach(function(p,pi){
+      var ga=p.ga,gb=p.gb;
+      if(ga&&gb){
+        var modesA=groupModes(A,ga),modesB=groupModes(B,gb);
+        var protoA=ga.proto||(modesA.length?protoOfMode(modesA[0]):""), protoB=gb.proto||(modesB.length?protoOfMode(modesB[0]):"");
+        /* C2 both protocols inside one group on one switch */
+        [[A,ga,"Switch A"],[B,gb,"Switch B"]].forEach(function(sg){ var ms=groupModes(sg[0],sg[1]),ps={}; ms.forEach(function(m){ps[protoOfMode(m)]=true;}); var keys=Object.keys(ps).filter(function(k){return k;});
+          if(keys.length>1) problems.push({id:"C2",order:11,title:"One group on "+sg[2]+" mixes two protocols",why:"Members of a single port-channel on "+sg[2]+" are configured with modes from two different negotiation protocols ("+ms.join(", ")+"). Ports speaking different protocols inside one group can never bundle together — pick one protocol for every member.",evidence:poEv(sg[0],sg[1]),fix:fixModes(sg[2]==="Switch A"?A:B,sg[1],"active"),states:[],blocks:true,groupWide:true,pairIdx:pi}); });
+        /* C1 different protocols across ends */
+        if(protoA&&protoB&&protoA!=="STATIC"&&protoB!=="STATIC"&&protoA!==protoB){
+          problems.push({id:"C1",order:10,title:"The two ends are speaking different languages",why:"Switch A\u2019s group is running "+protoA+" and Switch B\u2019s is running "+protoB+". The two ends are speaking different languages: LACP and PAgP frames mean nothing to each other, so no member will ever bundle. Pick one protocol on both ends — prefer LACP, the open standard that every vendor speaks.",evidence:poEv(A,ga).concat(poEv(B,gb)),fix:mergeFix(fixModes(A,ga,"active"),fixModes(B,gb,"active")),states:[],blocks:true,groupWide:true,pairIdx:pi});
+        }
+        /* C5 static on involved */
+        var eosWait=B.eosInactive.concat(A.eosInactive).filter(function(x){return /waiting for LACP/i.test(x.reason);});
+        if(protoA==="STATIC"||protoB==="STATIC"){
+          if(protoA==="STATIC"&&protoB==="STATIC"){
+            infos.push({id:"C5",title:"Static \u201Con\u201D on both ends — bundled, but nothing checks the cabling",text:"Both ends are forced on with no negotiation protocol. The bundle can pass traffic, but nothing verifies the cables actually land on the same far-end device — a mis-patch is invisible until it loops or blackholes. LACP active on both ends is the safer default."});
+          } else {
+            var ev5=poEv(A,ga).concat(poEv(B,gb)); eosWait.forEach(function(x){ ev5.push({side:(x===eosWait[0]&&A.eosInactive.indexOf(x)>=0)?"Switch A":"Switch B",cmd:"show port-channel "+x.group,line:x.raw+"  \u2014 reason given: \u201C"+x.reason+"\u201D"}); });
+            problems.push({id:"C5",order:12,title:"One end is forced \u201Con\u201D, the other is negotiating",why:"One end of this bundle is set to static \u201Con\u201D — it bundles its ports immediately and asks no questions — while the other end is waiting for LACP or PAgP negotiation that the \u201Con\u201D end never sends. Worse, the on side hashes traffic onto links the other end has not bundled \u2014 expect MAC flaps and blackholed traffic for anything hashed onto a member the far end is treating as stand-alone. Make both ends negotiate (LACP active is the safe default) or, if you truly want static, set \u201Con\u201D on both ends knowingly.",evidence:ev5,fix:mergeFix(fixModes(A,ga,"active"),fixModes(B,gb,"active")),states:[],blocks:true,groupWide:true,pairIdx:pi});
+          }
+        }
+        /* C3 LACP passive/passive */
+        if(protoA==="LACP"&&protoB==="LACP"&&modesA.length&&modesB.length&&modesA.every(function(m){return m==="passive";})&&modesB.every(function(m){return m==="passive";})){
+          problems.push({id:"C3",order:13,title:"Both ends are LACP passive — nobody starts the conversation",why:"Passive LACP ports only answer; they never speak first. With passive on both ends, both switches wait politely forever and the bundle silently never forms. Set Switch A to active so it starts the negotiation.",evidence:poEv(A,ga).concat(poEv(B,gb)),fix:fixModes(A,ga,"active"),states:[],blocks:true,groupWide:true,pairIdx:pi});
+        }
+        /* C4 PAgP auto/auto */
+        if(protoA==="PAgP"&&protoB==="PAgP"&&modesA.length&&modesB.length&&modesA.every(function(m){return m==="auto";})&&modesB.every(function(m){return m==="auto";})){
+          problems.push({id:"C4",order:14,title:"Both ends are PAgP auto — nobody starts the conversation",why:"PAgP auto ports only answer; they never initiate. Auto on both ends means the bundle never forms and never errors. Set one side to desirable so it starts asking.",evidence:poEv(A,ga).concat(poEv(B,gb)),fix:fixModes(A,ga,"desirable"),states:[],blocks:true,groupWide:true,pairIdx:pi});
+        }
+        /* C6 valid mode pairs pass */
+        if(modesA.length&&modesB.length&&!problems.some(function(x){return x.pairIdx===pi&&(x.id==="C1"||x.id==="C3"||x.id==="C4"||x.id==="C5"||x.id==="C2");})){
+          var valid=[["active","active"],["active","passive"],["passive","active"],["desirable","desirable"],["desirable","auto"],["auto","desirable"],["on","on"]];
+          var isValid=valid.some(function(v){return v[0]===modesA[0]&&v[1]===modesB[0];});
+          if(isValid) fine.push("Negotiation modes pair correctly — "+modesA[0]+" on Switch A with "+modesB[0]+" on Switch B is a combination that forms a channel.");
+        }
+        if(protoA&&protoB&&protoA===protoB&&protoA!=="STATIC") fine.push("Protocols match — both ends use "+protoA+".");
+        /* C21 Layer2 vs Layer3 ends */
+        if(ga.layer&&gb.layer&&ga.layer!==gb.layer){
+          problems.push({id:"C21",order:20,title:"One end is a Layer 2 channel, the other is Layer 3",why:"Switch A\u2019s port-channel flags show ("+ga.poFlags+") and Switch B\u2019s show ("+gb.poFlags+"): one end treats the channel as a switchport and the other as a routed port. IOS refuses this outright \u2014 it is the mismatch behind %EC-5-L3DONTBNDL2. Decide which the link is meant to be and configure both ends the same way.",evidence:poEv(A,ga).concat(poEv(B,gb)),fix:{},states:[],blocks:true,groupWide:true,pairIdx:pi});
+        }
+        /* C18 one group, two far-end devices */
+        [ [A,ga],[B,gb] ].forEach(function(sg){ var S=sg[0],g=sg[1],sysSet={}; S.neighbors.forEach(function(nb){ if(g.members[nb.local]) sysSet[nb.sys]=true; }); var sysKeys=Object.keys(sysSet);
+          if(sysKeys.length>1) problems.push({id:"C18",order:21,title:"One group on "+(S===A?"Switch A":"Switch B")+" is cabled to two different devices",why:"The neighbor output inside this one group shows two different partner system IDs ("+sysKeys.join(" and ")+") — the members land on two separate switches. One EtherChannel group must land on one logical device. The caveat that proves it: a vPC or MLAG pair presents ONE shared system ID, so two IDs means miscabling, not a redundant design. Re-patch the stray member onto the same far-end device as its partners.",evidence:S.neighbors.filter(function(nb){return g.members[nb.local];}).map(function(nb){return {side:S.label,cmd:nb.cmd,line:nb.raw};}),fix:{},states:[],blocks:true,groupWide:true,pairIdx:pi}); });
+        /* C17 Rule B: members of one A group landing in two B groups */
+        (function(){ var landings={}; ga.memberOrder.forEach(function(n){ A.neighbors.forEach(function(nb){ if(nb.local===n&&nb.partner){ var pn=normName(nb.partner); B.order.forEach(function(bn2){ if(B.groups[bn2].members[pn]) landings[bn2]=pn; }); } }); });
+          var lk=Object.keys(landings); if(lk.length>1) problems.push({id:"C17",order:22,title:"One bundle on Switch A lands in two different bundles on Switch B",why:"Neighbor evidence shows members of Switch A\u2019s group landing in two different groups on Switch B (the port landing outside the matched group is "+(B.groups[lk.filter(function(k){return B.groups[k]!==gb;})[0]]?dispOf(B,landings[lk.filter(function(k){return B.groups[k]!==gb;})[0]]):"") +"). The two cables are one bundle on A but land in two different bundles on B, so they can never bundle together. Move that Switch B port into the same channel-group as its partner — note this is about which group the cable lands in, not about the port-channel numbers matching (they never have to).",evidence:poEv(A,ga),fix:{},states:[],blocks:true,groupWide:true,pairIdx:pi}); })();
+        /* C17 Rule A: count difference plus a bad state on the larger side */
+        if(ga.memberOrder.length!==gb.memberOrder.length){
+          var larger=ga.memberOrder.length>gb.memberOrder.length?{S:A,g:ga,side:"Switch A",unp:p.unpairedA}:{S:B,g:gb,side:"Switch B",unp:p.unpairedB};
+          var badUnp=larger.unp.filter(function(n){ var m=larger.g.members[n]; return m&&/[sI]/.test(m.flag||""); });
+          var culprit=badUnp[0]||(larger.unp.length&&states.some(function(st){return st.S===larger.S&&st.g===larger.g&&larger.unp.indexOf(st.norm)>=0;})?larger.unp[0]:null);
+          if(culprit) problems.push({id:"C17",order:23,title:"A member has nowhere to land: "+dispOf(larger.S,culprit)+" on "+larger.side,why:"The matched groups have different member counts (Switch A: "+ga.memberOrder.length+", Switch B: "+gb.memberOrder.length+"), and "+dispOf(larger.S,culprit)+" on "+larger.side+" is showing a bad state with no partner to pair with. Counts alone would prove nothing — a vPC/MLAG far end can legitimately differ — but the bad state on the unpaired member is the evidence. Cable it to the far end\u2019s group, or remove it from this group.",evidence:evLines(larger.S,[culprit]),fix:{},states:[],blocks:true,pairIdx:pi,members:{A: larger.S===A?[culprit]:[], B: larger.S===B?[culprit]:[]} });
+        }
+        /* C10 native VLAN */
+        (function(){ var within=[]; [[A,ga],[B,gb]].forEach(function(sg){ var vals={}; sg[1].memberOrder.forEach(function(n){ var c=sg[0].cfg[n]; if(c&&c.nativeVlan!=null) vals[c.nativeVlan]=n; }); if(Object.keys(vals).length>1) within.push({S:sg[0],vals:vals}); });
+          var nA=groupNative(A,ga),nB=groupNative(B,gb);
+          if(within.length){ var w0=within[0]; problems.push({id:"C10",order:30,title:"Members of one group disagree on the native VLAN",why:"Members inside a single group on "+(w0.S===A?"Switch A":"Switch B")+" carry different native VLANs ("+Object.keys(w0.vals).join(" vs ")+"). Every member of a bundle must be configured identically or the switch suspends the odd ones out. Set the native VLAN on the port-channel interface and let it push to every member.",evidence:poEv(w0.S,w0.S===A?ga:gb),fix:fixNative(w0.S,w0.S===A?ga:gb,+Object.keys(w0.vals)[0]),states:[],blocks:false,pairIdx:pi}); }
+          else if(nA&&nB&&nA.v!==nB.v){ problems.push({id:"C10",order:30,title:"Native VLAN mismatch: "+nA.v+" on Switch A, "+nB.v+" on Switch B",why:"The two ends disagree on the native VLAN — Switch A\u2019s port-channel uses "+nA.v+", Switch B\u2019s uses "+nB.v+". Untagged traffic leaving one end in VLAN "+nA.v+" arrives at the other end and is classified into VLAN "+nB.v+": two VLANs silently leak into each other, and spanning tree may block the port with a PVID inconsistency. Pick the intended native VLAN and set it on both ends.",evidence:poEv(A,ga).concat(poEv(B,gb)),fix:fixNative(B,gb,nA.v),states:[],blocks:false,pairIdx:pi}); }
+          else if(nA&&nB) fine.push("Native VLAN matches — VLAN "+nA.v+" on both ends.");
+        })();
+        /* C11 allowed VLANs */
+        (function(){ var withinFired=false; [[A,ga],[B,gb]].forEach(function(sg){ var byKey={}; sg[1].memberOrder.forEach(function(n){ var c=sg[0].cfg[n]; if(c&&c.allowed) byKey[vlanKey(c.allowed)]=n; }); var ks=Object.keys(byKey);
+          if(ks.length>1&&!withinFired){ withinFired=true; problems.push({id:"C11",order:31,title:"Members of one group allow different VLANs",why:"Members inside one group on "+(sg[0]===A?"Switch A":"Switch B")+" carry different allowed-VLAN lists — "+ks.map(function(k){return "VLANs "+k+" on "+dispOf(sg[0],byKey[k]);}).join(" vs ")+". Members must be identical or the odd member is suspended. Set the allowed list on the port-channel interface so it pushes to every member.",evidence:poEv(sg[0],sg[1]),fix:{},states:[],blocks:true,pairIdx:pi}); } });
+          if(!withinFired){ var aA=groupAllowed(A,ga),aB=groupAllowed(B,gb);
+            if(aA&&aB){ if(vlanKey(aA)!==vlanKey(aB)){ var diff=aA.filter(function(v){return aB.indexOf(v)<0;}).concat(aB.filter(function(v){return aA.indexOf(v)<0;}));
+              problems.push({id:"C11",order:31,title:"Allowed VLANs differ across the ends — some VLANs blackhole",why:"The bundle forms, but the two ends allow different VLANs. Symmetric difference: VLAN "+diff.join(", VLAN ")+". A VLAN allowed on the sending end but not the receiving end is blackholed at the far end — traffic enters the bundle and is dropped on arrival. Align the allowed lists on both port-channels.",evidence:poEv(A,ga).concat(poEv(B,gb)),fix:fixAllowed(A,ga,B,gb),states:[],blocks:false,degraded:true,pairIdx:pi}); }
+            else fine.push("Allowed VLAN lists match on both ends (VLANs "+vlanKey(aA)+")."); } }
+        })();
+        /* C9 trunk/access mixing inside a group */
+        [[A,ga],[B,gb]].forEach(function(sg){ var modes2={}; sg[1].memberOrder.forEach(function(n){ var c=sg[0].cfg[n]; if(c&&c.swMode) modes2[c.swMode]=n; }); var ks=Object.keys(modes2);
+          if(ks.length>1) problems.push({id:"C9",order:32,title:"One group mixes trunk and access members on "+(sg[0]===A?"Switch A":"Switch B"),why:"Member "+dispOf(sg[0],modes2[ks[0]])+" is a "+ks[0]+" while "+dispOf(sg[0],modes2[ks[1]])+" is a "+ks[1]+" \u2014 members of one bundle must all be the same kind of port, or the switch suspends the odd one out. Set the switchport mode on the port-channel and let it push to every member.",evidence:evLines(sg[0],[modes2[ks[0]],modes2[ks[1]]]),fix:{},states:[],blocks:true,pairIdx:pi,members:{A:sg[0]===A?[modes2[ks[1]]]:[],B:sg[0]===B?[modes2[ks[1]]]:[]} });
+          else if(ks.length===1) fine.push("Every member on "+(sg[0]===A?"Switch A":"Switch B")+" is a "+ks[0]+" — no trunk/access mixing in the group."); });
+        /* C12 access VLAN mismatch inside a group */
+        [[A,ga],[B,gb]].forEach(function(sg){ var vals={}; sg[1].memberOrder.forEach(function(n){ var c=sg[0].cfg[n]; if(c&&c.accessVlan!=null) vals[c.accessVlan]=n; }); var ks=Object.keys(vals);
+          if(ks.length>1) problems.push({id:"C12",order:33,title:"Access members of one group sit in different VLANs on "+(sg[0]===A?"Switch A":"Switch B"),why:"Access members inside one group carry different access VLANs ("+ks.join(" vs ")+"). A bundle is one logical port — its members cannot belong to different VLANs. Set the access VLAN on the port-channel interface so every member inherits it.",evidence:poEv(sg[0],sg[1]),fix:{},states:[],blocks:true,pairIdx:pi}); });
+        /* C7 speed mismatch */
+        (function(){ var all=[]; [[A,ga,"Switch A"],[B,gb,"Switch B"]].forEach(function(sg){ sg[1].memberOrder.forEach(function(n){ var sp=memberSpeed(sg[0],n); if(sp) all.push({S:sg[0],side:sg[2],norm:n,v:sp.v}); }); });
+          A.eosInactive.concat(B.eosInactive).forEach(function(x){ var m=x.reason.match(/(\d+)\s*Mbps|speed/i); if(/speed/i.test(x.reason)){ /* EOS speed reason maps to C7 below via reason scan */ } });
+          if(all.length>1){ var counts={}; all.forEach(function(x){counts[x.v]=(counts[x.v]||0)+1;}); var ks=Object.keys(counts);
+            if(ks.length>1){ var majority=ks.sort(function(a,b){return counts[b]-counts[a];})[0]; var odd=all.filter(function(x){return String(x.v)!==String(majority);});
+              odd.forEach(function(o){ problems.push({id:"C7",order:40,title:"Slow member: "+dispOf(o.S,o.norm)+" on "+o.side+" runs at "+o.v+" Mbps",why:dispOf(o.S,o.norm)+" on "+o.side+" is running at "+o.v+" Mbps while the rest of the bundle runs at "+majority+" Mbps. EtherChannel members must all run at the same speed — the switch will not bundle a member that differs, so this port sits suspended or out of the bundle while its partners carry on. Check the cable, the optic, and any hard-set speed on both ends of that one link.",evidence:evLines(o.S,[o.norm]),fix:fixSpeed(o.S,o.norm,majority),states:[],blocks:!hasBundled,degraded:hasBundled,pairIdx:pi,members:{A:o.S===A?[o.norm]:[],B:o.S===B?[o.norm]:[]} }); });
+            } else fine.push("Member speeds match — every member with speed evidence runs at "+all[0].v+" Mbps."); }
+          /* EOS speed reason strings also map to C7 */
+          [[A,"Switch A"],[B,"Switch B"]].forEach(function(sg){ sg[0].eosInactive.forEach(function(x){ if(/speed/i.test(x.reason)&&!problems.some(function(pr){return pr.id==="C7"&&((pr.members||{}).A||[]).concat((pr.members||{}).B||[]).indexOf(x.norm)>=0;})){ problems.push({id:"C7",order:40,title:"Speed problem reported by "+sg[1]+": "+dispOf(sg[0],x.norm),why:"The switch itself reports this member inactive for a speed reason: \u201C"+x.reason+"\u201D. Members of a bundle must all run at the same speed. Match this port\u2019s speed to its partners on both ends of that link.",evidence:[{side:sg[1],cmd:"show port-channel "+x.group,line:x.raw}],fix:{},states:[],blocks:!hasBundled,degraded:hasBundled,pairIdx:pi,members:{A:sg[0]===A?[x.norm]:[],B:sg[0]===B?[x.norm]:[]} }); } }); });
+        })();
+        /* C8 duplex mismatch / half duplex */
+        (function(){ var all=[]; [[A,ga,"Switch A"],[B,gb,"Switch B"]].forEach(function(sg){ sg[1].memberOrder.forEach(function(n){ var d=memberDuplex(sg[0],n); if(d) all.push({S:sg[0],side:sg[2],norm:n,v:d}); }); });
+          var half=all.filter(function(x){return x.v==="half";}); var vals={}; all.forEach(function(x){vals[x.v]=true;});
+          if(half.length||Object.keys(vals).length>1){ var o=half[0]||all[0]; problems.push({id:"C8",order:41,title:"Duplex problem on "+dispOf(o.S,o.norm)+" ("+o.side+")",why:(half.length?dispOf(o.S,o.norm)+" on "+o.side+" is running half duplex. ":"The members report different duplex settings. ")+"EtherChannel members must all be full duplex and identical — a half-duplex member cannot bundle and, left forwarding, corrupts the link with late collisions. Set duplex full (or auto on both ends of that link) so both ends agree.",evidence:evLines(o.S,[o.norm]),fix:fixDuplex(o.S,o.norm),states:[],blocks:!hasBundled,degraded:hasBundled,pairIdx:pi,members:{A:o.S===A?[o.norm]:[],B:o.S===B?[o.norm]:[]} }); }
+          else if(all.length) fine.push("Duplex matches — every member with duplex evidence is full duplex."); })();
+      }
+      /* C20 one end bundled, other end has nothing covering the ports */
+      if(ga&&!gb){
+        var bCovers=B.status&&Object.keys(B.status).length>0||Object.keys(B.cfg).length>0;
+        if(bCovers) problems.push({id:"C20",order:24,title:"Switch A has a bundle, Switch B has nothing",why:"Switch A bundles these ports into a port-channel, but Switch B\u2019s paste covers its ports and shows no channel-group on any of them. That is the classic one-sided EtherChannel blackhole: Switch A hashes traffic onto links Switch B treats as separate stand-alone ports, so frames arrive on ports that spanning tree may block and return traffic takes a different path. Configure the matching bundle on Switch B, or unbundle Switch A.",evidence:poEv(A,ga),fix:fixModes(B,null,"active"),states:[],blocks:true,groupWide:true,pairIdx:pi});
+      }
+      if(gb&&!ga){
+        var aCovers=Object.keys(A.status).length>0||Object.keys(A.cfg).length>0;
+        if(aCovers) problems.push({id:"C20",order:24,title:"Switch B has a bundle, Switch A has nothing",why:"Switch B bundles these ports into a port-channel, but Switch A\u2019s paste covers its ports and shows no channel-group on any of them. That is the classic one-sided EtherChannel blackhole: Switch B hashes traffic onto links Switch A treats as separate stand-alone ports. Configure the matching bundle on Switch A, or unbundle Switch B.",evidence:poEv(B,gb),fix:fixModes(A,null,"active"),states:[],blocks:true,groupWide:true,pairIdx:pi});
+      }
+    });
+    /* EOS min-links reason maps to C16-M */
+    [[A,"Switch A"],[B,"Switch B"]].forEach(function(sg){ sg[0].eosInactive.forEach(function(x){ if(/min-links/i.test(x.reason)) problems.push({id:"C16",order:80,title:"Minimum links not met on "+sg[1],why:"The switch reports: \u201C"+x.reason+"\u201D. The port-channel is configured to need more active members than it currently has, so it stays down even though some members are fine. Bring the missing members up, or lower the min-links setting to what the cabling actually provides.",evidence:[{side:sg[1],cmd:"show port-channel "+x.group,line:x.raw}],fix:{},states:[],blocks:true,groupWide:true}); }); });
+    /* C19 NX-OS feature lacp reminder (info only) */
+    [[A,"Switch A"],[B,"Switch B"]].forEach(function(sg){ var S=sg[0]; if(S.nxos&&!S.featureLacp){ var usesLacp=S.order.some(function(gn){ return S.groups[gn].proto==="LACP"||groupModes(S,S.groups[gn]).some(function(m){return m==="active"||m==="passive";}); });
+      if(usesLacp) infos.push({id:"C19",title:"Reminder for "+sg[1]+": no \u201Cfeature lacp\u201D line in the paste",text:sg[1]+" reads as NX-OS using LACP, but its paste has no global \u201Cfeature lacp\u201D line. On NX-OS, LACP will not run until that feature is enabled — if the full config enables it, ignore this; the line simply was not in what was pasted."}); } });
+    return finish(A,B,pairs,problems,infos,fine,states,pairMethod,"");
+  }
+  function dispOf(S,n){ var c=S.cfg[n]; if(c&&c.disp) return c.disp; for(var i=0;i<S.order.length;i++){ var m=S.groups[S.order[i]].members[n]; if(m) return m.disp; } return n; }
+  function mergeFix(f1,f2){ var o={}; ["Switch A","Switch B"].forEach(function(k){ var a=(f1||{})[k]||[],b=(f2||{})[k]||[]; if(a.length||b.length) o[k]=a.concat(b); }); return o; }
+  function fixModes(S,g,mode){ if(!S) return {}; var o={},lines=[]; var members=g?g.memberOrder:(S?Object.keys(S.cfg):[]); var gn=g?g.num:(members.length&&S.cfg[members[0]]?S.cfg[members[0]].cg:1);
+    members.forEach(function(n){ lines.push("interface "+dispOf(S,n)); lines.push(" channel-group "+gn+" mode "+mode); }); if(lines.length) o[S.label]=lines; return o; }
+  function fixNative(S,g,v){ var o={},lines=["interface Port-channel"+g.num," switchport trunk native vlan "+v]; g.memberOrder.forEach(function(n){ lines.push("interface "+dispOf(S,n)); lines.push(" switchport trunk native vlan "+v); }); o[S.label]=lines; return o; }
+  function fixAllowed(SA,ga,SB,gb){ var aA=groupAllowed(SA,ga),aB=groupAllowed(SB,gb); var o={};
+    var missB=aA.filter(function(v){return aB.indexOf(v)<0;}), missA=aB.filter(function(v){return aA.indexOf(v)<0;});
+    if(missB.length) o["Switch B"]=["interface Port-channel"+gb.num," switchport trunk allowed vlan add "+missB.join(",")];
+    if(missA.length) o["Switch A"]=["interface Port-channel"+ga.num," switchport trunk allowed vlan add "+missA.join(",")];
+    return o; }
+  function fixSpeed(S,n,maj){ var o={}; o[S.label]=["interface "+dispOf(S,n)," speed "+maj]; return o; }
+  function fixDuplex(S,n){ var o={}; o[S.label]=["interface "+dispOf(S,n)," duplex full"]; return o; }
+
+  function finish(A,B,pairs,problems,infos,fine,states,pairMethod,forceMode){
+    /* attach states: C13 (s), C14 (I), C16 (u/M/f/D/w/H), EOS -/i */
+    var standalone=[];
+    if(forceMode!=="down") states.forEach(function(st){
+      var dec=decodeState(st);
+      if(st.flag==="H"){ if(!infos.some(function(x){return x.id==="C15";})) infos.push({id:"C15",title:"Hot-standby member — a healthy spare",text:"A member shows (H) hot-standby: LACP bundles at most 8 active members, so extra members wait as spares and take over if an active member fails. That is the design working, not a fault."}); return; }
+      if(st.flag==="w"){ infos.push({id:"C16",title:"A member is waiting (w) — usually transient",text:dispOf(st.S,st.norm)+" on "+st.S.label+" shows (w) waiting to be aggregated. This is normally a seconds-long state while the bundle forms. If it is still there, re-paste the output after a few seconds before changing anything."}); return; }
+      if(st.flag==="D"){ infos.push({id:"C16",title:"A member is down (D) — the bundle survives on reduced bandwidth",text:dispOf(st.S,st.norm)+" on "+st.S.label+" is down, which is a physical-layer fact (no carrier), but the channel still has bundled members carrying traffic. Restore the link to get the bandwidth back; no configuration change fixes a down port."}); return; }
+      var target=null;
+      function attachTo(pred){ for(var i=0;i<problems.length;i++){ if(pred(problems[i])) return problems[i]; } return null; }
+      if(st.flag==="s"){ /* C13 */
+        target=attachTo(function(pr){ return pr.pairIdx===st.pairIdx&&["C7","C8","C9","C10","C11","C12"].indexOf(pr.id)>=0&&pr.members&&((pr.members.A||[]).indexOf(st.norm)>=0||(pr.members.B||[]).indexOf(st.norm)>=0); })
+          ||attachTo(function(pr){ return pr.pairIdx===st.pairIdx&&["C7","C8","C9","C10","C11","C12"].indexOf(pr.id)>=0; })
+          ||attachTo(function(pr){ return pr.pairIdx===st.pairIdx&&["C3","C4","C5"].indexOf(pr.id)>=0; });
+        if(!target){ target={id:"C13",order:90,title:"Suspended member with no cause in the pasted output: "+dispOf(st.S,st.norm),why:"Nothing in either paste explains why "+dispOf(st.S,st.norm)+" on "+st.S.label+" is suspended. Paste show etherchannel detail and the member configurations from both ends to pin it down. In order, the three likeliest causes are: (1) a parameter mismatch on that member (speed, duplex, VLANs, trunk mode), (2) the far end not negotiating on that link, (3) the far end of that cable landing on a different device than its partners.",evidence:evLines(st.S,[st.norm]),fix:{},states:[],blocks:true,pairIdx:st.pairIdx,members:{A:st.S===A?[st.norm]:[],B:st.S===B?[st.norm]:[]}}; problems.push(target); }
+        target.states.push({flag:"s",text:dec}); return;
+      }
+      if(st.flag==="I"){ /* C14 */
+        target=attachTo(function(pr){ return pr.pairIdx===st.pairIdx&&["C5","C20","C17","C18","C3","C4"].indexOf(pr.id)>=0; });
+        if(!target){ target={id:"C14",order:91,title:"Stand-alone member: "+dispOf(st.S,st.norm)+" is not in the bundle",why:dispOf(st.S,st.norm)+" on "+st.S.label+" is up but operating stand-alone instead of as a bundle member. Nothing in the pasted output explains it — check that the port really has the channel-group command, that its settings match its partners exactly, and that the far end of that cable is negotiating.",evidence:evLines(st.S,[st.norm]),fix:{},states:[],blocks:true,pairIdx:st.pairIdx,members:{A:st.S===A?[st.norm]:[],B:st.S===B?[st.norm]:[]}}; problems.push(target); }
+        target.states.push({flag:"I",text:dec}); return;
+      }
+      if(st.flag==="M"){ if(!problems.some(function(pr){return pr.id==="C16"&&pr.title.indexOf("Minimum")===0;})) problems.push({id:"C16",order:80,title:"Minimum links not met",why:"A member or channel shows (M): the port-channel needs more active members than it has before it will come up. Bring the missing members up, or lower the min-links setting to match the cabling that actually exists.",evidence:evLines(st.S,[st.norm]),fix:{},states:[{flag:"M",text:dec}],blocks:true,pairIdx:st.pairIdx}); return; }
+      if(st.flag==="f"){ problems.push({id:"C16",order:92,title:"A port failed to allocate an aggregator (f)",why:dispOf(st.S,st.norm)+" on "+st.S.label+" shows (f): the switch could not assign it an aggregator, usually because its settings make it incompatible with every existing bundle. Compare its full configuration against a working member — speed, duplex, VLANs, and mode must all match.",evidence:evLines(st.S,[st.norm]),fix:{},states:[{flag:"f",text:dec}],blocks:true,pairIdx:st.pairIdx}); return; }
+      /* u, -, i : attach to a parameter problem for the member/group, else stand alone */
+      target=attachTo(function(pr){ return pr.pairIdx===st.pairIdx&&["C7","C8","C9","C10","C11","C12","C5","C17","C18"].indexOf(pr.id)>=0; });
+      if(!target){ target={id:"C16",order:93,title:"Member in a bad state ("+st.flag+"): "+dispOf(st.S,st.norm),why:"Nothing in the pasted output explains this member\u2019s state. Compare its full configuration against a bundled member on the same switch — the difference is almost always the cause.",evidence:evLines(st.S,[st.norm]),fix:{},states:[],blocks:true,pairIdx:st.pairIdx,members:{A:st.S===A?[st.norm]:[],B:st.S===B?[st.norm]:[]}}; problems.push(target); }
+      target.states.push({flag:st.flag,text:dec});
+    });
+    problems.sort(function(a,b){return a.order-b.order;});
+    /* mark diagram pairs bad */
+    pairs.forEach(function(p){ p.memberPairs.forEach(function(mp){ problems.forEach(function(pr){ if(pr.groupWide) mp.bad=true; if(pr.members&&(((pr.members.A||[]).indexOf(mp.a)>=0)||((pr.members.B||[]).indexOf(mp.b)>=0))) mp.bad=true; }); }); });
+    return {problems:problems,infos:infos,fine:fine,pairs:pairs,pairMethod:pairMethod,forceMode:forceMode};
+  }
+  function decodeState(st){
+    var who=dispOf(st.S,st.norm)+" on "+st.S.label;
+    switch(st.flag){
+      case "s": return "State (s) suspended on "+who+": this switch refused the port — a settings mismatch on the member, or no LACP/PAgP answer from the far end.";
+      case "I": return "State (I) stand-alone on "+who+": the port is up but NOT in the bundle, forwarding as a single link — spanning tree treats it as its own link, with its own blocking decisions.";
+      case "D": return "State (D) down on "+who+": no carrier — a physical-layer problem.";
+      case "u": return "State (u) unsuitable on "+who+": the port\u2019s parameters make it unsuitable for the bundle.";
+      case "M": return "State (M) on "+who+": minimum-links requirement not met.";
+      case "f": return "State (f) on "+who+": the switch failed to allocate an aggregator for this port.";
+      case "-": return "State (-) out of sync on "+who+" (EOS): the port is not in sync with the far end\u2019s LACP state.";
+      case "i": return "State (i) incompatible on "+who+" (EOS): the port\u2019s settings are incompatible with the bundle.";
+      default: return "State ("+st.flag+") on "+who+".";
+    }
+  }
+
+  /* ---------------- rendering ---------------- */
+  var FLAG_DEFS={
+    "S":"S — Layer 2 port-channel (a switchport channel).",
+    "R":"R — Layer 3 port-channel (a routed channel).",
+    "U":"U — in use: the port-channel is up.",
+    "D":"D — down: no carrier, or the channel itself is down.",
+    "P":"P — bundled: this member is an active part of the port-channel.",
+    "s":"s — suspended: the switch refused this member.",
+    "I":"I — stand-alone (IOS) / individual (NX-OS): up, but not in the bundle.",
+    "H":"H — hot-standby: an LACP spare member, by design.",
+    "w":"w — waiting to be aggregated (usually a seconds-long state).",
+    "M":"M — minimum-links requirement not met.",
+    "u":"u — unsuitable for bundling with its current parameters.",
+    "f":"f — failed to allocate an aggregator.",
+    "b":"b — (NX-OS) the member is in a vPC bundle state reported by the peer.",
+    "p":"p — (NX-OS/EOS) passive-side marker in the platform legend.",
+    "r":"r — (NX-OS) the member is in a suspended-by-vPC / remote state in the platform legend.",
+    "a":"a — (EOS) LACP active in the protocol column.",
+    "-":"- — (EOS) out of sync: not synchronised with the far end.",
+    "i":"i — (EOS) incompatible with the bundle."
+  };
+  function renderDiagram(pairs,checked){
+    var rows=[];
+    (pairs||[]).forEach(function(p){ p.memberPairs.forEach(function(mp){ rows.push({a:mp.a,b:mp.b,bad:mp.bad}); }); p.unpairedA.forEach(function(n){ rows.push({a:n,b:null,bad:checked}); }); p.unpairedB.forEach(function(n){ rows.push({a:null,b:n,bad:checked}); }); });
+    if(!rows.length) return '<p class="ec-mut" style="padding:14px">Run a check and the member pairs draw themselves here — one line per cable, coloured by the verdict.</p>';
+    var H=Math.max(150,rows.length*38+70), midY=H/2;
+    var svg='<svg viewBox="0 0 680 '+H+'" role="img" aria-label="Member pairing diagram" xmlns="http://www.w3.org/2000/svg">';
+    svg+='<rect x="0" y="0" width="680" height="'+H+'" fill="#ffffff"/>';
+    rows.forEach(function(r,i){ var y=55+i*38;
+      var stroke=r.bad?"#d97706":"#0d9488", op=checked?"1":"0.4", dash=checked?"":" stroke-dasharray=\"6 4\"";
+      if(r.a&&r.b) svg+='<line x1="185" y1="'+y+'" x2="495" y2="'+y+'" stroke="'+stroke+'" stroke-width="3" opacity="'+op+'"'+dash+'/>';
+      else if(r.a) svg+='<line x1="185" y1="'+y+'" x2="330" y2="'+y+'" stroke="'+stroke+'" stroke-width="3" opacity="'+op+'"'+dash+'/>';
+      else svg+='<line x1="350" y1="'+y+'" x2="495" y2="'+y+'" stroke="'+stroke+'" stroke-width="3" opacity="'+op+'"'+dash+'/>';
+      if(r.a) svg+='<text x="192" y="'+(y-6)+'" font-size="11.5" fill="#1e40af" font-family="monospace">'+esc(r.a)+'</text>';
+      if(r.b) svg+='<text x="488" y="'+(y-6)+'" font-size="11.5" fill="#1e40af" font-family="monospace" text-anchor="end">'+esc(r.b)+'</text>';
+      if(!r.b&&r.a) svg+='<text x="338" y="'+(y+4)+'" font-size="11" fill="#92400e">no partner on Switch B</text>';
+      if(!r.a&&r.b) svg+='<text x="342" y="'+(y+4)+'" font-size="11" fill="#92400e" text-anchor="end">no partner on Switch A</text>';
+    });
+    svg+='<rect x="15" y="'+(midY-34)+'" width="170" height="68" rx="8" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>';
+    svg+='<text x="100" y="'+(midY-4)+'" font-size="16" font-weight="bold" fill="#1e40af" text-anchor="middle">Switch A</text>';
+    svg+='<text x="100" y="'+(midY+16)+'" font-size="11" fill="#0f766e" text-anchor="middle">near end</text>';
+    svg+='<rect x="495" y="'+(midY-34)+'" width="170" height="68" rx="8" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>';
+    svg+='<text x="580" y="'+(midY-4)+'" font-size="16" font-weight="bold" fill="#1e40af" text-anchor="middle">Switch B</text>';
+    svg+='<text x="580" y="'+(midY+16)+'" font-size="11" fill="#0f766e" text-anchor="middle">far end</text>';
+    svg+='</svg>';
+    return svg;
+  }
+  function evHtml(ev){ if(!ev||!ev.length) return ""; return ev.map(function(e){ return '<div class="ec-ev"><b>'+esc(e.side)+' — '+esc(e.cmd)+'</b>\n'+esc(e.line)+'</div>'; }).join(""); }
+  function fixHtml(fix){ var ks=Object.keys(fix||{}); if(!ks.length) return "";
+    return '<p style="margin:.6rem 0 .2rem"><strong>Fix — starting point — check before you paste into production:</strong></p>'+ks.map(function(k){ return '<div class="ec-fix"><b>'+esc(k)+'</b>\n'+esc((fix[k]||[]).join("\n"))+'</div>'; }).join(""); }
+
+  function runCheck(){
+    var ta=document.getElementById("ecInA"), tb=document.getElementById("ecInB");
+    var A=parseSide(ta.value,"Switch A"), B=parseSide(tb.value,"Switch B");
+    document.getElementById("ecCountA").textContent=A.blocks?("Found "+A.blocks+" usable block"+(A.blocks===1?"":"s")+" in this paste."):"No usable EtherChannel block found in this paste yet.";
+    document.getElementById("ecCountB").textContent=B.blocks?("Found "+B.blocks+" usable block"+(B.blocks===1?"":"s")+" in this paste."):"No usable EtherChannel block found in this paste yet.";
+    var resEl=document.getElementById("ecResults"), diaEl=document.getElementById("ecDiagram"), noteEl=document.getElementById("ecPairNote");
+    var missing=[];
+    if(!A.blocks) missing.push("Switch A"); if(!B.blocks) missing.push("Switch B");
+    if(missing.length){
+      var who=missing.join(" and ");
+      resEl.innerHTML='<div class="ec-verdict warn"><strong>We could not check this bundle — '+esc(who)+' paste has no EtherChannel output in it. Run show etherchannel summary (or show port-channel summary on Nexus/Arista) there and paste again.</strong><div class="ec-vsub">That is not a failed bundle — it is missing evidence, so no verdict is given. Useful commands to paste from each switch: <code class="inline">show etherchannel summary</code> (IOS) or <code class="inline">show port-channel summary</code> (NX-OS / EOS), <code class="inline">show lacp neighbor</code>, <code class="inline">show interfaces status</code>, and the <code class="inline">interface</code> blocks from <code class="inline">show running-config</code>.</div></div>';
+      diaEl.innerHTML=renderDiagram([],false); noteEl.textContent="";
+      return;
+    }
+    var res=analyze(A,B);
+    /* diagram */
+    diaEl.innerHTML=renderDiagram(res.pairs,true);
+    var hasNei=A.neighbors.length||B.neighbors.length;
+    noteEl.textContent=hasNei?("Pairs were matched using neighbor output — the LACP/PAgP neighbor evidence ties the two ends\u2019 groups together, and partner ports pair the members where the output names them."):("Paired by order — if your cabling order differs, the per-port cards still hold at group level: every check below compares the two groups as wholes and names the exact port on the exact switch for anything member-specific.");
+    var out="";
+    var probs=res.problems, infos=res.infos;
+    if(res.forceMode==="down"){
+      out+='<div class="ec-verdict bad"><strong>This bundle is down — every member is down.</strong><div class="ec-vsub">1 physical problem. No configuration-mismatch cards are shown, because no setting causes every member to lose carrier at once.</div></div>';
+    } else if(!probs.length){
+      var cnt=res.pairs.length&&res.pairs[0].memberPairs?res.pairs[0].memberPairs.length:0;
+      var proto=(A.order.length&&A.groups[A.order[0]].proto)||"LACP"; if(proto==="STATIC") proto="static on";
+      out+='<div class="ec-verdict ok"><strong>This bundle is healthy — every check passed.</strong><div class="ec-vsub">'+cnt+' member'+(cnt===1?"":"s")+', '+esc(proto)+', all bundled.</div></div>';
+    } else if(probs.some(function(p){return p.blocks;})){
+      out+='<div class="ec-verdict bad"><strong>This bundle will not form — '+probs.length+' problem'+(probs.length===1?"":"s")+'.</strong><div class="ec-vsub">Root causes only are counted — a suspended or stand-alone flag is explained inside the card that causes it, not counted again.</div></div>';
+    } else {
+      out+='<div class="ec-verdict warn"><strong>This bundle forms, but it is not healthy — '+probs.length+' problem'+(probs.length===1?"":"s")+'.</strong><div class="ec-vsub">Traffic flows, but something below is dropping, leaking, or idling part of it.</div></div>';
+    }
+    if(probs.length){
+      out+='<h2 style="margin-top:1.2rem">Problems</h2>'+probs.map(function(p){
+        return '<div class="ec-problem'+(p.degraded?" deg":"")+'"><h3>'+esc(p.title)+'</h3><p>'+esc(p.why)+'</p>'+evHtml(p.evidence)
+          +(p.states&&p.states.length?p.states.map(function(s){return '<div class="ec-state">'+esc(s.text)+'</div>';}).join(""):"")
+          +fixHtml(p.fix)+'</div>';
+      }).join("");
+    }
+    if(res.fine.length) out+='<div class="card panel" style="margin-top:1rem"><h3 style="margin-top:0">What\u2019s fine</h3><ul>'+res.fine.map(function(f){return '<li>'+esc(f)+'</li>';}).join("")+'</ul></div>';
+    if(infos.length) out+='<div class="card panel" style="margin-top:1rem"><h3 style="margin-top:0">Not a problem</h3>'+infos.map(function(x){return '<p><strong>'+esc(x.title)+'.</strong> '+esc(x.text)+'</p>';}).join("")+'</div>';
+    /* flag glossary strip: every flag letter that appeared */
+    var seen={}; Object.keys(A.flagsSeen).forEach(function(k){seen[k]=true;}); Object.keys(B.flagsSeen).forEach(function(k){seen[k]=true;});
+    var order=["S","R","U","D","P","s","I","H","w","M","u","f","b","p","r","a","-","i"];
+    var gl=order.filter(function(k){return seen[k]&&FLAG_DEFS[k];});
+    if(gl.length) out+='<div class="card panel" style="margin-top:1rem"><h3 style="margin-top:0">Flag glossary — every letter in your pasted output</h3><div class="ec-gloss">'+gl.map(function(k){return '<span><b>('+esc(k)+')</b> '+esc(FLAG_DEFS[k].replace(/^\S+ — /,""))+'</span>';}).join("")+'</div></div>';
+    resEl.innerHTML=out;
+  }
+  function loadPreset(which){
+    document.getElementById("ecInA").value=which===1?PRESET1_A:PRESET2_A;
+    document.getElementById("ecInB").value=which===1?PRESET1_B:PRESET2_B;
+    runCheck();
+  }
+  document.getElementById("ecCheck").addEventListener("click",runCheck);
+  document.getElementById("ecPreset1").addEventListener("click",function(){loadPreset(1);});
+  document.getElementById("ecPreset2").addEventListener("click",function(){loadPreset(2);});
+  document.getElementById("ecTry").addEventListener("click",function(){ loadPreset(2); var r=document.getElementById("ecResults"); if(r&&r.scrollIntoView) r.scrollIntoView({behavior:"smooth",block:"start"}); });
+  document.getElementById("ecClear").addEventListener("click",function(){ document.getElementById("ecInA").value=""; document.getElementById("ecInB").value=""; document.getElementById("ecCountA").textContent=""; document.getElementById("ecCountB").textContent=""; document.getElementById("ecResults").innerHTML='<div class="card panel"><p class="ec-mut" style="margin:0">Cleared — paste both ends and press \u201CCheck this bundle\u201D.</p></div>'; document.getElementById("ecDiagram").innerHTML=renderDiagram([],false); document.getElementById("ecPairNote").textContent=""; });
+}
+</script>
+
+<script>
+CURRENT_TOOL="etherchannel-checker";
+pageEtherchannelChecker();
+(function(){
+  function fix(root){
+    var as=root.querySelectorAll('a[href^="#/"]');
+    for(var i=0;i<as.length;i++){
+      var a=as[i], href=a.getAttribute('href'), m;
+      m=href.match(/^#\/tools\/([a-z0-9-]+)\/?$/);
+      if(m){ a.setAttribute('href','/tools/'+m[1]+'/'); continue; }
+      m=href.match(/^#\/article\/([a-z0-9-]+)\/?$/);
+      if(m){ a.setAttribute('href','/articles/'+m[1]+'/'); continue; }
+      if(href==='#/'||href==='#'){ a.setAttribute('href','/'); }
+    }
+  }
+  fix(document.getElementById('app'));
+})();
+</script>
+
+</body>
+</html>
